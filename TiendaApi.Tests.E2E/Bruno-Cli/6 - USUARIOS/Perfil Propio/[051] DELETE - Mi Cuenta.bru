@@ -1,0 +1,31 @@
+meta {
+  name: [051] DELETE Mi Cuenta
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{baseUrl}}/api/users/me/profile
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{delCuentaToken}}
+}
+
+script:post-response {
+  test("Users My Delete - Status 204 No Content", function () {
+      expect(res.getStatus()).to.equal(204);
+  });
+}
+
+settings {
+  encodeUrl: true
+}
+
+docs {
+  Elimina cuenta propia. Retorna 204. Usa la cuenta dedicada creada por el
+  [051b] anterior para no destruir el usuario seed userdaw (paridad con la
+  suite Automation; antes borraba userdaw y rompía las suites siguientes).
+}

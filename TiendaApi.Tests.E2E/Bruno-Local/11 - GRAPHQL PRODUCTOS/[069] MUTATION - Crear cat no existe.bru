@@ -1,0 +1,41 @@
+meta {
+  name: [069] MUTATION - Crear cat no existe
+  type: graphql
+  seq: 6
+}
+
+post {
+  url: {{baseUrl}}/graphql
+  body: graphql
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{adminToken}}
+}
+
+body:graphql {
+  mutation($input: CreateProductoInput!) { createProducto(input: $input) { id nombre } }
+}
+
+body:graphql:vars {
+  {"input": {"nombre": "Test", "precio": 99, "stock": 10, "categoriaId": 999999}}
+}
+
+script:post-response {
+  // Por diseno el mutation LANZA excepcion en validacion de negocio (ver XML-doc
+  // de ProductoMutation): el cliente lo ve en errors[], no en data null.
+  test("GraphQL CreateProducto cat inexistente - errors de validacion", function () {
+      const jsonData = res.getBody();
+      expect(jsonData.errors).to.be.an("array").that.is.not.empty;
+      expect(JSON.stringify(jsonData.errors)).to.include("validaci");
+  });
+}
+
+settings {
+  encodeUrl: true
+}
+
+docs {
+  GraphQL: Crear producto con categoría inexistente debe fallar
+}

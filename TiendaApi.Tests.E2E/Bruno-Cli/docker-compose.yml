@@ -1,0 +1,56 @@
+services:
+  bruno:
+    # Imagen oficial de Bruno CLI (Docker Verified Publisher).
+    # Entrypoint ya es `bru` y el working dir esperado es /bruno.
+    image: usebruno/cli:latest
+    container_name: tienda-api-bruno-tests
+    volumes:
+      - .:/bruno:ro
+      - ./reports:/reports
+    command:
+      - run
+      # Carpetas explícitas: `run .` no escanea la colección en la CLI actual
+      # (devuelve 0 peticiones). Mismas carpetas que documenta el README para
+      # bru run (sin "6 - USUARIOS" ni "12 - WEBSOCKETS": la CLI no soporta WS).
+      - "0 - SETUP"
+      - "1 - AUTHENTICATION"
+      - "2 - CATEGORÍAS"
+      - "3 - PRODUCTOS"
+      - "14 - PROVEEDORES"
+      - "15 - ESTADISTICAS"
+      - "16 - BACKUP"
+      - "13 - HISTORIAL Y FEED"
+      - "4 - PEDIDOS (Usuario)"
+      - "5 - PEDIDOS (Admin)"
+      # USUARIOS tiene subcarpetas anidadas: bru no recursa con la carpeta raíz,
+      # hay que listar las rutas completas
+      - "6 - USUARIOS/Gestión Admin"
+      - "6 - USUARIOS/Perfil Propio"
+      - "7 - STORAGE"
+      - "10 - GRAPHQL CATEGORÍAS"
+      - "11 - GRAPHQL PRODUCTOS"
+      - "90 - TEARDOWN"
+      # environments/docker.bru apunta a host.docker.internal (el localhost del
+      # entorno local.bru no es alcanzable desde dentro del contenedor)
+      - --env-file
+      - environments/docker.bru
+      # Rate limit de la API (RateLimitConfig.cs): general 100/15s, auth 10/min.
+      # 250ms validado empíricamente (misma configuración que la API):
+      # da colchón si la colección crece; por debajo de 100ms se acerca al
+      # límite de ráfaga.
+      - --delay
+      - "250"
+      - --reporter-json
+      - /reports/report.json
+      - --reporter-junit
+      - /reports/junit-report.xml
+      - --reporter-html
+      - /reports/report.html
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Si la API aún no está arriba, reintenta (máx 3) en vez de morir.
+    restart: on-failure:3
+
+networks:
+  default:
+    name: tienda-api-network
