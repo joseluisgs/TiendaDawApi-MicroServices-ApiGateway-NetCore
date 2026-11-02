@@ -13,6 +13,18 @@ Reescritura de la **API de tienda en microservicios** con un API Gateway (**YARP
 
 Cada microservicio es una API pequeña con **su propia base de datos** y se comunican entre sí por **REST**; SignalR se usa solo hacia el cliente. El gateway es la única puerta de entrada.
 
+| Servicio | Base de datos |
+| --- | --- |
+| `gateway` (YARP) | — (solo enruta) |
+| `identity` (auth + users) | PostgreSQL `identity_db` |
+| `categories` | PostgreSQL `categories_db` |
+| `providers` | PostgreSQL `providers_db` |
+| `products` | PostgreSQL `products_db` (escritura) + MongoDB `products_read` (lectura, CQRS) |
+| `orders` | MongoDB `orders_db` |
+| `historical` | Cassandra (histórico de precios y feed) |
+| `statistics`, `backup`, `graphql` | sin base de datos (agregan por REST) |
+| `storage` | ficheros (imágenes) |
+
 | Pieza | Tecnología |
 | --- | --- |
 | Gateway | YARP |
