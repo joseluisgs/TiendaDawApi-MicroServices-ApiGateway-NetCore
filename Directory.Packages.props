@@ -6,7 +6,7 @@
   -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-    <!-- Ancla también las versiones transitivas declaradas (p.ej. Pkcs parcheado) -->
+    <!-- Ancla tambien las versiones transitivas declaradas (p.ej. Pkcs parcheado) -->
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
@@ -71,6 +71,6 @@
     <PackageVersion Include="System.Reactive" Version="6.0.1" />
       <!-- Identity -->
     <PackageVersion Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.12" />
-    <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
+      <PackageVersion Include="Yarp.ReverseProxy" Version="2.3.0" />
   </ItemGroup>
 </Project>
