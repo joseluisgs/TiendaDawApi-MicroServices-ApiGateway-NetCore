@@ -11,4 +11,6 @@
   <Project Path="src/Services/Identity/Identity.csproj" />
   <Project Path="src/Services/Identity.Tests/Identity.Tests.csproj" />
   <Project Path="src/Services/Historical/Historical.csproj" />
+  <Project Path="src/Services/Storage/Storage.csproj" />
+  <Project Path="src/Services/Storage.Tests/Storage.Tests.csproj" />
 </Solution>
