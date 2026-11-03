@@ -6,4 +6,5 @@
   </Configurations>
   <Project Path="TiendaApi.Api/TiendaApi.csproj" />
   <Project Path="TiendaApi.Tests/TiendaApi.Tests.csproj" />
+  <Project Path="src/Gateway/Gateway.csproj" />
 </Solution>
