@@ -11,19 +11,19 @@ Reescritura de la **API de tienda en microservicios** con un API Gateway (**YARP
 
 ## Arquitectura (en construcción)
 
-Cada microservicio es una API pequeña con **su propia base de datos** y se comunican entre sí por **REST**; SignalR se usa solo hacia el cliente. El gateway es la única puerta de entrada.
+Cada microservicio es una API pequeña con **su propia base de datos** y se comunican entre sí por **REST (Refit)**; SignalR se usa solo hacia el cliente. El gateway es la única puerta de entrada.
 
-| Servicio | Base de datos |
-| --- | --- |
-| `gateway` (YARP) | — (solo enruta) |
-| `identity` (auth + users) | PostgreSQL `identity_db` |
-| `categories` | PostgreSQL `categories_db` |
-| `providers` | PostgreSQL `providers_db` |
-| `products` | PostgreSQL `products_db` (escritura) + MongoDB `products_read` (lectura, CQRS) |
-| `orders` | MongoDB `orders_db` |
-| `historical` | Cassandra (histórico de precios y feed) |
-| `statistics`, `backup`, `graphql` | sin base de datos (agregan por REST) |
-| `storage` | ficheros (imágenes) |
+| Servicio | Contenido | Base de datos |
+| --- | --- | --- |
+| `gateway` (YARP) | Enrutado, auth en el borde, proxy SignalR | — (solo enruta) |
+| `identity` | Auth + users (Identity + JWT + OAuth 2.0) | PostgreSQL `identity_db` |
+| `catalog` | Categorías, proveedores y productos (CQRS: escritura en PostgreSQL, lectura desnormalizada en MongoDB) | PostgreSQL `catalog_db` + MongoDB `products_read` |
+| `orders` | Pedidos (documento embebido) + notificaciones | MongoDB `orders_db` |
+| `historical` | Histórico de precios y feed (TTL 180 días) | Cassandra |
+| `statistics` | Las 9 consultas de estadísticas | sin BD (agrega por Refit) |
+| `backup` | Export/import de datos del catálogo | sin BD (escribe vía `catalog`) |
+| `graphql` | Fachada GraphQL (queries y mutations) | sin BD (agrega por Refit) |
+| `storage` | Imágenes subidas | Ficheros |
 
 | Pieza | Tecnología |
 | --- | --- |
