@@ -6,6 +6,8 @@
   -->
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Ancla también las versiones transitivas declaradas (p.ej. Pkcs parcheado) -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <ItemGroup>
     <!-- API -->
@@ -18,7 +20,7 @@
     <!-- Security: forzar versión parchada de Pkcs (transitive, vulnerabilidad GHSA-846f-f764-76mx) -->
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.Google" Version="10.0.14" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="10.0.14" />
-    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.13" />
+    <PackageVersion Include="System.Security.Cryptography.Pkcs" Version="10.0.14" />
     <PackageVersion Include="FluentValidation.AspNetCore" Version="11.3.1" />
     <PackageVersion Include="HotChocolate.AspNetCore" Version="16.6.7" />
     <PackageVersion Include="HotChocolate.AspNetCore.Authorization" Version="16.6.7" />

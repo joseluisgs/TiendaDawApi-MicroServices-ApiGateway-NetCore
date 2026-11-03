@@ -6,5 +6,9 @@
   </Configurations>
   <Project Path="TiendaApi.Api/TiendaApi.csproj" />
   <Project Path="TiendaApi.Tests/TiendaApi.Tests.csproj" />
+  <Project Path="src/BuildingBlocks/BuildingBlocks.csproj" />
   <Project Path="src/Gateway/Gateway.csproj" />
+  <Project Path="src/Services/Identity/Identity.csproj" />
+  <Project Path="src/Services/Identity.Tests/Identity.Tests.csproj" />
+  <Project Path="src/Services/Historical/Historical.csproj" />
 </Solution>
