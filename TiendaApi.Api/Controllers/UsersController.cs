@@ -1,0 +1,291 @@
+using System.Security.Claims;
+using CSharpFunctionalExtensions;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using TiendaApi.Api.Dtos.Common;
+using TiendaApi.Api.Dtos.Historial;
+using TiendaApi.Api.Dtos.Usuarios;
+using TiendaApi.Api.Errors;
+using TiendaApi.Api.Extensions;
+using TiendaApi.Api.Features.Historial.Queries;
+using TiendaApi.Api.Features.Users.Commands;
+using TiendaApi.Api.Features.Users.Queries;
+using TiendaApi.Api.Helpers.Pagination;
+using TiendaApi.Api.Models;
+
+namespace TiendaApi.Api.Controllers;
+
+/// <summary>
+/// Controlador de API para gestión de usuarios.
+/// Endpoints: CRUD paginado, solo accesibles por administradores.
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+[Produces("application/json")]
+public class UsersController(IMediator mediator, ILogger<UsersController> logger) : ControllerBase
+{
+    /// <summary>
+    /// Obtiene el listado paginado de usuarios con filtros y ordenación (solo administradores).
+    /// </summary>
+    /// <param name="username">Filtro por nombre de usuario.</param>
+    /// <param name="email">Filtro por correo electrónico.</param>
+    /// <param name="isDeleted">Filtra por estado de eliminación lógica.</param>
+    /// <param name="page">Índice de página (base 0).</param>
+    /// <param name="size">Tamaño de página.</param>
+    /// <param name="sortBy">Campo de ordenación.</param>
+    /// <param name="direction">Dirección de ordenación (asc/desc).</param>
+    [HttpGet]
+    [Authorize(Roles = UserRoles.ADMIN)]
+    [ProducesResponseType(typeof(PagedResult<UserDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<PagedResult<UserDto>>> GetAll(
+        [FromQuery] string? username = null,
+        [FromQuery] string? email = null,
+        [FromQuery] bool? isDeleted = null,
+        [FromQuery] int page = 0,
+        [FromQuery] int size = 10,
+        [FromQuery] string sortBy = "id",
+        [FromQuery] string direction = "asc")
+    {
+        logger.LogInformation("Obteniendo todos los usuarios - Página: {Page}, Tamaño: {Size}", page, size);
+        var filter = new UserFilterDto(username, email, isDeleted, page, size, sortBy, direction);
+        var resultado = await mediator.Send(new GetAllUsersPagedQuery(filter));
+        return resultado.Match(
+            onSuccess: pagedResult =>
+            {
+                var linkHeader = PaginationLinksHelper.CreateLinkHeader(pagedResult, Request, sortBy, direction);
+                if (!string.IsNullOrEmpty(linkHeader)) Response.Headers.Append("Link", linkHeader);
+                return (ActionResult<PagedResult<UserDto>>)pagedResult;
+            },
+            onFailure: error => (ActionResult<PagedResult<UserDto>>)new ObjectResult(new { message = error.Message }) { StatusCode = StatusCodes.Status500InternalServerError });
+    }
+
+    /// <summary>
+    /// Obtiene un usuario por su identificador (solo administradores).
+    /// </summary>
+    /// <param name="id">Identificador del usuario.</param>
+    [HttpGet("{id}")]
+    [Authorize(Roles = UserRoles.ADMIN)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> GetById(long id)
+    {
+        logger.LogInformation("Obteniendo usuario con ID: {Id}", id);
+        var resultado = await mediator.Send(new GetUserByIdQuery(id));
+        return resultado.Match(
+            onSuccess: usuario => usuario,
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Registra un nuevo usuario (solo administradores).
+    /// </summary>
+    /// <param name="dto">Datos de registro del usuario.</param>
+    [HttpPost]
+    [Authorize(Roles = UserRoles.ADMIN)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<UserDto>> Create([FromBody] RegisterDto dto)
+    {
+        logger.LogInformation("Creando nuevo usuario: {Username}", dto.Username);
+        var resultado = await mediator.Send(new CreateUserCommand(dto));
+        return resultado.Match(
+            onSuccess: usuario => CreatedAtAction(nameof(GetById), new { id = usuario.Id }, usuario),
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Actualiza los datos de un usuario por su identificador (solo administradores).
+    /// </summary>
+    /// <param name="id">Identificador del usuario.</param>
+    /// <param name="dto">Datos actualizados del usuario.</param>
+    [HttpPut("{id}")]
+    [Authorize(Roles = UserRoles.ADMIN)]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<UserDto>> Update(long id, [FromBody] UserUpdateDto dto)
+    {
+        logger.LogInformation("Actualizando usuario con ID: {Id}", id);
+        var resultado = await mediator.Send(new UpdateUserCommand(id, dto));
+        return resultado.Match(
+            onSuccess: usuario => usuario,
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Actualiza el avatar de un usuario (el propio usuario o un administrador).
+    /// </summary>
+    /// <param name="id">Identificador del usuario.</param>
+    /// <param name="dto">Nueva URL del avatar.</param>
+    [HttpPatch("{id}/avatar")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> UpdateAvatar(long id, [FromBody] AvatarUpdateDto dto)
+    {
+        logger.LogInformation("Actualizando avatar de usuario con ID: {Id}", id);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var currentUserId))
+            return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+        if (id != currentUserId && userRole != UserRoles.ADMIN)
+            return Forbid();
+
+        var resultado = await mediator.Send(new UpdateUserAvatarCommand(id, dto.AvatarUrl));
+        return resultado.Match(
+            onSuccess: usuario => usuario,
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Elimina un usuario por su identificador (solo administradores).
+    /// </summary>
+    /// <param name="id">Identificador del usuario.</param>
+    [HttpDelete("{id}")]
+    [Authorize(Roles = UserRoles.ADMIN)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> Delete(long id)
+    {
+        logger.LogInformation("Eliminando usuario con ID: {Id}", id);
+        var resultado = await mediator.Send(new DeleteUserCommand(id));
+        if (resultado.IsSuccess) return NoContent();
+        var error = resultado.Error;
+        return error switch
+        {
+            NotFoundError => NotFound(new { message = error.Message }),
+            ForbiddenError => StatusCode(StatusCodes.Status403Forbidden, new { message = error.Message }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, new { message = error.Message })
+        };
+    }
+
+    /// <summary>
+    /// Obtiene el perfil del usuario autenticado.
+    /// </summary>
+    [HttpGet("me/profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserDto>> GetMyProfile()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+
+        var resultado = await mediator.Send(new GetUserByIdQuery(userId));
+        return resultado.Match(
+            onSuccess: usuario => usuario,
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Actualiza el perfil del usuario autenticado.
+    /// </summary>
+    /// <param name="dto">Datos a actualizar del perfil.</param>
+    [HttpPut("me/profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> UpdateMyProfile([FromBody] UserUpdateDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+        logger.LogInformation("Usuario {UserId} actualizando su perfil", userId);
+
+        var resultado = await mediator.Send(new UpdateUserCommand(userId, dto));
+        return resultado.Match(
+            onSuccess: usuario => usuario,
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Elimina la cuenta del usuario autenticado.
+    /// </summary>
+    [HttpDelete("me/profile")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult> DeleteMyProfile()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+        logger.LogInformation("Usuario {UserId} eliminando su cuenta", userId);
+
+        var resultado = await mediator.Send(new DeleteUserCommand(userId));
+        if (resultado.IsSuccess) return NoContent();
+        var error = resultado.Error;
+        return error switch
+        {
+            NotFoundError => NotFound(new { message = error.Message }),
+            ForbiddenError => StatusCode(StatusCodes.Status403Forbidden, new { message = error.Message }),
+            _ => StatusCode(StatusCodes.Status500InternalServerError, new { message = error.Message })
+        };
+    }
+
+    /// <summary>
+    /// Actualiza el avatar del usuario autenticado.
+    /// </summary>
+    /// <param name="dto">Nueva URL del avatar.</param>
+    [HttpPatch("me/profile/avatar")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> UpdateMyAvatar([FromBody] AvatarUpdateDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+        logger.LogInformation("Usuario {UserId} actualizando su avatar", userId);
+
+        var resultado = await mediator.Send(new UpdateUserAvatarCommand(userId, dto.AvatarUrl));
+        return resultado.Match(
+            onSuccess: usuario => usuario,
+            onFailure: error => error.ToHttpResult<UserDto>());
+    }
+
+    /// <summary>
+    /// Feed de actividad del usuario autenticado: últimos productos vistos
+    /// (Cassandra, consulta Q-B, TTL nativo de 180 días). Una partición vacía
+    /// responde lista vacía, no 404: el usuario existe (está autenticado).
+    /// </summary>
+    /// <param name="limit">Tamaño del feed (1..100, por defecto 20).</param>
+    /// <returns>200 con el feed (más reciente primero) o 401 sin sesión.</returns>
+    [HttpGet("me/feed")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<VistaFeedDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<VistaFeedDto>>> GetMyFeed(
+        [FromQuery] int limit = 20)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out var userId))
+            return Unauthorized(new { message = "Usuario no autenticado correctamente" });
+
+        var feed = await mediator.Send(new GetFeedVistasQuery(userId, limit));
+        // Constructor explícito: el operador implícito no se aplica con T = interfaz.
+        return new ActionResult<IReadOnlyList<VistaFeedDto>>(feed);
+    }
+}

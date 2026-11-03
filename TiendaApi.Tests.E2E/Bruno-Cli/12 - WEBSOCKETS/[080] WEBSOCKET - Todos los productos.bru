@@ -1,0 +1,20 @@
+meta {
+  name: [080] WEBSOCKET - Todos los productos
+  type: ws
+  seq: 1
+  tags: desktop-only
+}
+
+ws {
+  url: {{baseWs}}/ws/productos
+  body: ws
+  auth: none
+}
+
+body:ws {
+  name: message 1
+  type: json
+  content: '''
+    {}
+  '''
+}
