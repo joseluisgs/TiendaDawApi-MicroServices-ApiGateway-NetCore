@@ -19,7 +19,8 @@ Cada microservicio es una API pequeña con **su propia base de datos** y se comu
 | `identity` | Auth + users (Identity + JWT + OAuth 2.0) | PostgreSQL `identity_db` |
 | `catalog` | Categorías, proveedores y productos (CQRS: escritura en PostgreSQL, lectura desnormalizada en MongoDB) | PostgreSQL `catalog_db` + MongoDB `products_read` |
 | `orders` | Pedidos (documento embebido) + notificaciones | MongoDB `orders_db` |
-| `historical` | Histórico de precios y feed (TTL 180 días) | Cassandra |
+| `historical` | Histórico de precios y feed (TTL 180 días); lo consumen `catalog` e `identity` | Cassandra |
+| `email` | Cola de envío de emails (bienvenida, avisos de pedidos, reportes) | sin BD (SMTP) |
 | `statistics` | Las 9 consultas de estadísticas | sin BD (agrega por Refit) |
 | `backup` | Export/import de datos del catálogo | sin BD (escribe vía `catalog`) |
 | `graphql` | Fachada GraphQL (queries y mutations) | sin BD (agrega por Refit) |

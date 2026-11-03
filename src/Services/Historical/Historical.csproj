@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- Documentación XML: mantiene el patrón de los servicios -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CassandraCSharpDriver" />
+    <PackageReference Include="CSharpFunctionalExtensions" />
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+
+</Project>
