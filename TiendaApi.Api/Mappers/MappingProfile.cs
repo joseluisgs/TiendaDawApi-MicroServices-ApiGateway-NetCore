@@ -1,0 +1,42 @@
+using AutoMapper;
+using TiendaApi.Api.Dtos.Categorias;
+using TiendaApi.Api.Dtos.Pedidos;
+using TiendaApi.Api.Dtos.Productos;
+using TiendaApi.Api.Dtos.Usuarios;
+using TiendaApi.Api.Models;
+
+namespace TiendaApi.Api.Mappers;
+
+/// <summary>
+/// Perfiles de AutoMapper para mapeos entidad-DTO.
+/// Convierte automáticamente entre entidades y DTOs.
+/// </summary>
+public class MappingProfile : Profile
+{
+    /// <summary>
+    /// Registra los mapeos entre entidades y DTOs de la aplicación.
+    /// </summary>
+    public MappingProfile()
+    {
+        // Mapeos de categoría
+        CreateMap<Categoria, CategoriaDto>();
+        CreateMap<CategoriaRequestDto, Categoria>();
+
+        // Mapeos de producto: la categoría y el proveedor viajan anidados en el DTO
+        CreateMap<Categoria, CategoriaResumenDto>();
+        CreateMap<Proveedor, ProveedorResumenDto>();
+        CreateMap<Producto, ProductoDto>();
+        CreateMap<ProductoRequestDto, Producto>();
+
+        // Mapeos de usuario
+        CreateMap<User, UserDto>();
+        CreateMap<RegisterDto, User>();
+
+        // Mapeos de pedido
+        CreateMap<Pedido, PedidoDto>();
+        CreateMap<PedidoItem, PedidoItemDto>();
+        CreateMap<PedidoRequestDto, Pedido>()
+            .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items));
+        CreateMap<PedidoItemRequestDto, PedidoItem>();
+    }
+}
