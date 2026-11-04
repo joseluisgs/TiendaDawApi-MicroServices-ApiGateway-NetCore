@@ -1,8 +1,12 @@
+using System.Text;
 using BuildingBlocks.Jwt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Refit;
 using Serilog;
+using Serilog.Events;
+using Serilog.Extensions.Hosting;
+using Serilog.Sinks.SystemConsole.Themes;
 using TiendaApi.Api.Data;
 using TiendaApi.Api.Data.Seed;
 using TiendaApi.Api.Infrastructures;
@@ -12,8 +16,18 @@ using TiendaApi.Api.Services.Auth;
 using TiendaApi.Api.Services.Email;
 using TiendaApi.Api.Services.Historial;
 
+// 📺 Salida por pantalla igual que el monolito (patrón SerilogConfig): consola
+// con template legible y filtros para que el mensaje del servicio no se pierda
+// en el ruido de hosting/EF.
+Console.OutputEncoding = Encoding.UTF8;
+
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .WriteTo.Console(
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}",
+        theme: AnsiConsoleTheme.Code)
     .CreateLogger();
 
 try
@@ -22,7 +36,18 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
-    builder.Host.UseSerilog();
+    // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
+    // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
+    // DI —los que usan los tests con WebApplicationFactory— dejarían de recibir
+    // los mensajes con su formato nativo. ClearProviders: fuera los providers
+    // MEL por defecto (console/debug) para que no dupliquen la consola.
+    builder.Logging.ClearProviders();
+    builder.Logging.AddSerilog(Log.Logger);
+
+    // DiagnosticContext: lo necesita UseSerilogRequestLogging (en el monolito lo
+    // registra UseSerilog; aquí, a mano, para no tocar la fábrica MEL).
+    builder.Services.AddSingleton(new DiagnosticContext(Log.Logger));
+    builder.Services.AddSingleton<IDiagnosticContext>(sp => sp.GetRequiredService<DiagnosticContext>());
 
     // Infraestructura copiada del monolito (mismas extensiones, mismo orden).
     builder.Services.AddMvcControllers();
@@ -88,6 +113,9 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    // 📺 Una línea por petición (método, ruta, estado, ms): lo que se ejecuta.
+    app.UseSerilogRequestLogging();
+
     app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "identity" }));
     app.MapControllers();
 
@@ -99,6 +127,16 @@ try
         await db.Database.EnsureCreatedAsync();
         await IdentitySeed.InitializeAsync(scope.ServiceProvider);
     }
+
+    Log.Information("=================================================================");
+    Log.Information("identity-service · Autenticación y usuarios (dueño de la BD)");
+    Log.Information("=================================================================");
+    Log.Information("URL:         {Urls}", builder.Configuration["Urls"]);
+    Log.Information("PUBLICO:     /api/v1/auth/* · /api/users/* (vía gateway)");
+    Log.Information("INTERNO:     /internal/users/{id} · /internal/users/activos");
+    Log.Information("JWT:         ÚNICO emisor (HS256) + valida con BuildingBlocks");
+    Log.Information("BD:          identity_db (PostgreSQL) · Refit → email, historical");
+    Log.Information("=================================================================");
 
     app.Run();
 }
