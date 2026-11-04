@@ -173,4 +173,52 @@ public class HistorialServiceTests
     }
 
     #endregion
+
+    #region RegistrarPrecioAsync
+
+    [Test]
+    public async Task RegistrarPrecio_Ok_DevuelveSuccess_YEscribeElPunto()
+    {
+        var result = await _service.RegistrarPrecioAsync(1, 1299.99);
+
+        result.IsSuccess.Should().BeTrue();
+        // Dual-write: la escritura pasa por el repositorio (Q-A + Q-C).
+        _repository.Verify(r => r.RegistrarPrecioAsync(1, 1299.99), Times.Once);
+    }
+
+    [Test]
+    public async Task RegistrarPrecio_ProductoIdInvalido_DevuelveValidationError_NoEscribe()
+    {
+        var result = await _service.RegistrarPrecioAsync(0, 1299.99);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().BeOfType<ValidationError>();
+        _repository.Verify(r => r.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()), Times.Never);
+    }
+
+    [Test]
+    public async Task RegistrarPrecio_PrecioNegativo_DevuelveValidationError_NoEscribe()
+    {
+        var result = await _service.RegistrarPrecioAsync(1, -5);
+
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().BeOfType<ValidationError>();
+        _repository.Verify(r => r.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()), Times.Never);
+    }
+
+    [Test]
+    public async Task RegistrarPrecio_CassandraCaida_NoLanza_DevuelveSuccess()
+    {
+        // Degradado igual que PrecioHistoricoHandler del monolito: el alta o el
+        // cambio de precio del consumidor NUNCA debe fallar por Cassandra.
+        _repository.Setup(r => r.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()))
+            .ThrowsAsync(new InvalidOperationException("Nodo caído"));
+
+        var act = async () => await _service.RegistrarPrecioAsync(1, 1299.99);
+        var result = await act.Should().NotThrowAsync();
+
+        result.Which.IsSuccess.Should().BeTrue();
+    }
+
+    #endregion
 }

@@ -65,6 +65,35 @@ public class HistorialService(
     }
 
     /// <inheritdoc />
+    public async Task<UnitResult<DomainError>> RegistrarPrecioAsync(long productoId, double precio)
+    {
+        if (productoId <= 0)
+            return UnitResult.Failure<DomainError>(
+                ValidationError.Create("El identificador del producto no es válido"));
+
+        if (precio < 0)
+            return UnitResult.Failure<DomainError>(
+                ValidationError.Create("El precio no puede ser negativo"));
+
+        try
+        {
+            // Dual-write (Q-A serie del producto + Q-C bucket del día), el MISMO
+            // camino que el repositorio del monolito. Mejor esfuerzo: si Cassandra
+            // está caído, el alta/cambio de precio del consumidor no debe fallar
+            // (misma filosofía degradada que PrecioHistoricoHandler).
+            await historialRepository.RegistrarPrecioAsync(productoId, precio);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex,
+                "Cassandra: no se pudo registrar el precio {Precio} del producto {Id} (modo degradado)",
+                precio, productoId);
+        }
+
+        return UnitResult.Success<DomainError>();
+    }
+
+    /// <inheritdoc />
     public async Task<IReadOnlyList<VistaFeedDto>> GetFeedVistasAsync(long usuarioId, int limit)
     {
         var limitEfectivo = Math.Clamp(limit, 1, 100);
