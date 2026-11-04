@@ -31,6 +31,15 @@ public interface IHistorialService
     Task<UnitResult<DomainError>> RegistrarVistaAsync(long usuarioId, long productoId, string nombreProducto);
 
     /// <summary>
+    /// Registra un punto de precio en las series (dual-write Q-A + Q-C): el
+    /// punto de NACIMIENTO al crear el producto y los cambios reales de precio
+    /// al actualizarlo. La decisión de cuándo llamar aquí (y el try/catch
+    /// degradado) la toma el consumidor, <b>catalog</b>, con la misma semántica
+    /// que <c>PrecioHistoricoHandler</c> en el monolito.
+    /// </summary>
+    Task<UnitResult<DomainError>> RegistrarPrecioAsync(long productoId, double precio);
+
+    /// <summary>
     /// Feed de actividad: últimos productos vistos por un usuario. Una
     /// partición vacía es una respuesta válida (lista vacía), no un error.
     /// </summary>

@@ -50,7 +50,26 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Registra un punto de precio en las series (dual-write). Lo llama catalog
+    /// (dueño del producto) al crearlo (punto de nacimiento) y al cambiar el
+    /// precio de verdad — con su propio try/catch degradado, como el monolito.
+    /// </summary>
+    [HttpPost("precios")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RegistrarPrecio([FromBody] RegistrarPrecioRequest body)
+    {
+        var resultado = await service.RegistrarPrecioAsync(body.ProductoId, body.Precio);
+        if (resultado.IsFailure)
+            return BadRequest(new { message = resultado.Error.Message });
+
+        return NoContent();
+    }
 }
 
 /// <summary>Cuerpo de escritura de una vista (nombre aportado por el dueño del producto).</summary>
 public sealed record RegistrarVistaRequest(long UsuarioId, long ProductoId, string NombreProducto);
+
+/// <summary>Cuerpo de escritura de un punto de precio (lo aporta el dueño del producto).</summary>
+public sealed record RegistrarPrecioRequest(long ProductoId, double Precio);

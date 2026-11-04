@@ -112,4 +112,32 @@ public class HistoricalInternalControllerTests
     }
 
     #endregion
+
+    #region POST precios
+
+    [Test]
+    public async Task RegistrarPrecio_Ok_Devuelve204()
+    {
+        _service.Setup(s => s.RegistrarPrecioAsync(1, 1299.99))
+            .ReturnsAsync(UnitResult.Success<DomainError>());
+
+        var result = await _controller.RegistrarPrecio(new RegistrarPrecioRequest(1, 1299.99));
+
+        result.Should().BeOfType<NoContentResult>();
+        _service.Verify(s => s.RegistrarPrecioAsync(1, 1299.99), Times.Once);
+    }
+
+    [Test]
+    public async Task RegistrarPrecio_PrecioNegativo_Devuelve400()
+    {
+        _service.Setup(s => s.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()))
+            .ReturnsAsync(UnitResult.Failure<DomainError>(
+                ValidationError.Create("El precio no puede ser negativo")));
+
+        var result = await _controller.RegistrarPrecio(new RegistrarPrecioRequest(1, -5));
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    #endregion
 }
