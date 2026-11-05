@@ -22,7 +22,7 @@ public sealed class AssemblyContainerFixture
 
     /// <summary>
     /// Crea (o recrea) una base de datos PostgreSQL con el nombre indicado y
-    /// devuelve la cadena de conexi��n apuntando a ella.
+    /// devuelve la cadena de conexión apuntando a ella.
     /// </summary>
     internal static async Task<string> CreatePostgresDatabaseAsync(string databaseName)
     {

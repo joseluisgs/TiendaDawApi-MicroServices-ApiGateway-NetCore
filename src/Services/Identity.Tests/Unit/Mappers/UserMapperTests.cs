@@ -134,7 +134,7 @@ public class UserMapperTests
             Email = "newuser@example.com",
             Password = "SecurePassword123!"
         };
-        // El hash lo genera UserManager (PBKDF2): el mapper no toca la contraseÃ±a.
+        // El hash lo genera UserManager (PBKDF2): el mapper no toca la contraseña.
 
         // Act
         var entity = dto.ToEntity();
