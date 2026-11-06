@@ -3,14 +3,14 @@
   "variables": [
     {
       "name": "baseUrl",
-      "value": "http://localhost:5031",
+      "value": "http://localhost:5000",
       "type": "text",
       "enabled": true,
       "secret": false
     }
     ,{
       "name": "baseWs",
-      "value": "ws://localhost:5031",
+      "value": "ws://localhost:5000",
       "type": "text",
       "enabled": true,
       "secret": false
