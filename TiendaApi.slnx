@@ -16,4 +16,6 @@
   <Project Path="src/Services/Email/Email.csproj" />
   <Project Path="src/Services/Email.Tests/Email.Tests.csproj" />
   <Project Path="src/Services/Historical.Tests/Historical.Tests.csproj" />
+  <Project Path="src/Services/Catalog/Catalog.csproj" />
+  <Project Path="src/Services/Catalog.Tests/Catalog.Tests.csproj" />
 </Solution>
