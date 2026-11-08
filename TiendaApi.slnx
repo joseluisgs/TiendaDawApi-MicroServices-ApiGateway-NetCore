@@ -18,4 +18,6 @@
   <Project Path="src/Services/Historical.Tests/Historical.Tests.csproj" />
   <Project Path="src/Services/Catalog/Catalog.csproj" />
   <Project Path="src/Services/Catalog.Tests/Catalog.Tests.csproj" />
+  <Project Path="src/Services/Orders/Orders.csproj" />
+  <Project Path="src/Services/Orders.Tests/Orders.Tests.csproj" />
 </Solution>
