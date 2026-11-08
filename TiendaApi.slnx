@@ -16,4 +16,14 @@
   <Project Path="src/Services/Email/Email.csproj" />
   <Project Path="src/Services/Email.Tests/Email.Tests.csproj" />
   <Project Path="src/Services/Historical.Tests/Historical.Tests.csproj" />
+  <Project Path="src/Services/Catalog/Catalog.csproj" />
+  <Project Path="src/Services/Catalog.Tests/Catalog.Tests.csproj" />
+  <Project Path="src/Services/Orders/Orders.csproj" />
+  <Project Path="src/Services/Orders.Tests/Orders.Tests.csproj" />
+  <Project Path="src/Services/Statistics/Statistics.csproj" />
+  <Project Path="src/Services/Statistics.Tests/Statistics.Tests.csproj" />
+  <Project Path="src/Services/Backup/Backup.csproj" />
+  <Project Path="src/Services/Backup.Tests/Backup.Tests.csproj" />
+  <Project Path="src/Services/GraphQL/GraphQL.csproj" />
+  <Project Path="src/Services/GraphQL.Tests/GraphQL.Tests.csproj" />
 </Solution>

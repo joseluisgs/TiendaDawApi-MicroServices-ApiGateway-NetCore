@@ -122,8 +122,12 @@ try
     if (app.Environment.IsDevelopment())
     {
         using var scope = app.Services.CreateScope();
-        // Como el monolito: crear el esquema si falta y sembrar (idempotente).
+        // Como el monolito (y como catalog): en desarrollo se recrea la BD en
+        // cada arranque, para que "reiniciar la API entre corridas" vuelva al
+        // estado semilla — sin esto los usuarios de las suites (p. ej. newuser)
+        // se acumulan y el siguiente POST da 500 por clave duplicada.
         var db = scope.ServiceProvider.GetRequiredService<TiendaDbContext>();
+        await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();
         await IdentitySeed.InitializeAsync(scope.ServiceProvider);
     }
@@ -132,7 +136,7 @@ try
     Log.Information("identity-service · Autenticación y usuarios (dueño de la BD)");
     Log.Information("=================================================================");
     Log.Information("URL:         {Urls}", builder.Configuration["Urls"]);
-    Log.Information("PUBLICO:     /api/v1/auth/* · /api/users/* (vía gateway)");
+    Log.Information("PUBLICO:     /api/v1/auth/* · /api/v1/users/* (vía gateway)");
     Log.Information("INTERNO:     /internal/users/{id} · /internal/users/activos");
     Log.Information("JWT:         ÚNICO emisor (HS256) + valida con BuildingBlocks");
     Log.Information("BD:          identity_db (PostgreSQL) · Refit → email, historical");
