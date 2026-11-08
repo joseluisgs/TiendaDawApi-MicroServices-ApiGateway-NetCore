@@ -24,4 +24,6 @@
   <Project Path="src/Services/Statistics.Tests/Statistics.Tests.csproj" />
   <Project Path="src/Services/Backup/Backup.csproj" />
   <Project Path="src/Services/Backup.Tests/Backup.Tests.csproj" />
+  <Project Path="src/Services/GraphQL/GraphQL.csproj" />
+  <Project Path="src/Services/GraphQL.Tests/GraphQL.Tests.csproj" />
 </Solution>
