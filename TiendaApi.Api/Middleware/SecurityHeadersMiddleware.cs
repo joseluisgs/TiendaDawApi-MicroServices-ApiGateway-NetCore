@@ -19,10 +19,10 @@ public class SecurityHeadersMiddleware(RequestDelegate next)
 
     /// <summary>
     /// Política para las páginas HTML que sirve esta API: Swagger UI y la UI
-    /// de GraphQL (Banana Cake Pop / Nitro en /graphql). Son SPAs que cargan
-    /// sus propios scripts, estilos, workers y assets, así que reciben la
-    /// mínima que les deja funcionar; el resto de respuestas (la API JSON)
-    /// mantiene el default-src 'none' de arriba.
+    /// de GraphQL (Banana Cake Pop en /graphql). Son SPAs que cargan sus
+    /// propios scripts, estilos, workers y assets, así que reciben la mínima
+    /// que les deja funcionar; el resto de respuestas (la API JSON) mantiene
+    /// el default-src 'none' de arriba.
     /// </summary>
     private const string ContentSecurityPolicyUi =
         "default-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; " +
