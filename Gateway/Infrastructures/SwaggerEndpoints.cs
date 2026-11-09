@@ -23,7 +23,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// </summary>
 public static class SwaggerEndpoints
 {
-    /// <summary>Servicios cuya spec se fusiona (nombre lógico y puerto).</summary>
+    /// <summary>Servicios cuya spec se fusiona (nombre lógico y puerto por defecto en local).</summary>
     private static readonly (string Nombre, int Puerto)[] Servicios =
     [
         ("identity", 5101),
@@ -36,6 +36,14 @@ public static class SwaggerEndpoints
         ("backup", 5108),
         ("graphql", 5109),
     ];
+
+    /// <summary>
+    /// ?? T12.5: URL base de un servicio. En local, <c>http://localhost:{puerto}</c>;
+    /// en Docker se sobreescribe con <c>Backends__{nombre}</c> (misma clave que
+    /// usa el health: la red interna del compose es la única fuente de verdad).
+    /// </summary>
+    private static string BaseUrl(IConfiguration configuracion, string nombre, int puerto)
+        => configuracion[$"Backends:{nombre}"] ?? $"http://localhost:{puerto}";
 
     /// <summary>Caché del documento agregado: se reconstruye si tiene más de 5 minutos.</summary>
     private static readonly object Candado = new();
@@ -51,7 +59,7 @@ public static class SwaggerEndpoints
     {
         app.MapGet("/swagger/v1/swagger.json", async () =>
         {
-            var json = await ObtenerSpecAsync();
+            var json = await ObtenerSpecAsync(app.Configuration);
             return Results.Text(json, "application/json; charset=utf-8");
         });
 
@@ -63,7 +71,7 @@ public static class SwaggerEndpoints
     }
 
     /// <summary>Spec agregado (con caché corta para no re-fetchear en cada carga).</summary>
-    private static async Task<string> ObtenerSpecAsync()
+    private static async Task<string> ObtenerSpecAsync(IConfiguration configuracion)
     {
         lock (Candado)
         {
@@ -71,7 +79,7 @@ public static class SwaggerEndpoints
                 return _documento;
         }
 
-        var documento = await ConstruirAsync();
+        var documento = await ConstruirAsync(configuracion);
 
         lock (Candado)
         {
@@ -83,7 +91,7 @@ public static class SwaggerEndpoints
     }
 
     /// <summary>Recorre los servicios y fusiona sus specs.</summary>
-    private static async Task<string> ConstruirAsync()
+    private static async Task<string> ConstruirAsync(IConfiguration configuracion)
     {
         using var cliente = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
 
@@ -112,7 +120,7 @@ public static class SwaggerEndpoints
             JsonNode? spec;
             try
             {
-                var texto = await cliente.GetStringAsync($"http://localhost:{puerto}/swagger/v1/swagger.json");
+                var texto = await cliente.GetStringAsync($"{BaseUrl(configuracion, nombre, puerto)}/swagger/v1/swagger.json");
                 spec = JsonNode.Parse(texto);
             }
             catch

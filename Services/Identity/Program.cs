@@ -119,16 +119,26 @@ try
     app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "identity" }));
     app.MapControllers();
 
-    if (app.Environment.IsDevelopment())
+    using (var scope = app.Services.CreateScope())
     {
-        using var scope = app.Services.CreateScope();
-        // Como el monolito (y como catalog): en desarrollo se recrea la BD en
-        // cada arranque, para que "reiniciar la API entre corridas" vuelva al
-        // estado semilla — sin esto los usuarios de las suites (p. ej. newuser)
-        // se acumulan y el siguiente POST da 500 por clave duplicada.
         var db = scope.ServiceProvider.GetRequiredService<TiendaDbContext>();
-        await db.Database.EnsureDeletedAsync();
+
+        if (app.Environment.IsDevelopment())
+        {
+            // Como el monolito (y como catalog): en desarrollo se recrea la BD en
+            // cada arranque, para que "reiniciar la API entre corridas" vuelva al
+            // estado semilla - sin esto los usuarios de las suites (p. ej. newuser)
+            // se acumulan y el siguiente POST da 500 por clave duplicada.
+            await db.Database.EnsureDeletedAsync();
+        }
+
+        // ?? T12.5: SIEMPRE crea la BD si falta (patrón catalog). Sin esto, en
+        // producción (Docker) identity_db nunca se crearía: EnsureDeleted solo
+        // ocurre en desarrollo, y antes EnsureCreated vivía dentro del mismo if.
         await db.Database.EnsureCreatedAsync();
+
+        // Semilla idempotente (roles + usuarios): en producción crea los
+        // usuarios de prueba si la BD está recién creada; si ya existen, los omite.
         await IdentitySeed.InitializeAsync(scope.ServiceProvider);
     }
 

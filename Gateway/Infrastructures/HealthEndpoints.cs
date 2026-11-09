@@ -18,7 +18,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// </summary>
 public static class HealthEndpoints
 {
-    /// <summary>Backends que el gateway sondea (host, puerto y nombre para el informe).</summary>
+    /// <summary>Backends que el gateway sondea (nombre y puerto por defecto en local).</summary>
     private static readonly (string Nombre, int Puerto)[] Backends =
     [
         ("identity", 5101),
@@ -33,6 +33,14 @@ public static class HealthEndpoints
     ];
 
     /// <summary>
+    /// ?? T12.5: URL base de un backend. En local es <c>http://localhost:{puerto}</c>;
+    /// en Docker (compose) cada servicio tiene nombre propio en la red y se
+    /// sobreescribe con <c>Backends__{nombre}=http://identity:5101</c> etc.
+    /// </summary>
+    private static string BaseUrl(IConfiguration configuracion, string nombre, int puerto)
+        => configuracion[$"Backends:{nombre}"] ?? $"http://localhost:{puerto}";
+
+    /// <summary>
     /// Mapea <c>/health</c>, <c>/health/live</c> y <c>/health/ready</c>.
     /// </summary>
     /// <param name="app">Aplicación en marcha.</param>
@@ -45,7 +53,7 @@ public static class HealthEndpoints
         // Readiness + health agregado: sondea los backends (en paralelo).
         app.MapGet("/health/ready", async () =>
         {
-            var informe = await SondearAsync();
+            var informe = await SondearAsync(app.Configuration);
             return informe.TodosOk
                 ? Results.Ok(informe.Payload)
                 : Results.Json(informe.Payload, statusCode: StatusCodes.Status503ServiceUnavailable);
@@ -53,7 +61,7 @@ public static class HealthEndpoints
 
         app.MapGet("/health", async () =>
         {
-            var informe = await SondearAsync();
+            var informe = await SondearAsync(app.Configuration);
             // El contrato pide 200 con "OK" mientras el gateway esté vivo;
             // el detalle de qué backend cae está en el body y en /health/ready.
             return Results.Ok(informe.Payload);
@@ -66,7 +74,7 @@ public static class HealthEndpoints
     /// Sondea todos los backends en PARALELO con un timeout corto: el health del
     /// gateway no puede tardar más que lo que tarda el backend más lento.
     /// </summary>
-    private static async Task<(bool TodosOk, object Payload)> SondearAsync()
+    private static async Task<(bool TodosOk, object Payload)> SondearAsync(IConfiguration configuracion)
     {
         var reloj = Stopwatch.StartNew();
         // Timeout corto: el health del gateway no puede tardar más que el
@@ -78,7 +86,7 @@ public static class HealthEndpoints
             try
             {
                 // Los servicios exponen `/health` (no todos `/health/live`).
-                var respuesta = await cliente.GetAsync($"http://localhost:{b.Puerto}/health");
+                var respuesta = await cliente.GetAsync($"{BaseUrl(configuracion, b.Nombre, b.Puerto)}/health");
                 return (b.Nombre, Ok: respuesta.IsSuccessStatusCode, Error: (string?)null);
             }
             catch (Exception ex)

@@ -1,3 +1,18 @@
+# ============================================================
+# docker-compose.local.yml · DESARROLLO local (T12.5)
+# ============================================================
+#   Solo infraestructura: las 4 BDs + Adminer + Mongo Express.
+#   Los servicios NO corren aquí: se arrancan en el host con `dotnet run`
+#   (reiniciar-api.ps1 / test-runner.mjs) leyendo appsettings.json (localhost).
+#
+#   .\Reset-Database.ps1        # bajar todo y volver a la semilla
+#   cp .env.development .env     # opcional: fija credenciales (defaults: admin123)
+#
+# ¿Por qué sin Redis? CacheConfig usa MemoryCache en Development (Redis es
+# obligatorio solo en Producción). ¿Por qué sin servicios? En local se depura con
+# `dotnet run`; la topología de PRODUCCIÓN está en docker-compose.prod.yml.
+#
+# Las BDs solo publican en 127.0.0.1: nada de la red local entra sin querer.
 services:
   postgres:
     image: postgres:17-alpine

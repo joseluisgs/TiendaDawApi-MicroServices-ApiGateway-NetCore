@@ -51,13 +51,13 @@ try
 
     var app = builder.Build();
 
-    if (app.Environment.IsDevelopment())
+    // ?? T12.5: SIEMPRE inicializa el keyspace (patrón catalog/identity). Antes
+    // solo ocurría en desarrollo y en producción el keyspace `tienda` no llegaría
+    // a crearse. Con isDevelopment: false es CREATE IF NOT EXISTS + tablas
+    // IF NOT EXISTS: nunca hace DROP, así que en desarrollo el seed del E2E se
+    // conserva igual que hasta ahora.
+    using (var scope = app.Services.CreateScope())
     {
-        using var scope = app.Services.CreateScope();
-
-        // IMPORTANTE: isDevelopment = false → CREATE IF NOT EXISTS, sin DROP:
-        // este servicio comparte el keyspace con el monolito durante el porte y un
-        // DROP aquí borraría la serie seed que esperan los E2E.
         await app.InitializeCassandraAsync(isDevelopment: false);
 
         // Semilla idempotente (omite si el historial ya existe).
