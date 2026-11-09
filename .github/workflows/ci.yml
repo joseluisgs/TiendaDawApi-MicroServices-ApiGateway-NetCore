@@ -38,7 +38,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: TiendaApi.Api/bin/Release/net10.0/
+          path: Gateway/bin/Release/net10.0/
           retention-days: 1
 
   test:
@@ -59,7 +59,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-output
-          path: TiendaApi.Api/bin/Release/net10.0/
+          path: Gateway/bin/Release/net10.0/
 
       - name: Run unit tests (parallel)
         run: dotnet test ${{ env.SOLUTION }} --configuration Release --no-build --filter "FullyQualifiedName~Unit" --verbosity minimal --collect:"XPlat Code Coverage" --results-directory ./TestResults
@@ -117,7 +117,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-output
-          path: TiendaApi.Api/bin/Release/net10.0/
+          path: Gateway/bin/Release/net10.0/
 
       - name: Run integration tests (sequential, non-parallel)
         run: dotnet test ${{ env.SOLUTION }} --configuration Release --no-build --filter "FullyQualifiedName~Integration" --verbosity minimal
@@ -141,7 +141,7 @@ jobs:
       - name: Create fallback docfx.json
         run: |
           if [ ! -f docfx.json ]; then
-            printf '%s\n' '{' '  "metadata": [' '    {' '      "src": [' '        {' '          "files": ["TiendaApi.Api/TiendaApi.Api.csproj"],' '          "properties": {' '            "TargetFramework": "net10.0"' '          }' '        }' '      ],' '      "dest": "api"' '    }' '  ],' '  "build": {' '    "content": [' '      {' '        "files": ["api/*.yml", "doc/*.md", "*.md"]' '      },' '      {' '        "files": ["api/**.yml"],' '        "src": "api"' '      }' '    ],' '    "dest": "_site",' '    "template": ["default"],' '    "globalMetadataFiles": [],' '    "fileMetadataFiles": []' '  }' '}' > docfx.json
+            printf '%s\n' '{' '  "metadata": [' '    {' '      "src": [' '        {' '          "files": ["Gateway/Gateway.csproj"],' '          "properties": {' '            "TargetFramework": "net10.0"' '          }' '        }' '      ],' '      "dest": "api"' '    }' '  ],' '  "build": {' '    "content": [' '      {' '        "files": ["api/*.yml", "doc/*.md", "*.md"]' '      },' '      {' '        "files": ["api/**.yml"],' '        "src": "api"' '      }' '    ],' '    "dest": "_site",' '    "template": ["default"],' '    "globalMetadataFiles": [],' '    "fileMetadataFiles": []' '  }' '}' > docfx.json
           fi
 
       - name: Build Documentation (HTML)
