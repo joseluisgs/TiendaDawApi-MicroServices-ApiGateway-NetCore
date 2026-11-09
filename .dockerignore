@@ -1,6 +1,7 @@
-# .dockerignore — contexto RAÍZ del repo
-# Build: docker build -f TiendaApi.Api/Dockerfile .
-# Reduce el build context y evita copiar bin/obj, IDE y docs a la imagen.
+# .dockerignore · T12.5 — contexto de build de los11 Dockerfiles (raíz del repo)
+# Los Dockerfiles copian rutas CONCRETAS (global.json, props, BuildingBlocks/,
+# Services/<X>/, Gateway/); esto reduce el tamaño del contexto y evita que
+# basura o secretos suban al daemon de Docker.
 
 # Control de versiones / IDE
 .git
@@ -17,27 +18,43 @@
 TestResults
 **/TestResults
 *.trx
+coverage
+**/coverage
 
-# Dependencias de JavaScript (cliente / E2E)
+# Dependencias de JavaScript (suite E2E)
 **/node_modules
+tests/E2E/**/reports
+
+# SECRETS: nunca dentro de una imagen (el compose los pasa por environment)
+.env
+.env.*
+!.env.example
+!.env.development
+
+# Composes y arranques (el build no los necesita)
+docker-compose*.yml
+Reset-Database.ps1
+*.ps1
+
+# Documentación y docs internos
+doc
+*.md
+banner.png
+.github
+
+# Fuentes que la imagen no necesita
+tests
+Gateway.Tests
+**/*.Tests
+# Subidas de prueba de storage: en producción persiste el volumen tienda-images,
+# no la imagen (en un clone limpio ni siquiera existen).
+Services/Storage/wwwroot/images/uploads
+Services/Storage/wwwroot/wwwroot
 
 # Logs
 *.log
 
-# Fuentes que la imagen no necesita
-doc
-scripts
-TiendaApi.Clients
-TiendaApi.Tests.E2E
-docker-compose*.yml
-.env
-.env.*
-Reset-Database.ps1
-*.md
-banner.png
-*.log
-
-# Docker
+# El propio Dockerfile y esta regla (se envían aparte, no vía contexto)
 Dockerfile
 **/Dockerfile
 .dockerignore

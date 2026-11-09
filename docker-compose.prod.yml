@@ -1,4 +1,63 @@
+# ============================================================
+# docker-compose.prod.yml · T12.5 — pila COMPLETA de producción
+# ============================================================
+#   gateway (única puerta pública) + 9 microservicios + 4 BDs.
+#
+# Arranque:
+#   cp .env.example .env      # en el servidor: rellena JWT_KEY, contraseñas, SMTP
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Reglas (AGENTS.md):
+#   • Solo el gateway publica puerto (API_PORT). Los microservicios viven SOLO en
+#     la red interna: publicar su puerto rompería el modelo de acceso.
+#   • Las BDs publican solo en 127.0.0.1 (administración local o SSH-tunnel).
+#   • Topología entre servicios (URLs, Backends, clusters YARP, Cassandra host):
+#     appsettings.Production.json de cada servicio. Secretos: vía .env → environment.
+#   • No levantar esta pila junto con docker-compose.local.yml en el mismo host:
+#     ambos reclaman los puertos de BD (5432/27017/9042).
+#
+# Notas T12.5:
+#   • Auth__Mode NO existe: el proyecto es SOLO Identity (JWT + OAuth 2.0).
+#   • Los servicios validan JWT con Jwt__Key (misma clave en todos: si la cambias,
+#     cámbiala en .env y reinicia TODOS los contenedores a la vez).
+#   • Redis es obligatorio en producción (CacheConfig en Producción lanza si falta
+#     Cache:RedisConfiguration; en desarrollo los servicios usan MemoryCache).
+
+# Proyecto propio: no comparte volúmenes con docker-compose.local.yml.
+name: tienda-prod
+
+# ---- Bloques reutilizados (YAML anchors) ------------------------------------
+x-logging: &logging
+  driver: "json-file"
+  options:
+    max-size: "50m"
+    max-file: "5"
+
+# Defaults comunes de TODOS los contenedores .NET (menos el healthcheck: ese lo
+# define cada Dockerfile con su puerto).
+x-dotnet: &dotnet
+  restart: unless-stopped
+  networks:
+    - tienda-network
+  logging: *logging
+  deploy:
+    resources:
+      limits:
+        cpus: '${SERVICE_CPUS:-1}'
+        memory: "${SERVICE_MEMORY:-512M}"
+      reservations:
+        cpus: '${SERVICE_CPUS_RESERVED:-0.25}'
+        memory: "${SERVICE_MEMORY_RESERVED:-128M}"
+
+# JWT compartido: emisor identity, validador gateway + servicios (R6).
+x-jwt: &jwt
+  Jwt__Key: ${JWT_KEY:?JWT_KEY no definido - copia .env.example a .env y pon una clave de 32+ caracteres}
+  Jwt__Issuer: ${JWT_ISSUER:-TiendaApi}
+  Jwt__Audience: ${JWT_AUDIENCE:-TiendaApi}
+  Jwt__ExpireMinutes: ${JWT_EXPIRE_MINUTES:-60}
+
 services:
+  # ============================ Infraestructura =============================
   postgres:
     image: postgres:17-alpine
     container_name: tienda-postgres
@@ -6,8 +65,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-tienda}
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+    # Solo administración local: las BDs no son públicas.
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -27,11 +87,7 @@ services:
         reservations:
           cpus: '${POSTGRES_CPUS_RESERVED:-0.5}'
           memory: "${POSTGRES_MEMORY_RESERVED:-256M}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *logging
 
   mongodb:
     image: mongo:7.0
@@ -41,7 +97,7 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin123}
       MONGO_INITDB_DATABASE: ${MONGO_DB:-tienda}
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "127.0.0.1:${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb-data:/data/db
     healthcheck:
@@ -61,24 +117,20 @@ services:
         reservations:
           cpus: '${MONGO_CPUS_RESERVED:-0.5}'
           memory: "${MONGO_MEMORY_RESERVED:-256M}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *logging
 
   redis:
     image: redis:7-alpine
     container_name: tienda-redis
+    # Caché de datos (producción). Sin autenticación: red interna + solo
+    # publicado en 127.0.0.1 (el tráfico servicio→redis nunca sale de la red).
     command: >
       redis-server
       --appendonly yes
       --maxmemory "${REDIS_MAXMEMORY:-256mb}"
       --maxmemory-policy allkeys-lru
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     volumes:
       - redis-data:/data
     healthcheck:
@@ -98,25 +150,20 @@ services:
         reservations:
           cpus: '${REDIS_CPUS_RESERVED:-0.25}'
           memory: "${REDIS_MEMORY_RESERVED:-128M}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *logging
 
   cassandra:
     image: cassandra:5.0
     container_name: tienda-cassandra
-    ports:
-      - "${CASSANDRA_PORT:-9042}:9042"
-    # La JVM pide memoria sin techo: heap fijado igual que en desarrollo.
+    # La JVM pide memoria sin techo: heap fijado (mismo criterio que desarrollo).
     environment:
       MAX_HEAP_SIZE: ${CASSANDRA_MAX_HEAP:-1G}
       HEAP_NEWSIZE: ${CASSANDRA_HEAP_NEWSIZE:-256M}
+    ports:
+      - "127.0.0.1:${CASSANDRA_PORT:-9042}:9042"
     volumes:
       - cassandra-data:/var/lib/cassandra
-    # La imagen tarda ~30-60 s en estar lista: el healthcheck comprueba el
-    # protocolo CQL real, no el proceso de la JVM.
+    # La imagen tarda ~30-60 s: el healthcheck comprueba el protocolo CQL real.
     healthcheck:
       test: ["CMD-SHELL", "cqlsh -e 'SELECT now() FROM system.local' || exit 1"]
       interval: 15s
@@ -134,109 +181,183 @@ services:
         reservations:
           cpus: '${CASSANDRA_CPUS_RESERVED:-0.5}'
           memory: "${CASSANDRA_MEMORY_RESERVED:-1G}"
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+    logging: *logging
 
-  api:
+  # ========================= Gateway (puerta pública) ========================
+  gateway:
+    <<: *dotnet
     build:
       context: .
       dockerfile: Gateway/Dockerfile
       args:
         BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
-    container_name: tienda-api
-    env_file:
-      - .env
+    container_name: tienda-gateway
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=${POSTGRES_DB:-tienda};Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-admin123}
-      - ConnectionStrings__MongoDB=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DB:-tienda}?authSource=admin&retryWrites=true&retryReads=true
-      - ConnectionStrings__Redis=redis:6379
-      - Cassandra__Hosts__0=cassandra
-      - Cassandra__Port=${CASSANDRA_PORT:-9042}
-      - Cassandra__Keyspace=${CASSANDRA_KEYSPACE:-tienda}
-      - Jwt__Key=${JWT_KEY:-ChangeThisToASecureKeyAtLeast32CharactersLong}
-      - Jwt__Issuer=${JWT_ISSUER:-TiendaApi}
-      - Jwt__Audience=${JWT_AUDIENCE:-TiendaApi}
-      - Jwt__ExpireMinutes=${JWT_EXPIRE_MINUTES:-30}
-      # Auth: modo de autenticación (Custom=BCrypt | Identity=UserManager) y login externo OAuth 2.0.
-      # Los ClientId/Secret van en .env (nunca en el compose); el callback es https://<dominio>/signin-google
-      - Auth__Mode=${AUTH_MODE:-Custom}
-      - Auth__Google__Enabled=${AUTH_GOOGLE_ENABLED:-false}
-      - Google__ClientId=${GOOGLE_CLIENT_ID:-}
-      - Google__ClientSecret=${GOOGLE_CLIENT_SECRET:-}
-      - Auth__GitHub__Enabled=${AUTH_GITHUB_ENABLED:-false}
-      - GitHub__ClientId=${GITHUB_CLIENT_ID:-}
-      - GitHub__ClientSecret=${GITHUB_CLIENT_SECRET:-}
-      - Auth__Microsoft__Enabled=${AUTH_MICROSOFT_ENABLED:-false}
-      - Microsoft__ClientId=${MICROSOFT_CLIENT_ID:-}
-      - Microsoft__ClientSecret=${MICROSOFT_CLIENT_SECRET:-}
-      - MongoDbSettings__ConnectionString=mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DB:-tienda}?authSource=admin&retryWrites=true&retryReads=true
-      - MongoDbSettings__DatabaseName=${MONGO_DB:-tienda}
-      - MongoDbSettings__PedidosCollection=${MONGO_PEDIDOS_COLLECTION:-pedidos}
-      - MongoDbSettings__ProductosCollection=productos_read
-      - Pedidos__RepositoryType=${PEDIDOS_REPOSITORY_TYPE:-MongoDbNative}
-      - Smtp__Host=${SMTP_HOST:-smtp.gmail.com}
-      - Smtp__Port=${SMTP_PORT:-587}
-      - Smtp__Username=${SMTP_USERNAME:-}
-      - Smtp__Password=${SMTP_PASSWORD:-}
-      - Smtp__FromEmail=${SMTP_FROM_EMAIL:-noreply@tienda.com}
-      - Smtp__FromName=${SMTP_FROM_NAME:-TiendaApi Notifications}
-      - Smtp__AdminEmail=${SMTP_ADMIN_EMAIL:-admin@tienda.com}
-      - Smtp__EnableSsl=${SMTP_ENABLE_SSL:-true}
-      - Cache__DefaultExpirationMinutes=${CACHE_DEFAULT_EXPIRATION_MINUTES:-5}
-      - Cache__ProductoCacheTTLMinutes=${CACHE_PRODUCTO_TTL_MINUTES:-10}
-      - WebSocket__RoleCacheTTLMinutes=${WEBSOCKET_ROLE_CACHE_TTL_MINUTES:-3}
-      - Storage__UploadPath=${STORAGE_UPLOAD_PATH:-uploads}
-      - Storage__MaxFileSize=${STORAGE_MAX_FILE_SIZE:-5242880}
+      <<: *jwt
+    # ÚNICO puerto expuesto. DENTRO del contenedor escucha en :5000
+    # (appsettings.Production.json → Urls = http://+:5000).
     ports:
-      - "${API_PORT:-5000}:8080"
-    volumes:
-      - tienda-images:/app/wwwroot/uploads
+      - "${API_PORT:-5000}:5000"
+    # Arranca cuando todos los backends responden /health (sus healthchecks
+    # del Dockerfile); así el primer /health del gateway sale OK, no DEGRADED.
     depends_on:
-      postgres:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      cassandra:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - tienda-network
-    deploy:
-      resources:
-        limits:
-          cpus: '${API_CPUS:-1}'
-          memory: "${API_MEMORY:-512M}"
-        reservations:
-          cpus: '${API_CPUS_RESERVED:-0.5}'
-          memory: "${API_MEMORY_RESERVED:-256M}"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "50m"
-        max-file: "5"
+      identity: { condition: service_healthy }
+      storage: { condition: service_healthy }
+      historical: { condition: service_healthy }
+      email: { condition: service_healthy }
+      catalog: { condition: service_healthy }
+      orders: { condition: service_healthy }
+      statistics: { condition: service_healthy }
+      backup: { condition: service_healthy }
+      graphql: { condition: service_healthy }
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.tienda-api.rule=Host(`${DOMAIN:-localhost}`)"
-      - "traefik.http.routers.tienda-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.tienda-gateway.rule=Host(`${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.tienda-gateway.tls.certresolver=letsencrypt"
 
+  # ============================ Microservicios ==============================
+  # Sin bloque `ports:` ninguno: solo red interna (regla AGENTS.md).
+  # Las URLs entre servicios (Services:*, Backends, ReverseProxy) están en cada
+  # appsettings.Production.json → apuntan a los nombres de este compose.
+
+  identity:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Identity/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-identity
+    environment:
+      <<: *jwt
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=identity_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-admin123}
+      # OAuth 2.0 (identity es el único que abre puertas externas).
+      Auth__Google__Enabled: ${AUTH_GOOGLE_ENABLED:-false}
+      Google__ClientId: ${GOOGLE_CLIENT_ID:-}
+      Google__ClientSecret: ${GOOGLE_CLIENT_SECRET:-}
+      Auth__GitHub__Enabled: ${AUTH_GITHUB_ENABLED:-false}
+      GitHub__ClientId: ${GITHUB_CLIENT_ID:-}
+      GitHub__ClientSecret: ${GITHUB_CLIENT_SECRET:-}
+      Auth__Microsoft__Enabled: ${AUTH_MICROSOFT_ENABLED:-false}
+      Microsoft__ClientId: ${MICROSOFT_CLIENT_ID:-}
+      Microsoft__ClientSecret: ${MICROSOFT_CLIENT_SECRET:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  storage:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Storage/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-storage
+    environment:
+      Storage__MaxFileSize: ${STORAGE_MAX_FILE_SIZE:-5242880}
+    volumes:
+      # Subida de imágenes (Storage:UploadPath=images/uploads en appsettings).
+      - tienda-images:/app/wwwroot/images/uploads
+
+  historical:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Historical/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-historical
+    # Host de Cassandra (cassandra:9042): appsettings.Production.json.
+    depends_on:
+      cassandra: { condition: service_healthy }
+
+  email:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Email/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-email
+    environment:
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      # Vacíos → el servicio degrada (no envía) en vez de fallar el arranque.
+      Smtp__Username: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__FromEmail: ${SMTP_FROM_EMAIL:-noreply@tienda.com}
+      Smtp__FromName: ${SMTP_FROM_NAME:-TiendaApi Notifications}
+      Smtp__AdminEmail: ${SMTP_ADMIN_EMAIL:-admin@tienda.com}
+
+  catalog:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Catalog/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-catalog
+    environment:
+      <<: *jwt
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=catalog_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-admin123}
+      MongoDbSettings__ConnectionString: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/${MONGO_DB:-tienda}?authSource=admin&retryWrites=true&retryReads=true
+    depends_on:
+      postgres: { condition: service_healthy }
+      mongodb: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  orders:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Orders/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-orders
+    environment:
+      <<: *jwt
+      MongoDbSettings__ConnectionString: mongodb://${MONGO_ROOT_USER:-admin}:${MONGO_ROOT_PASSWORD:-admin123}@mongodb:27017/orders_db?authSource=admin&retryWrites=true&retryReads=true
+    depends_on:
+      mongodb: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  statistics:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Statistics/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-statistics
+    environment:
+      <<: *jwt
+
+  backup:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/Backup/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-backup
+    environment:
+      <<: *jwt
+
+  graphql:
+    <<: *dotnet
+    build:
+      context: .
+      dockerfile: Services/GraphQL/Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    container_name: tienda-graphql
+    environment:
+      <<: *jwt
+
+# ================================ Red y volúmenes ===========================
 networks:
   tienda-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16
 
 volumes:
   postgres-data:

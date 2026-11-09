@@ -34,11 +34,15 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION }} --configuration Release --no-restore
 
+      # T12.5: subimos bin Y obj de TODOS los proyectos (antes solo Gateway/bin;
+      # --no-build necesita los assets de obj/ de cada proyecto para evaluarlos).
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-output
-          path: Gateway/bin/Release/net10.0/
+          path: |
+            **/bin/Release/**
+            **/obj/**
           retention-days: 1
 
   test:
@@ -59,7 +63,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-output
-          path: Gateway/bin/Release/net10.0/
+          path: .
 
       - name: Run unit tests (parallel)
         run: dotnet test ${{ env.SOLUTION }} --configuration Release --no-build --filter "FullyQualifiedName~Unit" --verbosity minimal --collect:"XPlat Code Coverage" --results-directory ./TestResults
@@ -117,7 +121,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build-output
-          path: Gateway/bin/Release/net10.0/
+          path: .
 
       - name: Run integration tests (sequential, non-parallel)
         run: dotnet test ${{ env.SOLUTION }} --configuration Release --no-build --filter "FullyQualifiedName~Integration" --verbosity minimal
