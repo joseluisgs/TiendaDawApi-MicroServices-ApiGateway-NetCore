@@ -66,7 +66,7 @@ Thumbs.db
 nul
 
 # Informes E2E generados por los compose (Bruno/Newman)
-TiendaApi.Tests.E2E/**/reports/
+tests/E2E/**/reports/
 **/results.json
 
 # Documentos internos de trabajo (no se suben al remoto)
