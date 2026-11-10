@@ -149,6 +149,43 @@ TiendaDaw API Microservicios es una serie de servicios backend desarrollados con
 git clone https://github.com/joseluisgs/TiendaDawApi-MicroServices-ApiGateway-NetCore.git
 cd TiendaDawApi-MicroServices-ApiGateway-NetCore
 
+# Arranque completo en un solo comando (opciones mas abajo)
+powershell -ExecutionPolicy Bypass -File .\Start-Api.ps1
+```
+
+#### `Start-Api.ps1` — arranque completo en un solo comando
+
+Script incluido en la raíz del proyecto. **Por defecto (sin opciones) hace TODO**, en este orden:
+
+1. **Para los servicios** que ya estuvieran corriendo → se parte siempre de un estado limpio y determinista.
+2. **Compila** la solución completa (`dotnet build TiendaApi.slnx`, 22 proyectos) y se detiene si hay errores.
+3. **Arranca Docker** si el demonio no responde (espera hasta 3 minutos a Docker Desktop).
+4. **Resetea las bases de datos** con `Reset-Database.ps1`: para los contenedores, **borra los volúmenes** y los recrea con sus datos de semilla. Es la opción por defecto **a propósito**: siempre arrancas con las BDs limpias (aunque la API además siembra sus datos al arrancar).
+5. **Lanza los 9 servicios uno a uno**, esperando su `/health` antes de pasar al siguiente, en este orden: `identity → storage → historical → email → catalog → orders → statistics → backup → graphql`. Antes de `historical` espera a que Cassandra acepte **`cqlsh`** de verdad (el puerto 9042 se abre antes de que el nodo sirva consultas) y, si el primer intento falla, reintenta hasta 3 veces.
+6. **Lanza el gateway al final** (`:5000`) y comprueba el `/health` agregado.
+7. **Resumen final**: estado, URLs, ruta de los logs y — si algún servicio no responde — las últimas líneas de su log de error.
+
+**Opciones:**
+
+| Comando | Qué hace |
+| --- | --- |
+| `.\Start-Api.ps1` | **Por defecto**: para → compila → **resetea las BDs (borra datos)** → arranca todo en orden |
+| `.\Start-Api.ps1 -SinReset` | Igual pero **sin borrar las BDs**: solo levanta los contenedores si faltan y conserva los datos existentes |
+| `.\Start-Api.ps1 -SinBuild` | Salta la compilación: rearranque rápido usando lo ya compilado |
+| `.\Start-Api.ps1 -Parar` | **Solo detiene** los 10 servicios; no compila ni arranca nada |
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Start-Api.ps1             # limpio (borra las BDs)
+powershell -ExecutionPolicy Bypass -File .\Start-Api.ps1 -SinReset  # conserva los datos
+powershell -ExecutionPolicy Bypass -File .\Start-Api.ps1 -SinBuild  # rearranque rapido
+powershell -ExecutionPolicy Bypass -File .\Start-Api.ps1 -Parar     # solo detener
+```
+
+**Logs**: cada servicio escribe en `%LOCALAPPDATA%\Temp\tienda-logs\` (`<servicio>-run.log` y `<servicio>-run.err.log`); si un servicio no levanta, el script imprime el final de su log de error automáticamente.
+
+#### Arranque manual (alternativa)
+
+```bash
 # 1) Infraestructura de bases de datos (PostgreSQL, MongoDB, Cassandra + Adminer y Mongo Express)
 docker compose -f docker-compose.local.yml up -d
 
