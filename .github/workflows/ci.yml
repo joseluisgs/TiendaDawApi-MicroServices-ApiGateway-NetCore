@@ -34,8 +34,8 @@ jobs:
       - name: Build
         run: dotnet build ${{ env.SOLUTION }} --configuration Release --no-restore
 
-      # T12.5: subimos bin Y obj de TODOS los proyectos (antes solo Gateway/bin;
-      # --no-build necesita los assets de obj/ de cada proyecto para evaluarlos).
+      # Subimos bin Y obj de TODOS los proyectos
+      # (--no-build necesita los assets de obj/ de cada proyecto para evaluarlos).
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:

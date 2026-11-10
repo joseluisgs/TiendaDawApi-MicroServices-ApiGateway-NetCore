@@ -8,22 +8,22 @@
 
 ## Índice
 
-- [27.1. El Dockerfile multi-etapa (uno por servicio)](#271-el-dockerfile-multi-etapa-uno-por-servicio)
+- [27.1. El Dockerfile multi-stage (uno por servicio)](#271-el-dockerfile-multi-stage-uno-por-servicio)
 - [27.2. Composes: local y producción](#272-composes-local-y-producción)
 - [27.3. Topología de despliegue](#273-topología-de-despliegue)
 - [27.4. Configuración por entornos](#274-configuración-por-entornos)
 - [27.5. Pipeline de CI](#275-pipeline-de-ci)
 - [27.6. Comandos rápidos](#276-comandos-rápidos)
 
-## 27.1. El Dockerfile multi-etapa (uno por servicio)
+## 27.1. El Dockerfile multi-stage (uno por servicio)
 
 Hay **10 Dockerfiles idénticos en forma**, uno por proceso: `Gateway/Dockerfile`
 y `Services/{Identity,Storage,Historical,Email,Catalog,Orders,Statistics,Backup,GraphQL}/Dockerfile`.
 
-| Etapa | Imagen | Qué hace |
-|---|---|---|
-| **build** | `mcr.microsoft.com/dotnet/sdk:10.0` | `dotnet restore` (capa cacheada) → `dotnet publish Release` |
-| **runtime** | `mcr.microsoft.com/dotnet/aspnet:10.0` | Solo el publish, sin SDK ni fuentes |
+| Imagen (build multi-stage) | Qué hace |
+|---|---|
+| `mcr.microsoft.com/dotnet/sdk:10.0` — **build** | `dotnet restore` (capa cacheada) → `dotnet publish Release` |
+| `mcr.microsoft.com/dotnet/aspnet:10.0` — **runtime** | Solo el publish, sin SDK ni fuentes |
 
 ```dockerfile
 # Contexto = RAÍZ del proyecto (no la carpeta del servicio)

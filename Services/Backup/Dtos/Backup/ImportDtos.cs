@@ -42,5 +42,5 @@ public record ImportProductoDto(
     DateTime UpdatedAt
 );
 
-/// <summary>Cuerpo del descuento atómico de stock (lo consume orders en T8).</summary>
+/// <summary>Cuerpo del descuento atómico de stock (lo consume orders).</summary>
 public record DecrementoStockDto(int Cantidad);

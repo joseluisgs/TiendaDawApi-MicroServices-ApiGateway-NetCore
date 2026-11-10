@@ -107,7 +107,7 @@ try
     Log.Information("=================================================================");
     Log.Information("URL:         {Urls}", builder.Configuration["Urls"]);
     Log.Information("PUBLICO:     /api/v1/pedidos (ADMIN y me)");
-    Log.Information("TIEMPO REAL: /hubs/pedidos (SignalR) · /ws/pedidos (transicional, T12)");
+    Log.Information("TIEMPO REAL: /hubs/pedidos (SignalR)");
     Log.Information("BD:          orders_db (MongoDB, colección pedidos con items desnormalizados)");
     Log.Information("REFIT:       catalog (stock + snapshot) · identity (usuario) · email (avisos)");
     Log.Information("=================================================================");

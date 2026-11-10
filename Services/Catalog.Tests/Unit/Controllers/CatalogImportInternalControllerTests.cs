@@ -17,7 +17,7 @@ using TiendaApi.Api.Repositories.Proveedores;
 namespace TiendaApi.Tests.Unit.Controllers;
 
 /// <summary>
-/// Tests de los endpoints internos de <b>import de backups</b> (los consume backup en T10).
+/// Tests de los endpoints internos de <b>import de backups</b> (los consume backup).
 ///
 /// Replican la semántica del <c>BackupService</c> del monolito: upsert por clave,
 /// altas con ID explícito (<c>OVERRIDING SYSTEM VALUE</c> + re-sincronización de

@@ -11,7 +11,7 @@ namespace TiendaApi.Tests.Unit.Features.Pedidos;
 /// <summary>
 /// 🎓 Tests de paridad de canales de los handlers de pedidos (CQRS).
 /// Cada evento de tiempo real debe salir por SignalR a los grupos del dueño
-/// (user-{id}) y de administradores — nunca a Clients.All — — sin canal WebSocket (retirado en T12, R1/R2) y
+/// (user-{id}) y de administradores - nunca a Clients.All - sin canal WebSocket (solo SignalR) y
 /// dueño + admins. Regresión del bug de broadcast (cualquier usuario autenticado
 /// veía todos los pedidos) y de los eventos que solo tenían un canal.
 /// </summary>

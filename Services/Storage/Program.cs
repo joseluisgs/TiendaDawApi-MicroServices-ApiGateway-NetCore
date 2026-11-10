@@ -64,7 +64,7 @@ try
     Log.Information("=================================================================");
     Log.Information("URL:         {Urls}", builder.Configuration["Urls"]);
     Log.Information("SERVE:       GET /storage/{**path} · /images/... (wwwroot)");
-    Log.Information("UPLOAD:      pendiente (decisión en T7: por Refit o ficheros en catalog)");
+    Log.Information("UPLOAD:      imagenes via Refit a storage (el dueño de los ficheros)");
     Log.Information("=================================================================");
 
     app.Run();

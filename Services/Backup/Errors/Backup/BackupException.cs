@@ -5,7 +5,7 @@ namespace TiendaApi.Api.Errors.Backup;
 /// <summary>
 /// Excepción interna del dominio de backup: envuelve un <see cref="DomainError"/>
 /// para que los servicios de bajo nivel (codecs, lectura de ficheros) puedan
-/// señalar el error concreto sin devolver un Result en cada paso.
+/// señalar el error concreto sin devolver un Result en cada operación.
 /// El servicio la captura y la convierte en el Result de la operación.
 /// </summary>
 public sealed class BackupException : Exception

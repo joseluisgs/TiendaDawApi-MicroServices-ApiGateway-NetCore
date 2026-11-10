@@ -16,7 +16,7 @@ namespace TiendaApi.Api.Controllers;
 
 /// <summary>
 /// API interna de <c>catalog</c> para el <b>import de backups</b> (rutas
-/// <c>/api/catalog/internal/*</c>, R7): la consume <b>backup</b> (T10) por Refit.
+/// <c>/api/catalog/internal/*</c>, R7): la consume <b>backup</b> por Refit.
 ///
 /// 🎓 El cliente NUNCA llega aquí (no hay ruta en el gateway) y solo es
 /// accesible por la red interna (R12). El upsert es por clave — <c>id</c> en

@@ -13,7 +13,7 @@ namespace TiendaApi.Tests.Unit.GraphQL;
 /// <summary>
 /// Tests de las mutations GraphQL con el client Refit de catalog mockeado.
 ///
-/// 🎓 Es la parte NUEVA de T11: la validación de negocio la hace catalog y aquí
+/// 🎓 la validación de negocio la hace catalog y aquí
 /// solo se traduce su respuesta a un error de GraphQL (para que salga en
 /// <c>errors[]</c> con el mismo texto que daría REST).
 /// </summary>

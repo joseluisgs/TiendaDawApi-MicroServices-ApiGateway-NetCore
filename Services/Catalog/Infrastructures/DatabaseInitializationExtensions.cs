@@ -37,7 +37,7 @@ public static class DatabaseInitializationExtensions
 
             // 🎓 Mongo con el MISMO patrón que PostgreSQL: en desarrollo se
             // elimina la BD y el seeder de abajo (read-model de productos) la
-            // vuelve a poblar desde cero. Sin este paso, el seeder solo siembra
+            // vuelve a poblar desde cero. Sin esta inicialización, el seeder solo siembra
             // si está vacío y la BD acumularía productos entre corridas.
             try
             {

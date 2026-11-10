@@ -72,8 +72,8 @@ try
     // de la réplica Mongo.
     builder.Services.AddBackgroundJobs();
 
-    // SignalR (hub /hubs/productos) y WebSocket (/ws/productos - transicional,
-    // se retira en T12 con el monolito; ver TAREAS.md R1).
+    // SignalR (hub /hubs/productos). Los WebSockets puros /ws/* no se
+    // replican en esta arquitectura (decisión del proyecto: solo SignalR).
     builder.Services.AddRealtimeSignalR();
 
     // Health checks (sondeo de PostgreSQL, MongoDB y Redis en /health).
@@ -114,7 +114,7 @@ try
     Log.Information("URL:         {Urls}", builder.Configuration["Urls"]);
     Log.Information("PUBLICO:     /api/v1/categorias · /api/v1/proveedores · /api/v1/productos");
     Log.Information("INTERNO:     /api/catalog/internal/*/import · /internal/productos/{id}/stock/decremento");
-    Log.Information("TIEMPO REAL: /hubs/productos (SignalR) · /ws/productos (transicional, T12)");
+    Log.Information("TIEMPO REAL: /hubs/productos (SignalR)");
     Log.Information("BD:          catalog_db (PG, fuente de verdad) + catalog_db.productos_read (Mongo)");
     Log.Information("REFIT:       historical · identity · email · storage");
     Log.Information("=================================================================");

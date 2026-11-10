@@ -1,9 +1,8 @@
 # 36. API Gateway (YARP)
 
-> **Documento nuevo en la variante de microservicios.** Migra y amplía el contenido
-> de `GATEWAY.md` (doc interna que desaparece). YARP es la pieza que **no existía
-> en el monolito**: sin él, el cliente tendría que conocer los puertos de los diez
-> servicios.
+**El API Gateway de la arquitectura de microservicios.** YARP es la pieza que
+**no existía en el monolito**: sin él, el cliente tendría que conocer los
+puertos de los diez servicios.
 
 ## Índice
 
@@ -33,10 +32,9 @@ transversales.
 | **¿Puerto?** | **5000** — el único que se publica en Docker (los servicios solo red interna) |
 | **¿Por qué no un Load Balancer a secas?** | Además de enrutar, resuelve CORS, rate limit, la validación JWT de borde, el Swagger agregado y el proxy de SignalR |
 
-> 🎓 **Idea clave (patrón strangler)**: el gateway se creó **primero**, con todas
-> las rutas del monolito apuntando al monolito. Así, cada microservicio que se
-> iba creando cambiaba **solo su fila de configuración** y el cliente (y las
-> suites E2E) no se enteraba de nada.
+**Idea clave**: el mapa de rutas permite cambiar el destino de cualquier
+recurso **por configuración** (una fila por recurso), de modo que migrar un
+servicio no toca al cliente ni a las suites E2E.
 
 ## 36.2. Cómo funciona YARP: routes y clusters
 

@@ -18,7 +18,7 @@ namespace TiendaApi.Api.Services.Background.Jobs;
 ///
 /// 🎓 Reparto en microservicios (mismo flujo que el monolito):
 /// - usuarios activos → <b>identity</b> por Refit (<c>GET /internal/users/activos</c>,
-///   endpoint creado en T5.5),
+///   endpoint interno de identity),
 /// - envío → <b>email</b> por Refit (<c>POST /internal/emails</c>).
 /// Si alguno no responde, el reporte no lanza: se registra y se reintenta.
 /// </summary>

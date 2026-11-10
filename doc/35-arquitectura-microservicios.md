@@ -1,9 +1,8 @@
 # 35. Arquitectura de Microservicios
 
-> **Documento nuevo en la variante de microservicios.** Migra y amplía el contenido
-> de `ESTRUCTURA-Y-PASOS.md` (doc interna que desaparece). Los conceptos generales
-> de dominio, CQRS y tecnologías siguen siendo los de los documentos
-> [31](31-clean-architecture.md) y [12](12-cqrs-commands-queries.md).
+**Guía de la arquitectura de microservicios.** Los conceptos generales de
+dominio, CQRS y tecnologías siguen siendo los de los documentos
+[31](31-clean-architecture.md) y [12](12-cqrs-commands-queries.md).
 
 ## Índice
 
@@ -31,7 +30,7 @@ API para el cliente:
 | ¿Cambian los endpoints? | **No.** Mismas rutas, mismos códigos, mismas respuestas |
 | ¿Cómo lo ve el cliente? | A través del **API Gateway** (`:5000`), como si fuera una sola API |
 | ¿Y las suites E2E? | Pasan **sin tocar una sola aserción** — solo cambia la URL base |
-| ¿Qué método se usa? | **Strangler** (*copiar y partir*): primero el gateway con todas las rutas apuntando al monolito, y microservicio a microservicio cada ruta cambia de destino |
+| ¿Cómo está resuelto? | El gateway con su mapa de rutas: cada recurso apunta a su servicio dueño **por configuración** |
 
 > 🎓 **Por qué interesa en clase**: el reparto obliga a tomar decisiones que en el
 > monolito no existían — ¿quién es dueño de cada dato?, ¿cómo se comunica un

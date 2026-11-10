@@ -8,7 +8,7 @@
     <!-- Núcleo compartido de ASP.NET (IConfiguration, IServiceCollection, auth) -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <!-- T12.6 · resiliencia de las llamadas Refit entre microservicios (Http/RefitResilience). -->
+    <!-- resiliencia de las llamadas Refit entre microservicios (Http/RefitResilience). -->
     <PackageReference Include="Polly" />
   </ItemGroup>
 

@@ -17,7 +17,7 @@ namespace TiendaApi.Tests.Unit.GraphQL;
 /// <summary>
 /// Tests de las queries GraphQL con los clients Refit mockeados.
 ///
-/// ðŸŽ“ Es la parte NUEVA de T11: en el monolito las queries pasaban por MediatR;
+/// ðŸŽ“ En el monolito las queries pasaban por MediatR;
 /// aquÃ­ son la llamada REST equivalente. Se cubre tambiÃ©n el mapeo de errores
 /// (404 â†’ null) y el hecho de que <c>misPedidos</c> delega el filtro en orders.
 /// </summary>

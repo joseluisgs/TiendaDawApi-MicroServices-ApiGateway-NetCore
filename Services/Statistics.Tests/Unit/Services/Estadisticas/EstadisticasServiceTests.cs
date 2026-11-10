@@ -16,7 +16,7 @@ namespace TiendaApi.Tests.Unit.Services.Estadisticas;
 /// <summary>
 /// Tests del servicio de estadísticas con los clients Refit mockeados.
 ///
-/// 🎓 Es la parte NUEVA de T9: en el monolito el servicio leía repositorios con
+/// 🎓 en el monolito el servicio leía repositorios con
 /// los modelos de dominio ya construidos; aquí llegan <i>snapshots</i> por JSON
 /// y hay que convertirlos. Los errores de mapeo son SILENCIOSOS (el cálculo
 /// devuelve ceros en vez de fallar), así que se cubren explícitamente.
@@ -44,7 +44,7 @@ public class EstadisticasServiceTests
             NullLogger<EstadisticasService>.Instance);
 
         // Catálogos por defecto: página 0 con TODO y página 1 vacía — así el
-        // bucle de paginación corta bien y se comprueba de paso.
+        // bucle de paginación corta bien y además se comprueba.
         var productos = Productos();
         var categorias = Categorias();
         var proveedores = Proveedores();

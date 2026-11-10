@@ -11,7 +11,7 @@ using Polly.Timeout;
 namespace BuildingBlocks.Tests.Unit.Http;
 
 /// <summary>
-/// Tests educativos de la política de resiliencia Refit (T12.6).
+/// Tests educativos de la política de resiliencia Refit.
 ///
 /// 🎓 Cubren los tres comportamientos que la auditoría exigió:
 /// <list type="bullet">

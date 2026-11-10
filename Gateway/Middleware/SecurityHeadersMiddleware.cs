@@ -4,7 +4,7 @@ namespace TiendaApi.Api.Middleware;
 /// Middleware de headers de seguridad HTTP en el <b>borde</b>.
 ///
 /// 🎓 R11 (ENDPOINTS §11.1): "CORS, rate limit y security headers se resuelven en
-/// el gateway". Antes los servía el monolito; con T12 pasan aquí, que es la
+/// el gateway". Se aplican en el borde, que es la
 /// única puerta pública.
 /// </summary>
 public class SecurityHeadersMiddleware(RequestDelegate next)

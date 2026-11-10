@@ -1,4 +1,4 @@
-# .dockerignore · T12.5 — contexto de build de los11 Dockerfiles (raíz del repo)
+# .dockerignore · contexto de build de los11 Dockerfiles (raíz del repo)
 # Los Dockerfiles copian rutas CONCRETAS (global.json, props, BuildingBlocks/,
 # Services/<X>/, Gateway/); esto reduce el tamaño del contexto y evita que
 # basura o secretos suban al daemon de Docker.

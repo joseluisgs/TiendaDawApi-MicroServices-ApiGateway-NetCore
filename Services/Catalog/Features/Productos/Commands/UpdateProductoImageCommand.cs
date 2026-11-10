@@ -26,7 +26,7 @@ public record UpdateProductoImageCommand(long Id, IFormFile Image)
 /// <summary>
 /// Handler del comando UpdateProductoImageCommand.
 ///
-/// 🎓 Decisión de imagen (T7): el fichero lo guarda <b>storage</b> (dueño de los
+/// 🎓 Decisión de imagen : el fichero lo guarda <b>storage</b> (dueño de los
 /// ficheros) por Refit; aquí solo se guarda la ruta pública que devuelve en la
 /// columna <c>imagen</c>. El monolito hacía lo mismo pero con el servicio
 /// local de ficheros del propio proceso.

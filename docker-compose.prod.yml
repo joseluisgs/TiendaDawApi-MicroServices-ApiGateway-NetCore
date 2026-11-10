@@ -1,5 +1,5 @@
 # ============================================================
-# docker-compose.prod.yml · T12.5 — pila COMPLETA de producción
+# docker-compose.prod.yml · pila COMPLETA de producción
 # ============================================================
 #   gateway (única puerta pública) + 9 microservicios + 4 BDs.
 #
@@ -7,7 +7,7 @@
 #   cp .env.example .env      # en el servidor: rellena JWT_KEY, contraseñas, SMTP
 #   docker compose -f docker-compose.prod.yml up -d --build
 #
-# Reglas (AGENTS.md):
+# Reglas del proyecto:
 #   • Solo el gateway publica puerto (API_PORT). Los microservicios viven SOLO en
 #     la red interna: publicar su puerto rompería el modelo de acceso.
 #   • Las BDs publican solo en 127.0.0.1 (administración local o SSH-tunnel).
@@ -16,7 +16,7 @@
 #   • No levantar esta pila junto con docker-compose.local.yml en el mismo host:
 #     ambos reclaman los puertos de BD (5432/27017/9042).
 #
-# Notas T12.5:
+# Notas:
 #   • Auth__Mode NO existe: el proyecto es SOLO Identity (JWT + OAuth 2.0).
 #   • Los servicios validan JWT con Jwt__Key (misma clave en todos: si la cambias,
 #     cámbiala en .env y reinicia TODOS los contenedores a la vez).
@@ -216,7 +216,7 @@ services:
       - "traefik.http.routers.tienda-gateway.tls.certresolver=letsencrypt"
 
   # ============================ Microservicios ==============================
-  # Sin bloque `ports:` ninguno: solo red interna (regla AGENTS.md).
+  # Sin bloque `ports:` ninguno: solo red interna (regla del proyecto).
   # Las URLs entre servicios (Services:*, Backends, ReverseProxy) están en cada
   # appsettings.Production.json → apuntan a los nombres de este compose.
 

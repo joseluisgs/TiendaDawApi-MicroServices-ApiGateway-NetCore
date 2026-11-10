@@ -5,9 +5,9 @@ namespace TiendaApi.Api.Infrastructures;
 /// <summary>
 /// Health checks del <b>gateway</b>: sondea los servicios detrás de él.
 ///
-/// 🎓 T12: hasta aquí estas rutas se proyectaban al monolito (su propio health,
-/// que solo miraba sus BDs). Con el monolito retirado, el gateway —que es la
-/// única puerta pública— pasa a ser quien responde por TODOS.
+/// Estas rutas son las del gateway -que es la única puerta pública-:
+/// aquí responde el health AGREGADO de TODOS los servicios (cada backend
+/// conserva además el suyo propio, que solo mira sus BDs).
 ///
 /// Contrato (idéntico al del monolito, lo exigen las suites):
 /// <list type="bullet">
@@ -33,7 +33,7 @@ public static class HealthEndpoints
     ];
 
     /// <summary>
-    /// ?? T12.5: URL base de un backend. En local es <c>http://localhost:{puerto}</c>;
+    /// ?? URL base de un backend. En local es <c>http://localhost:{puerto}</c>;
     /// en Docker (compose) cada servicio tiene nombre propio en la red y se
     /// sobreescribe con <c>Backends__{nombre}=http://identity:5101</c> etc.
     /// </summary>

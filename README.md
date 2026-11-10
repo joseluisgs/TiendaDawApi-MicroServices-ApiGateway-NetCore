@@ -31,7 +31,7 @@ TiendaDaw API Microservicios es una serie de servicios backend desarrollados con
 - 📊 **Extras portados**: estadísticas, backup/restore, feed e histórico de precios (Cassandra, TTL 180 días), imágenes, GraphQL (BFF) y notificaciones en tiempo real (SignalR)
 - 🔁 **Resiliencia (Polly)**: timeout por intento, reintento por verbo y cortacircuitos **por backend** entre servicios
 - 🧪 **Testing**: 794 tests (unit + integración con Testcontainers) y **4 suites E2E** (Automation, Newman, Bruno local y Bruno Docker) contra el gateway
-- 🐳 **Docker de producción**: 10 Dockerfiles multi-etapa, compose completo (10 servicios .NET + 4 BDs) y `.env` unificados
+- 🐳 **Docker de producción**: 10 Dockerfiles multi-stage, compose completo (10 servicios .NET + 4 BDs) y `.env` unificados
 
 ## 📑 Tabla de Contenidos
 
@@ -137,7 +137,7 @@ TiendaDaw API Microservicios es una serie de servicios backend desarrollados con
 - **NUnit + Moq + Testcontainers** - Unit e integración con BDs reales
 - **Newman / Bruno / Node** - 4 suites E2E (colecciones + Automation runner)
 - **Swashbuckle/Swagger** - Documentación agregada por el gateway
-- **Docker** - 10 Dockerfiles multi-etapa + compose de producción completo
+- **Docker** - 10 Dockerfiles multi-stage + compose de producción completo
 - **Serilog** - Logging estructurado por servicio
 
 ## 🏃‍♂️ Inicio Rápido
@@ -383,12 +383,6 @@ Para una comprensión profunda de la arquitectura y las tecnologías utilizadas,
 | 31  | [Clean Architecture](doc/31-clean-architecture.md)        | Capas, estructura                 |
 | 32  | [Organización Program.cs](doc/32-organizacion-program.md) | Extension Methods, modularización |
 
-> **Documentación interna del porte** (no versionada, en la raíz del proyecto):
-> [`TAREAS.md`](TAREAS.md) (plan y criterios por tarea), [`ENDPOINTS.md`](ENDPOINTS.md)
-> (fuente de verdad de endpoints), [`DEPENDENCIAS.md`](DEPENDENCIAS.md) (mapa
-> quién-necesita-a-quién), [`ESTRUCTURA-Y-PASOS.md`](ESTRUCTURA-Y-PASOS.md) y
-> [`GATEWAY.md`](GATEWAY.md) (mapa de rutas y diseño JWT).
-
 ## 📂 Estructura del Proyecto
 
 ```
@@ -432,11 +426,6 @@ TiendaDawApi-MicroServices-ApiGateway-NetCore/
 │
 ├── doc/                              # 34 guías técnicas (las del monolito de origen)
 │
-├── TAREAS.md                         # 📋 Doc interna: plan y criterios por tarea (no versionada)
-├── ENDPOINTS.md                      # 📋 Doc interna: fuente de verdad de endpoints (no versionada)
-├── DEPENDENCIAS.md                   # 📋 Doc interna: mapa quién-necesita-a-quién (no versionada)
-├── ESTRUCTURA-Y-PASOS.md             # 📋 Doc interna: arquitectura y pasos (no versionada)
-├── GATEWAY.md                        # 📋 Doc interna: mapa de rutas y diseño JWT (no versionada)
 └── README.md                         # Este archivo
 ```
 
@@ -818,8 +807,7 @@ sequenceDiagram
 
 > **Cómo se lee la columna Auth**: `anónimo` = sin token; `ADMIN` = requiere rol
 > ADMIN; `usuario` = requiere token (cualquier rol). El contrato completo, con
-> los endpoints internos y las reglas transversales, vive en
-> [`ENDPOINTS.md`](ENDPOINTS.md) (fuente de verdad).
+los endpoints internos y las reglas transversales, se detalla en esta sección.
 
 ### Auth
 
@@ -1002,7 +990,7 @@ createProducto(input) · updateProducto(id, input) · deleteProducto(id)
 inspección); los servicios .NET corren en la máquina con `dotnet run` y Redis se
 sustituye por caché en memoria si no está disponible.
 
-**Producción**: `docker-compose.prod.yml` — 10 Dockerfiles multi-etapa, una red
+**Producción**: `docker-compose.prod.yml` — 10 Dockerfiles multi-stage, una red
 interna y **solo el gateway publicando el puerto 5000**; las bases de datos
 escuchan en `127.0.0.1`. Los secretos (JWT, SMTP, OAuth) viajan de `.env` a
 variables de entorno del compose, **nunca** en el repositorio ni en los
@@ -1014,7 +1002,7 @@ variables de entorno del compose, **nunca** en el repositorio ni en los
 | `.env` | Secretos → variables de entorno (`Jwt__*` idénticos en todos los servicios) |
 | `.env.example` | Plantilla de producción |
 | `.env.development` | Variables para desarrollo local |
-| `Dockerfile` (×10) | Build multi-etapa por servicio, **contexto = raíz del proyecto** (comparte `Directory.Packages.props`) |
+| `Dockerfile` (×10) | Build multi-stage por servicio, **contexto = raíz del proyecto** (comparte `Directory.Packages.props`) |
 
 ## 👥 Usuarios Demo
 

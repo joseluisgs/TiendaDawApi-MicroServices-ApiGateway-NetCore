@@ -1,4 +1,4 @@
-# Email · T12.5 - build multi-etapa. Contexto = RAÍZ del repo:
+# Email · build multi-stage. Contexto = RAÍZ del repo:
 #   docker build -f Services/Email/Dockerfile .
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src

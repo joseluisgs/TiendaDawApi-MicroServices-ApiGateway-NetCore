@@ -19,7 +19,7 @@ namespace TiendaApi.Tests.Unit.Services.Backup;
 /// <summary>
 /// Tests del servicio de backup con el client Refit de catalog mockeado.
 ///
-/// 🎓 Es la parte NUEVA de T10: en el monolito el servicio escribía en sus
+/// 🎓 en el monolito el servicio escribía en sus
 /// propios repositorios; aquí solo orquesta — lee por las rutas públicas y
 /// escribe en los endpoints internos de catalog, traduciendo su código de
 /// respuesta al informe (201 creado · 200 actualizado · 204 sin cambios · 400 error).
