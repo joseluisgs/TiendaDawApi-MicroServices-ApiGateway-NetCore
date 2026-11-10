@@ -985,6 +985,7 @@ public class CreatePedidoCommandHandler(
 | **Transparencia** | Difícil saber qué hace cada método | Clear reading: fases 1-4 |
 | **Errores** | Errores genéricos | Errores tipados del dominio |
 
+```csharp
             // Verificar que todos los productos existen
             if (productos.Count != request.Items.Count)
             {
@@ -1719,3 +1720,56 @@ Con transacciones y concurrencia dominados, el siguiente paso es aprender sobre 
 - EF Core Concurrency: https://learn.microsoft.com/ef/core/saving/concurrency
 - SQL Transactions: https://docs.microsoft.com/sql/relational-databases/sql-server-transaction-locking-and-row-versioning-guide
 - Polly Retry: https://github.com/App-vNext/Polly
+
+
+## 15.12. En microservicios: la transacción pasa a coordinación REST
+
+> **Nota de la variante de microservicios.** Todo lo anterior describe el
+> monolito, donde crear un pedido era **una transacción EF Core Serializable**
+> sobre una única base de datos. Repartido en dos servicios (`orders` con
+> MongoDB y `catalog` con PostgreSQL) **ya no existe una transacción
+> distribuida**: la integridad se consigue con **coordinación por llamadas**.
+
+### Qué cambia
+
+| Monolito (transacción) | Microservicios (coordinación) |
+| --- | --- |
+| Una transacción cubre usuario + stock + pedido | **Tres llamadas REST** con sus códigos de error: valida usuario (`404`), descuento de stock (`204`/`422`), inserta pedido |
+| Rollback automático si algo falla | **Sin rollback**: si el paso final falla, los anteriores ya se ejecutaron |
+| Stock descontado dentro del mismo `UPDATE` | Descuento **atómico en catalog**: `POST /internal/productos/{id}/stock/decremento` valida y descuenta en una sola operación |
+| El item guarda nombre/precio por la FK | El item **congela** nombre y precio en el propio documento (snapshot) |
+
+### La secuencia real
+
+```mermaid
+sequenceDiagram
+    participant O as orders
+    participant I as identity
+    participant C as catalog
+    participant M as orders_db
+
+    O->>I: GET /internal/users/{id} (Refit)
+    alt usuario no existe
+        I-->>O: 404
+        O-->>Cliente: pedido NO creado
+    else usuario ok
+        I-->>O: 200
+        O->>C: GET /api/v1/productos/{id}
+        C-->>O: nombre, precio, stock
+        O->>C: POST /internal/productos/{id}/stock/decremento
+        alt stock suficiente
+            C-->>O: 204 (atómico)
+            O->>M: inserta el pedido (snapshot congelado)
+            O-->>Cliente: 201 Created
+        else stock insuficiente
+            C-->>O: 422
+            O-->>Cliente: 422 (pedido NO creado, stock intacto)
+        end
+    end
+```
+
+**Regla de oro**: **orders nunca toca el stock directamente** — el dueño es
+catalog. La ventana entre el descuento y la inserción es mínima (el snapshot se
+congela antes) y la consistencia entre ambos es **eventual**, documentada como
+limitación (ver [35](35-arquitectura-microservicios.md) y
+[38](38-comunicacion-microservicios.md)).
