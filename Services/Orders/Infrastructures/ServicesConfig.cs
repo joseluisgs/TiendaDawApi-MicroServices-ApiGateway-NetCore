@@ -1,3 +1,4 @@
+using BuildingBlocks.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -28,15 +29,18 @@ public static class ServicesConfig
         // ?? Conexiones con otros servicios (REST con Refit).
         services.AddRefitClient<ICatalogApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Catalog"] ?? "http://localhost:5105"));
+                new Uri(configuration["Services:Catalog"] ?? "http://localhost:5105"))
+            .AddTiendaResilience();
 
         services.AddRefitClient<IUsersApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Identity"] ?? "http://localhost:5101"));
+                new Uri(configuration["Services:Identity"] ?? "http://localhost:5101"))
+            .AddTiendaResilience();
 
         services.AddRefitClient<IEmailApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Email"] ?? "http://localhost:5104"));
+                new Uri(configuration["Services:Email"] ?? "http://localhost:5104"))
+            .AddTiendaResilience();
 
         return services;
     }

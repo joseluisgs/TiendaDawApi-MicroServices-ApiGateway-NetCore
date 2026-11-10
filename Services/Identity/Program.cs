@@ -1,4 +1,5 @@
 using System.Text;
+using BuildingBlocks.Http;
 using BuildingBlocks.Jwt;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -92,10 +93,12 @@ try
     // nombre del contenedor; en desarrollo, localhost.
     builder.Services.AddRefitClient<IEmailApi>()
         .ConfigureHttpClient(c => c.BaseAddress =
-            new Uri(builder.Configuration["Services:Email"] ?? "http://localhost:5104"));
+            new Uri(builder.Configuration["Services:Email"] ?? "http://localhost:5104"))
+        .AddTiendaResilience();
     builder.Services.AddRefitClient<IHistorialApi>()
         .ConfigureHttpClient(c => c.BaseAddress =
-            new Uri(builder.Configuration["Services:Historical"] ?? "http://localhost:5103"));
+            new Uri(builder.Configuration["Services:Historical"] ?? "http://localhost:5103"))
+        .AddTiendaResilience();
     builder.Services.AddScoped<IHistorialService, HistorialRefitService>();
 
     // Puertas de login externo (Google, GitHub, Microsoft) — misma config Auth.

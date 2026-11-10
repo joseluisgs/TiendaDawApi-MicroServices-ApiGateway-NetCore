@@ -1,4 +1,5 @@
 using MediatR;
+using Serilog;
 using TiendaApi.Api.Services.Email;
 namespace TiendaApi.Api.Features.Pedidos.Notifications;
 
@@ -11,11 +12,19 @@ public class PedidoCreadoEmailHandler(IEmailApi emailService, IConfiguration con
     : INotificationHandler<PedidoCreadoNotification>
 {
     /// <inheritdoc/>
-    public Task Handle(PedidoCreadoNotification notification, CancellationToken cancellationToken)
+    public async Task Handle(PedidoCreadoNotification notification, CancellationToken cancellationToken)
     {
         var adminEmail = configuration["Smtp:AdminEmail"];
-        if (string.IsNullOrWhiteSpace(adminEmail)) return Task.CompletedTask;
+        if (string.IsNullOrWhiteSpace(adminEmail)) return;
         var content = EmailTemplates.PedidoCreado(notification.Pedido.Id, notification.Pedido.Total, notification.Pedido.Items?.Count ?? 0, notification.Pedido.UserId);
-        return emailService.EnqueueAsync(new EmailRequest(adminEmail, $"🛒 Nuevo Pedido #{notification.Pedido.Id}", EmailTemplates.CreateBase("Nuevo Pedido Recibido", content), IsHtml: true));
+        try
+        {
+            await emailService.EnqueueAsync(new EmailRequest(adminEmail, $"🛒 Nuevo Pedido #{notification.Pedido.Id}", EmailTemplates.CreateBase("Nuevo Pedido Recibido", content), IsHtml: true));
+        }
+        catch (Exception ex)
+        {
+            // 📧 T12.6: mejor esfuerzo — email caído NO rompe la operación del pedido.
+            Log.Warning(ex, "PedidoCreadoEmailHandler: email-service no disponible, no se encoló el aviso");
+        }
     }
 }

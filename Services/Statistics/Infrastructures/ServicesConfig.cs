@@ -1,3 +1,4 @@
+using BuildingBlocks.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -39,22 +40,26 @@ public static class ServicesConfig
         services.AddRefitClient<ICatalogApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Catalog"] ?? "http://localhost:5105"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         services.AddRefitClient<IUsersApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Identity"] ?? "http://localhost:5101"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         services.AddRefitClient<IOrdersApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Orders"] ?? "http://localhost:5106"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         services.AddRefitClient<IHistorialApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Historical"] ?? "http://localhost:5103"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         // Fachada interna (dominio de este servicio).
         services.AddScoped<TiendaApi.Api.Services.Estadisticas.IEstadisticasService,

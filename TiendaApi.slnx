@@ -5,6 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="BuildingBlocks/BuildingBlocks.csproj" />
+  <Project Path="BuildingBlocks.Tests/BuildingBlocks.Tests.csproj" />
   <Project Path="Gateway/Gateway.csproj" />
   <Project Path="Gateway.Tests/Gateway.Tests.csproj" />
   <Project Path="Services/Identity/Identity.csproj" />

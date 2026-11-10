@@ -1,3 +1,4 @@
+using BuildingBlocks.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -35,19 +36,23 @@ public static class ServicesConfig
         // desarrollo, localhost.
         services.AddRefitClient<IEmailApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Email"] ?? "http://localhost:5104"));
+                new Uri(configuration["Services:Email"] ?? "http://localhost:5104"))
+            .AddTiendaResilience();
 
         services.AddRefitClient<IHistorialApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Historical"] ?? "http://localhost:5103"));
+                new Uri(configuration["Services:Historical"] ?? "http://localhost:5103"))
+            .AddTiendaResilience();
 
         services.AddRefitClient<IUsersApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Identity"] ?? "http://localhost:5101"));
+                new Uri(configuration["Services:Identity"] ?? "http://localhost:5101"))
+            .AddTiendaResilience();
 
         services.AddRefitClient<IStorageApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
-                new Uri(configuration["Services:Storage"] ?? "http://localhost:5102"));
+                new Uri(configuration["Services:Storage"] ?? "http://localhost:5102"))
+            .AddTiendaResilience();
 
         // Fachadas que envuelven a los clients con la semántica del monolito
         // (mejor esfuerzo: si el servicio remoto no responde, no se rompe la
