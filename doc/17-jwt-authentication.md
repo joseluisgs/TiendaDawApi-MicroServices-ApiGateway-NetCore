@@ -2534,3 +2534,63 @@ Los tests del switch viven en tres archivos (27 tests):
 - `LoginExternalAsync_UsuarioCreadoPorOAuth_NoDebePoderLoginConPassword` — un usuario OAuth no tiene contraseña
 
 **Ver también**: [Login Externo con OAuth 2.0](#1713-login-externo-con-oauth-20)
+
+
+## 17.15. En microservicios: emisión única y validación doble
+
+> **Nota de la variante de microservicios.** Aquí se documenta el JWT de un
+> proceso único. Repartido en 10 procesos, el reto es que **todos** validen el
+> mismo token sin repartir la capacidad de emitirlo.
+
+### Las tres reglas
+
+| Regla | Detalle |
+| --- | --- |
+| **Emisión única** | Solo `identity` firma tokens (`Services/Identity` → `JwtService.cs`). Ningún otro servicio emite |
+| **Validación doble** | El **gateway** valida en el borde (401 temprano, sin llegar al servicio) y **cada servicio** vuelve a validar con el **mismo código** (`BuildingBlocks/Jwt` → `AddJwtAuthentication`) |
+| **Valores compartidos** | Misma sección `Jwt` (Key, Issuer, Audience, ExpireMinutes) en todos: en Docker, variables `Jwt__*` desde `.env`; en local, los mismos `appsettings.json` |
+
+### Diagrama
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant G as Gateway
+    participant I as identity
+    participant S as Servicio
+
+    C->>G: POST /api/v1/auth/signin
+    G->>I: proxy
+    I-->>C: JWT (HS256, 60 min)
+    C->>G: GET /api/v1/pedidos/me (Bearer)
+    G->>G: valida firma + expiración + rol
+    alt token inválido
+        G-->>C: 401 (ni llega al servicio)
+    else token válido
+        G->>S: proxy con el Authorization
+        S->>S: vuelve a validar (BuildingBlocks)
+        S-->>G: 200
+        G-->>C: 200
+    end
+```
+
+### Por qué doble validación
+
+Si solo validara el gateway, un error de configuración (o un acceso interno no
+previsto) dejaría los servicios **abiertos**. Si solo validaran los servicios,
+el gateway gastaría tiempo en peticiones que nadie aceptaría. La doble
+validación es **defensa en profundidad**: rechazo temprano + garantía final.
+
+### HS256 vs RS256
+
+En desarrollo/tests: **HS256** (clave simétrica compartida). En producción con
+varios servicios convendría **RS256**: `identity` firma con la **privada** y
+cada servicio valida con la **pública**, así la clave de firma **nunca se
+reparte**. Misma semántica de claims (ver [36 §36.10](36-api-gateway-yarp.md)).
+
+### Modo de autenticación
+
+Esta variante es **solo Identity** (JWT + OAuth 2.0): sin el conmutador
+`Auth:Mode` ni el enfoque BCrypt/Custom. Los cuatro caminos de la sección
+17.14 siguen documentados para el monolito, pero aquí solo existe el camino
+**Identity + OAuth**.

@@ -1,12 +1,12 @@
 # 27. Optimización de Rendimiento
 
-> **Este documento vive en el repo original.**
+> **Este documento vive en el proyecto original.**
 >
 > La versión canónica de este tema está en
 > [doc/27-optimizacion.md](https://github.com/joseluisgs/TiendaDawApi-NetCore/blob/develop/doc/27-optimizacion.md)
 > del repositorio [TiendaDawApi-NetCore](https://github.com/joseluisgs/TiendaDawApi-NetCore).
 >
-> Este repo (variante con CQRS + MediatR) no mantiene una copia propia del
+> Esta variante (microservicios + API Gateway) no mantiene una copia propia del
 > contenido general: los endpoints, los datos y el comportamiento son los mismos,
 > así que se documentan una sola vez. Aquí solo se conservan los documentos
-> específicos de la arquitectura CQRS.
+> específicos de esta arquitectura (ver [35 · Arquitectura](35-arquitectura-microservicios.md)).
