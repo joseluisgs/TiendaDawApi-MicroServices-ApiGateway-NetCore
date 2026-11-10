@@ -14,10 +14,10 @@ public class EstadoPedidoActualizadoEmailHandler(IEmailApi emailService)
     : INotificationHandler<EstadoPedidoActualizadoNotification>
 {
     /// <inheritdoc/>
-    public Task Handle(EstadoPedidoActualizadoNotification notification, CancellationToken cancellationToken)
+    public async Task Handle(EstadoPedidoActualizadoNotification notification, CancellationToken cancellationToken)
     {
         var destinatario = notification.Pedido.Destinatario;
-        if (string.IsNullOrWhiteSpace(destinatario?.Email)) return Task.CompletedTask;
+        if (string.IsNullOrWhiteSpace(destinatario?.Email)) return;
 
         var content = EmailTemplates.PedidoEstadoActualizado(
             notification.Pedido.Id,
@@ -25,9 +25,16 @@ public class EstadoPedidoActualizadoEmailHandler(IEmailApi emailService)
             notification.NuevoEstado,
             notification.Pedido.Total);
 
-        Log.Information("📧 [EMAIL] Cambio de estado encolado para el cliente: {PedidoId} -> {Email} ({Estado})",
-            notification.Pedido.Id, destinatario.Email, notification.NuevoEstado);
-
-        return emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"📦 Pedido #{notification.Pedido.Id} - {notification.NuevoEstado}", EmailTemplates.CreateBase("Cambio de Estado de Pedido", content), IsHtml: true));
+        try
+        {
+            await emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"📦 Pedido #{notification.Pedido.Id} - {notification.NuevoEstado}", EmailTemplates.CreateBase("Cambio de Estado de Pedido", content), IsHtml: true));
+            Log.Information("📧 [EMAIL] Cambio de estado encolado para el cliente: {PedidoId} -> {Email} ({Estado})",
+                notification.Pedido.Id, destinatario.Email, notification.NuevoEstado);
+        }
+        catch (Exception ex)
+        {
+            // 📧 T12.6: mejor esfuerzo — email caído NO rompe la operación del pedido.
+            Log.Warning(ex, "EstadoPedidoActualizadoEmailHandler: email-service no disponible, no se encoló el aviso");
+        }
     }
 }

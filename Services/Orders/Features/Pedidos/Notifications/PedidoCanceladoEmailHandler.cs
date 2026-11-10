@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 using TiendaApi.Api.Services.Email;
+
 namespace TiendaApi.Api.Features.Pedidos.Notifications;
 
 /// <summary>
@@ -27,9 +28,17 @@ public class PedidoCanceladoEmailHandler(
         );
         var body = EmailTemplates.CreateBase("Pedido Cancelado por Usuario", content);
 
-        var emailMessage = new EmailRequest(adminEmail, $"🚫 Pedido #{notification.PedidoId} Cancelado por Usuario", body, IsHtml: true);
+        var emailMessage = new EmailRequest(adminEmail, $"📧 Pedido #{notification.PedidoId} Cancelado por Usuario", body, IsHtml: true);
 
-        await emailService.EnqueueAsync(emailMessage);
-        Log.Information("📧 [EMAIL] Notificación enviada: Pedido cancelado por usuario ID={PedidoId}", notification.PedidoId);
+        try
+        {
+            await emailService.EnqueueAsync(emailMessage);
+            Log.Information("📧 [EMAIL] Notificación enviada: Pedido cancelado por usuario ID={PedidoId}", notification.PedidoId);
+        }
+        catch (Exception ex)
+        {
+            // 📧 T12.6: mejor esfuerzo - email caído NO rompe la operación del pedido.
+            Log.Warning(ex, "PedidoCanceladoEmailHandler: email-service no disponible, no se encoló el aviso");
+        }
     }
 }

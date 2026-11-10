@@ -129,7 +129,7 @@ public class CreatePedidoCommandHandler(
         return Result.Success<PedidoDto, DomainError>(dto);
     }
 
-    /// <summary>¿Existe el usuario en identity? (404 → false, cualquier otro fallo → true).</summary>
+    /// <summary>¿Existe el usuario en identity? (404 → false; cualquier otro fallo → propaga: fail-closed, sin verificar no se crea el pedido).</summary>
     private async Task<bool> ExisteUsuarioAsync(long userId)
     {
         try

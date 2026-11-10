@@ -14,19 +14,26 @@ public class PedidoEliminadoClienteEmailHandler(IEmailApi emailService)
     : INotificationHandler<PedidoEliminadoNotification>
 {
     /// <inheritdoc/>
-    public Task Handle(PedidoEliminadoNotification notification, CancellationToken cancellationToken)
+    public async Task Handle(PedidoEliminadoNotification notification, CancellationToken cancellationToken)
     {
         var destinatario = notification.Destinatario;
-        if (string.IsNullOrWhiteSpace(destinatario?.Email)) return Task.CompletedTask;
+        if (string.IsNullOrWhiteSpace(destinatario?.Email)) return;
 
         var content = EmailTemplates.PedidoCanceladoCliente(
             notification.PedidoId,
             notification.Total,
             destinatario.NombreCompleto);
 
-        Log.Information("📧 [EMAIL] Aviso de eliminación encolado para el cliente: {PedidoId} -> {Email}",
-            notification.PedidoId, destinatario.Email);
-
-        return emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"🚫 Tu pedido #{notification.PedidoId} ha sido cancelado", EmailTemplates.CreateBase($"Pedido #{notification.PedidoId} cancelado", content), IsHtml: true));
+        try
+        {
+            await emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"🚫 Tu pedido #{notification.PedidoId} ha sido cancelado", EmailTemplates.CreateBase($"Pedido #{notification.PedidoId} cancelado", content), IsHtml: true));
+            Log.Information("📧 [EMAIL] Aviso de eliminación encolado para el cliente: {PedidoId} -> {Email}",
+                notification.PedidoId, destinatario.Email);
+        }
+        catch (Exception ex)
+        {
+            // 📧 T12.6: mejor esfuerzo — email caído NO rompe la operación del pedido.
+            Log.Warning(ex, "PedidoEliminadoClienteEmailHandler: email-service no disponible, no se encoló el aviso");
+        }
     }
 }
