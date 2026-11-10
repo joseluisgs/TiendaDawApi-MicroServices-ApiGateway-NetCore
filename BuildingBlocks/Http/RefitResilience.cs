@@ -9,7 +9,7 @@ using Polly.Timeout;
 namespace BuildingBlocks.Http;
 
 /// <summary>
-/// Políticas de resiliencia (Polly v8) para las llamadas Refit entre microservicios (T12.6).
+/// Políticas de resiliencia (Polly v8) para las llamadas Refit entre microservicios.
 ///
 /// 🎓 El problema sin esto: un backend caído o colgado bloquea al cliente hasta el
 /// timeout por defecto de HttpClient (<b>100 s</b>), y statistics encadena páginas

@@ -10,7 +10,7 @@ namespace TiendaApi.Api.Infrastructures;
 ///
 /// 🎓 R4 · SignalR solo hacia el navegador: el hub de productos vive en el
 /// servicio DUEÑO del dato (aquí) y el gateway hace de proxy en
-/// <c>/hubs/productos</c>. El hub de pedidos es de <b>orders</b> (T8).
+/// <c>/hubs/productos</c>. El hub de pedidos es de <b>orders</b>.
 /// </summary>
 public static class SignalRExtensions
 {

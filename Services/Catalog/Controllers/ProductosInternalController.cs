@@ -10,7 +10,7 @@ namespace TiendaApi.Api.Controllers;
 
 /// <summary>
 /// API interna de <c>catalog</c> (rutas <c>/internal/*</c>, R7): la consume
-/// <b>orders</b> (T8) por Refit para descontar stock al crear un pedido.
+/// <b>orders</b> por Refit para descontar stock al crear un pedido.
 ///
 /// 🎓 Reparto de la transacción: en el monolito, <c>CreatePedidoCommand</c>
 /// hacía <c>producto.Stock -= cantidad</c> DENTRO de una transacción

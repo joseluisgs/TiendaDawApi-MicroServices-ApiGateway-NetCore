@@ -12,7 +12,7 @@ using TiendaApi.Api.Repositories.Productos;
 namespace TiendaApi.Tests.Unit.Controllers;
 
 /// <summary>
-/// Tests del endpoint interno de <b>descuento de stock</b> (lo consume orders en T8).
+/// Tests del endpoint interno de <b>descuento de stock</b> (lo consume orders).
 ///
 /// Reparte la transacción Serializable del monolito: aquí se ejecuta el
 /// descuento atómico con validación, con los mismos códigos que devolvía el

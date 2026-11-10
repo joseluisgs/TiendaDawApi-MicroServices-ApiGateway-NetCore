@@ -31,7 +31,7 @@ public class PedidoCanceladoClienteEmailHandler(IEmailApi emailService)
         }
         catch (Exception ex)
         {
-            // 📧 T12.6: mejor esfuerzo — email caído NO rompe la operación del pedido.
+            // 📧 Mejor esfuerzo: email caído NO rompe la operación del pedido.
             Log.Warning(ex, "PedidoCanceladoClienteEmailHandler: email-service no disponible, no se encoló el aviso");
         }
     }

@@ -19,7 +19,7 @@
   - [14.9. Comparativa: Llamada Directa vs Notifications](#149-comparativa-llamada-directa-vs-notifications)
   - [14.10. Consideraciones y Mejores Prácticas](#1410-consideraciones-y-mejores-prcticas)
   - [14.11. Consistencia Eventual: los cambios entre la escritura y la lectura](#1411-consistencia-eventual-los-cambios-entre-la-escritura-y-la-lectura)
-  - [14.12. Resumen y Siguientes Pasos](#1412-resumen-y-siguientes-pasos)
+  - [14.12. Resumen y Tema siguiente](#1412-resumen-y-tema-siguiente)
 
 ---
 
@@ -1303,7 +1303,7 @@ Cuando se renombra una categoría, los DTO de producto cacheados (`productos:{id
 
 ---
 
-## 14.12. Resumen y Siguientes Pasos
+## 14.12. Resumen y Tema siguiente
 
 ### Puntos clave del capítulo
 
@@ -1360,7 +1360,7 @@ sequenceDiagram
     Note over Client: Los efectos secundarios llegan después
 ```
 
-### Siguientes pasos
+### Tema siguiente
 
 Con CQRS, MediatR y Eventos de Dominio dominados, tienes las bases para implementar patrones más avanzados como:
 

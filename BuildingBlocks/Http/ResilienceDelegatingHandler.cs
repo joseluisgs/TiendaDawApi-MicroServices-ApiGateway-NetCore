@@ -4,7 +4,7 @@ namespace BuildingBlocks.Http;
 
 /// <summary>
 /// DelegatingHandler que aplica la política de <see cref="RefitResilience"/> a cada
-/// petición <b>según su verbo</b> (T12.6).
+/// petición <b>según su verbo</b>.
 ///
 /// 🎓 Por qué un handler propio y no <c>AddResilienceHandler</c>: esta última
 /// construye UN pipeline por client y su <c>ShouldHandle</c> solo ve el

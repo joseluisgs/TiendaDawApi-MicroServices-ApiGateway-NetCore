@@ -119,7 +119,7 @@ public class PedidosRepositoryIntegrationTests
         var ventana = (await _repo.FindByRangoFechasAsync(desde, hasta)).ToList();
 
         ventana.Should().ContainSingle(p => p.Total == 2m,
-            "ventana semiabierta [desde, hasta): la usa statistics en T9");
+            "ventana semiabierta [desde, hasta): la usa statistics");
     }
 
     [Test]

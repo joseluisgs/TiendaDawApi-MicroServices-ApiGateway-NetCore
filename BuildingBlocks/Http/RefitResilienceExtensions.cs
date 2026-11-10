@@ -6,7 +6,7 @@ namespace BuildingBlocks.Http;
 
 /// <summary>
 /// Extensión <c>AddTiendaResilience()</c> para los clients Refit entre
-/// microservicios (T12.6 · Capa 2).
+/// microservicios.
 /// </summary>
 public static class RefitResilienceExtensions
 {

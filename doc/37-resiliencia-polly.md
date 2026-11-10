@@ -122,7 +122,7 @@ La integración es **una línea por cliente Refit** en el registro:
 services.AddRefitClient<ICatalogApi>()
     .ConfigureHttpClient(c => c.BaseAddress = new Uri(...))
     .AddHttpMessageHandler<AuthorizationForwardingHandler>()  // ← el JWT viaja una vez
-    .AddTiendaResilience();                                   // ← T12.6: la resiliencia
+    .AddTiendaResilience();                                   // ← la resiliencia
 ```
 
 **¿Por qué un handler propio y no `AddResilienceHandler` de YARP/Polly?**
@@ -216,7 +216,7 @@ Con `catalog` caído y una llamada encadenada a statistics:
 
 | Momento | Tiempo |
 | --- | --- |
-| **Antes de T12.6** (timeout por defecto) | hasta **100 000 ms** colgada |
+| **Sin la política** (timeout por defecto) | hasta **100 000 ms** colgada |
 | **1ª llamada con la política** (paga los reintentos) | **9 199 ms** |
 | **Siguientes llamadas** (circuito ABIERTO, falla en ms) | **~27 ms** |
 

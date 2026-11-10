@@ -155,7 +155,7 @@ public class CatalogRepositoryIntegrationTests
 
         encontrados.Should().HaveCount(2, "el ID inexistente no aparece (sin excepción)");
         encontrados.Should().OnlyContain(p => p.Categoria != null,
-            "el Include evita una recarga por item al descontar stock en T8");
+            "el Include evita una recarga por item al descontar stock");
     }
 
     [Test]
@@ -197,7 +197,7 @@ public class CatalogRepositoryIntegrationTests
         var categorias = new CategoriaRepository(context, NullLogger<CategoriaRepository>.Instance);
         var productos = new ProductoRepository(context, NullLogger<ProductoRepository>.Instance);
 
-        // Altas con ID explícito, como hace el restore de backup (T10).
+        // Altas con ID explícito, como hace el restore de backup.
         await categorias.CrearConIdExplicitoAsync(new TiendaApi.Api.Models.Categoria
         {
             Id = 9001,

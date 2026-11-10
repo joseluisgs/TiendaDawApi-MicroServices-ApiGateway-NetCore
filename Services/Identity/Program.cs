@@ -135,7 +135,7 @@ try
             await db.Database.EnsureDeletedAsync();
         }
 
-        // ?? T12.5: SIEMPRE crea la BD si falta (patrón catalog). Sin esto, en
+        // ?? SIEMPRE crea la BD si falta (patrón catalog). Sin esto, en
         // producción (Docker) identity_db nunca se crearía: EnsureDeleted solo
         // ocurre en desarrollo, y antes EnsureCreated vivía dentro del mismo if.
         await db.Database.EnsureCreatedAsync();

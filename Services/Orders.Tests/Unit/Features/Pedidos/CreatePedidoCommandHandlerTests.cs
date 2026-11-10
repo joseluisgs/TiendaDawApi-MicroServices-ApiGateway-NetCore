@@ -20,7 +20,7 @@ using TiendaApi.Api.Services.Identity;
 namespace TiendaApi.Tests.Unit.Features.Pedidos;
 
 /// <summary>
-/// Tests del comando de creación de pedido — el flujo con Refit de T8.
+/// Tests del comando de creación de pedido — el flujo con Refit.
 ///
 /// 🎓 Equivalente al del monolito, pero la transacción Serializable pasa a ser
 /// <b>validación + decremento atómico en catalog</b>: aquí se mockean los

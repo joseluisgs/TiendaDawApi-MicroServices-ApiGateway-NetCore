@@ -51,8 +51,8 @@ try
 
     var app = builder.Build();
 
-    // ?? T12.5: SIEMPRE inicializa el keyspace (patrón catalog/identity). Antes
-    // solo ocurría en desarrollo y en producción el keyspace `tienda` no llegaría
+    // SIEMPRE inicializa el keyspace (patrón catalog/identity): sin esto, en
+    // producción el keyspace `tienda` no llegaría
     // a crearse. Con isDevelopment: false es CREATE IF NOT EXISTS + tablas
     // IF NOT EXISTS: nunca hace DROP, así que en desarrollo el seed del E2E se
     // conserva igual que hasta ahora.
@@ -80,7 +80,7 @@ try
     Log.Information("URL:         {Urls}", builder.Configuration["Urls"]);
     Log.Information("INTERNO:     /internal/historial/feed · /productos/{{id}} · /vistas · /precios");
     Log.Information("CONSUMIDORES: identity (feed) · catalog (serie, vistas, precios)");
-    Log.Information("CASSANDRA:   keyspace 'tienda' (compartido con el monolito hasta T12)");
+    Log.Information("CASSANDRA:   keyspace 'tienda'");
     Log.Information("=================================================================");
 
     app.Run();

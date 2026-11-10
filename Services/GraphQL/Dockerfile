@@ -1,4 +1,4 @@
-# GraphQL · T12.5 - build multi-etapa. Contexto = RAÍZ del repo:
+# GraphQL · build multi-stage. Contexto = RAÍZ del repo:
 #   docker build -f Services/GraphQL/Dockerfile .
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
