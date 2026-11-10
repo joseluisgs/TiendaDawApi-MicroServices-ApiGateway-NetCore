@@ -1,3 +1,4 @@
+using BuildingBlocks.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -35,7 +36,8 @@ public static class ServicesConfig
         services.AddRefitClient<ICatalogApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Catalog"] ?? "http://localhost:5105"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         // Fachada interna (dominio de este servicio).
         services.AddScoped<IBackupService, BackupService>();

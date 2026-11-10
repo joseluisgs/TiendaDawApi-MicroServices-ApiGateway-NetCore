@@ -1,3 +1,4 @@
+using BuildingBlocks.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -35,12 +36,14 @@ public static class ServicesConfig
         services.AddRefitClient<ICatalogApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Catalog"] ?? "http://localhost:5105"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         services.AddRefitClient<IOrdersApi>()
             .ConfigureHttpClient(c => c.BaseAddress =
                 new Uri(configuration["Services:Orders"] ?? "http://localhost:5106"))
-            .AddHttpMessageHandler<AuthorizationForwardingHandler>();
+            .AddHttpMessageHandler<AuthorizationForwardingHandler>()
+            .AddTiendaResilience();
 
         return services;
     }
