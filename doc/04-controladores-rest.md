@@ -1011,7 +1011,7 @@ public async Task<ActionResult<PagedResult<ProductoDto>>> GetAll(
 
 ## 4.8. Filters en Controladores
 
-Los filtros permiten ejecutar código antes o después de ciertas etapas del pipeline de procesamiento de la petición. Son ideales para lógica transversal como logging, manejo de errores, validación de permisos, y caché de respuestas.
+Los filtros permiten ejecutar código antes o después de ciertos momentos del pipeline de procesamiento de la petición. Son ideales para lógica transversal como logging, manejo de errores, validación de permisos, y caché de respuestas.
 
 ### Tipos de filtros
 
@@ -1132,9 +1132,9 @@ flowchart TB
     D1 --> D2 --> D3
 ```
 
-### Siguientes pasos
+### Tema siguiente
 
-Con los controladores dominados, el siguiente paso es aprender sobre validación en cascada, donde verás cómo implementar validación robusta combinando Data Annotations, FluentValidation, y el patrón Result.
+Con los controladores dominados, el tema siguiente es aprender sobre validación en cascada, donde verás cómo implementar validación robusta combinando Data Annotations, FluentValidation, y el patrón Result.
 
 ### Recursos adicionales
 

@@ -46,7 +46,7 @@ public class BackupService(
     /// <summary>
     /// 🎓 Backup no tiene ni BD ni validadores propios (R5): el upsert por
     /// clave, la validación de fila y la re-sincronización de secuencias los
-    /// hace <b>catalog</b> en sus endpoints internos (creados en T7). Aquí solo
+    /// hace <b>catalog</b> en sus endpoints internos. Aquí solo
     /// se orquesta: leer por las rutas públicas y devolver el código que
     /// catalog responda (201 creado · 200 actualizado · 204 sin cambios · 400 error).
     /// </summary>

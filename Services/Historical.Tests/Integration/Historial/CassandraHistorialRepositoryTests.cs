@@ -70,7 +70,7 @@ public class CassandraHistorialRepositoryTests
         serie.Should().ContainSingle(p => p.Precio == 1299.99);
 
         // Q-C: la MISMA escritura tambiÃ©n cayÃ³ en el bucket del dÃ­a. Dos INSERT
-        // independientes SIN transacciÃ³n repartida (diseÃ±o asumido en T9).
+        // independientes SIN transacciÃ³n repartida.
         // Materializamos UNA vez: el RowSet del driver no re-itera bien y
         // enumerarlo dos veces (HaveCount + First) dejaria la 2Âª vacÃ­a.
         var filas = (await _session.ExecuteAsync(new SimpleStatement(
@@ -92,7 +92,7 @@ public class CassandraHistorialRepositoryTests
 
         serie.Should().HaveCount(3);
         // Mas reciente primero SIN ORDER BY en el SELECT: lo garantiza la
-        // CLUSTERING KEY (fecha DESC) declarada en el esquema (T8).
+        // CLUSTERING KEY (fecha DESC) declarada en el esquema.
         serie.Select(p => p.Precio).Should().Equal(300.0, 200.0, 100.0);
         serie.Select(p => p.Fecha).Should().BeInDescendingOrder();
 

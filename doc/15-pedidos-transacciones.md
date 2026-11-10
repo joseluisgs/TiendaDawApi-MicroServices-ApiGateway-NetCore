@@ -879,7 +879,7 @@ public class CreatePedidoCommandHandler(
 
         try
         {
-            // FASE 1: Verificación optimista (lectura rápida sin lock)
+            // Verificación optimista (lectura rápida sin lock)
             var productoIds = request.Dto.Items.Select(i => i.ProductoId).ToList();
             
             var productos = await context.Productos
@@ -910,7 +910,7 @@ public class CreatePedidoCommandHandler(
                 }
             }
 
-            // FASE 2: Decremento atómico con WHERE (previene stock negativo)
+            // Decremento atómico con WHERE (previene stock negativo)
             foreach (var item in request.Dto.Items)
             {
                 // UPDATE atómico: solo decrementa si stock >= cantidad
@@ -931,7 +931,7 @@ public class CreatePedidoCommandHandler(
                 }
             }
 
-            // FASE 3: Crear el pedido
+            // Crear el pedido
             var pedido = new Pedido
             {
                 UsuarioId = request.UsuarioId,
@@ -954,7 +954,7 @@ public class CreatePedidoCommandHandler(
             // Confirmar transacción
             await transaction.CommitAsync(cancellationToken);
 
-            // FASE 4: Publicar notification (efectos secundarios desacoplados)
+            // Publicar notification (efectos secundarios desacoplados)
             var pedidoDto = pedido.ToDto();
             await mediator.Publish(new PedidoCreadoNotification(pedidoDto), cancellationToken);
 
@@ -982,7 +982,7 @@ public class CreatePedidoCommandHandler(
 | **Responsabilidad** |Hace de todo | Solo crear pedidos |
 | **Efectos secundarios** | Acoplados en el método | Desacoplados en Notifications |
 | **Testing** | Mockear repositorio + email + signalR + cache | Solo mockear repositorio |
-| **Transparencia** | Difícil saber qué hace cada método | Clear reading: fases 1-4 |
+| **Transparencia** | Difícil saber qué hace cada método | Clear reading: flujo lineal |
 | **Errores** | Errores genéricos | Errores tipados del dominio |
 
 ```csharp
@@ -1006,7 +1006,7 @@ public class CreatePedidoCommandHandler(
                 }
             }
 
-            // FASE 2: Decremento atómico (pesimista ringan)
+            // Decremento atómico (pesimista ringan)
             // Solo bloqueamos para el UPDATE, no para toda la transacción
             foreach (var item in request.Items)
             {
@@ -1038,7 +1038,7 @@ public class CreatePedidoCommandHandler(
                 }
             }
 
-            // FASE 3: Crear pedido (sin bloqueos)
+            // Crear pedido (sin bloqueos)
             var pedido = new Pedido
             {
                 UsuarioId = request.UsuarioId,
@@ -1100,7 +1100,7 @@ sequenceDiagram
     U->>A: POST /pedidos {items}
     
     rect rgb(200, 240, 200)
-        Note over A,D: Fase 1: Validación
+        Note over A,D: Validación
     end
     
     A->>D: SELECT productos (sin lock)
@@ -1110,7 +1110,7 @@ sequenceDiagram
     Note over A: Si no hay stock, rollback
     
     rect rgb(240, 200, 200)
-        Note over A,D: Fase 2: Decremento Atómico
+        Note over A,D: Decremento Atómico
     end
     
     A->>D: UPDATE Stock = Stock - q WHERE Stock >= q
@@ -1124,7 +1124,7 @@ sequenceDiagram
         D-->>A: 1 fila actualizada
         
         rect rgb(200, 240, 200)
-            Note over A,D: Fase 3: Crear Pedido
+            Note over A,D: Crear Pedido
         end
         
         A->>D: INSERT pedido
@@ -1688,7 +1688,7 @@ flowchart TB
 
 ### Checklist de Implementación con CQRS
 
-| Paso | Descripción | Ubicación |
+| Acción | Descripción | Ubicación |
 | ---- | ----------- | --------- |
 | 1 | Validar que productos existen | CreatePedidoCommandHandler |
 | 2 | Validar stock preliminar | CreatePedidoCommandHandler |
@@ -1711,9 +1711,9 @@ flowchart TB
 | Difícil de testear (muchos mocks) | Fácil de testear (solo repositorio) |
 | Miedo a modificar código | Cambios localizados y seguros |
 
-### Siguientes Pasos
+### Tema siguiente
 
-Con transacciones y concurrencia dominados, el siguiente paso es aprender sobre almacenamiento de archivos.
+Con transacciones y concurrencia dominados, el tema siguiente es aprender sobre almacenamiento de archivos.
 
 ### Recursos Adicionales
 
@@ -1735,7 +1735,7 @@ Con transacciones y concurrencia dominados, el siguiente paso es aprender sobre 
 | Monolito (transacción) | Microservicios (coordinación) |
 | --- | --- |
 | Una transacción cubre usuario + stock + pedido | **Tres llamadas REST** con sus códigos de error: valida usuario (`404`), descuento de stock (`204`/`422`), inserta pedido |
-| Rollback automático si algo falla | **Sin rollback**: si el paso final falla, los anteriores ya se ejecutaron |
+| Rollback automático si algo falla | **Sin rollback**: si la operación final falla, los anteriores ya se ejecutaron |
 | Stock descontado dentro del mismo `UPDATE` | Descuento **atómico en catalog**: `POST /internal/productos/{id}/stock/decremento` valida y descuenta en una sola operación |
 | El item guarda nombre/precio por la FK | El item **congela** nombre y precio en el propio documento (snapshot) |
 

@@ -13,7 +13,7 @@ namespace TiendaApi.Api.Services.Catalog;
 /// 🎓 Backup no tiene BD: el <b>export</b> LEE por las rutas públicas y el
 /// <b>import</b> ESCRIBE en los endpoints internos de catalog — el upsert por
 /// clave, la validación de FKs y la re-sincronización de secuencias los hace el
-/// dueño (creados en T7), no este servicio.
+/// dueño, no este servicio.
 ///
 /// Los métodos de import devuelven <see cref="HttpResponseMessage"/> para poder
 /// leer el código: 201 (creado) · 200 (actualizado) · 204 (sin cambios) son la

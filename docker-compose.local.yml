@@ -1,5 +1,5 @@
 # ============================================================
-# docker-compose.local.yml · DESARROLLO local (T12.5)
+# docker-compose.local.yml · DESARROLLO local
 # ============================================================
 #   Solo infraestructura: las 4 BDs + Adminer + Mongo Express.
 #   Los servicios NO corren aquí: se arrancan en el host con `dotnet run`

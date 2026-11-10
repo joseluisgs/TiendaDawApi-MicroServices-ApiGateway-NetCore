@@ -51,14 +51,14 @@ try
     // Quien firma es solo identity; aquí solo se valida.
     builder.Services.AddJwtAuthentication(builder.Configuration);
 
-          // ?? T12 - rate limit en el borde (ENDPOINTS §11.1): antes vivía en el
-      // monolito; con T12 pasa al gateway, que es la única puerta pública.
+          // Rate limit en el borde (ENDPOINTS §11.1): vive en el gateway,
+      // que es la única puerta pública.
       builder.Services.AddRateLimitingPolicy();
 
       var app = builder.Build();
-        // ?? T12 - seguridad en el borde (ENDPOINTS §11.1): el gateway es la
-        // única puerta pública, así que los headers de seguridad viven AQUÍ
-        // (antes los servía el monolito). Ojo: las páginas UI (Swagger, GraphQL,
+        // Seguridad en el borde (ENDPOINTS §11.1): el gateway es la
+        // única puerta pública, así que los headers de seguridad viven AQUÍ.
+        // Ojo: las páginas UI (Swagger, GraphQL,
         // índice) reciben una CSP relajada; sin ella se sirven en blanco.
         app.UseSecurityHeaders();
         app.UseRateLimiting();
@@ -91,8 +91,8 @@ try
     // El mapa completo de rutas vive en appsettings.json (ReverseProxy:Routes):
     // auth, users, categorias, proveedores, productos, pedidos, estadisticas,
     // backup, storage, graphql, hubs, health, version y swagger.
-            // ?? T12 - el monolito ya no está detrás: el gateway sirve SUS PROPIOS
-        // endpoints de infraestructura. Antes se proyectaban al monolito.
+            // El gateway sirve SUS PROPIOS endpoints de infraestructura
+        // (health, version, swagger) con el mismo shape que el monolito.
         app.MapHealthEndpoint();
         app.MapInfoEndpoints();
         app.MapSwaggerEndpoints();

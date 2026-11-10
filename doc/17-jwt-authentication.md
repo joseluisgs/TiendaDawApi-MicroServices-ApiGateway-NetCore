@@ -18,7 +18,7 @@
   - [17.13. Login Externo con OAuth 2.0](#1713-login-externo-con-oauth-20)
     - [17.13.1. ¿Qué es OAuth 2.0 y por qué usarlo?](#17131--qués-oauth-20-y-por-qué-usarlo)
     - [17.13.2. Arquitectura: Puertas Múltiples](#17132-arquitectura-puertas-múltiples)
-    - [17.13.3. Flujo OAuth Paso a Paso](#17133-flujo-oauth-paso-a-paso)
+    - [17.13.3. Flujo OAuth completo](#17133-flujo-oauth-completo)
     - [17.13.4. Arquitectura Interna del Proyecto](#17134-arquitectura-interna-del-proyecto)
     - [17.13.5. Configuración Completa](#17135-configuración-completa)
     - [17.13.6. Tabla Comparativa de Proveedores](#17136-tabla-comparativa-de-proveedores)
@@ -1470,9 +1470,9 @@ flowchart TB
     D1 --> D2 --> D3 --> D4
 ```
 
-### Siguientes Pasos
+### Tema siguiente
 
-Con JWT dominado, el siguiente paso es aprender sobre autorización y roles.
+Con JWT dominado, el tema siguiente es aprender sobre autorización y roles.
 
 ### Recursos Adicionales
 
@@ -1601,7 +1601,7 @@ sequenceDiagram
     end
 ```
 
-**Pasos del registro:**
+**Secuencia del registro:**
 1. Usuario envia email, password y username
 2. Buscar si el email ya existe en la BD
 3. Si existe → error 409
@@ -1652,7 +1652,7 @@ sequenceDiagram
     end
 ```
 
-**Pasos del login:**
+**Secuencia del login:**
 1. Usuario envia email y password
 2. Buscar usuario por email en la BD
 3. Si no existe o esta eliminado → error 401
@@ -1690,7 +1690,7 @@ sequenceDiagram
     end
 ```
 
-**Pasos de peticion autorizada:**
+**Secuencia de la petición autorizada:**
 1. Cliente envia peticion con header Authorization: Bearer token
 2. Middleware de JWT extrae y valida el token
 3. Si el token es invalido o expirado → 401
@@ -2173,7 +2173,7 @@ Porque el middleware de autenticación **no sabe cómo se generó el token**. So
 
 Da igual si el usuario se logueó con password o con Google — el JWT resultante es **idéntico**.
 
-### 17.13.3. Flujo OAuth Paso a Paso
+### 17.13.3. Flujo OAuth completo
 
 ```mermaid
 sequenceDiagram
@@ -2181,23 +2181,23 @@ sequenceDiagram
     participant API as API TiendaDaw
     participant G as Google OAuth
 
-    Note over B,G: FASE 1: Challenge (iniciar login)
+    Note over B,G: Challenge (iniciar login)
     B->>GET /api/v1/auth/external/Google
     API->>API: Verificar que "Google" está configurado
     API->>B: 302 Redirect a accounts.google.com/o/oauth2/v2/auth?...
 
-    Note over B,G: FASE 2: Autenticación en el proveedor
+    Note over B,G: Autenticación en el proveedor
     B->>G: Login con cuenta Google
     G->>B: 302 Redirect a /api/v1/auth/external-callback?code=4/xxx
 
-    Note over B,G: FASE 3: Callback (procesar respuesta)
+    Note over B,G: Callback (procesar respuesta)
     B->>GET /api/v1/auth/external-callback?code=4/xxx
     API->>G: POST /token (intercambiar code por access_token)
     G-->>API: { access_token: "ya29.xxx", id_token: "eyJ..." }
     API->>G: GET /userinfo (obtener email, nombre, avatar)
     G-->>API: { email: "user@gmail.com", name: "Juan", picture: "..." }
 
-    Note over API,B: FASE 4: Crear/vincular usuario + JWT
+    Note over API,B: Crear/vincular usuario + JWT
     API->>API: ¿Existe vinculación Google+ProviderKey?
     API->>API: ¿Existe usuario con ese email?
     API->>API: Si no → crear usuario local
@@ -2297,7 +2297,7 @@ public async Task<Result<AuthResponseDto, DomainError>> LoginExternalAsync(
 
 ### 17.13.5. Configuración Completa
 
-#### Paso 1: Crear apps en los proveedores
+#### 1. Crear apps en los proveedores
 
 | Proveedor | Dónde | URL de callback |
 |-----------|-------|-----------------|
@@ -2305,7 +2305,7 @@ public async Task<Result<AuthResponseDto, DomainError>> LoginExternalAsync(
 | **GitHub** | github.com → Settings → Developer settings → OAuth Apps | `http://localhost:5031/api/v1/auth/external-callback` |
 | **Microsoft** | entra.microsoft.com → App registrations | `http://localhost:5031/api/v1/auth/external-callback` |
 
-#### Paso 2: Configurar user-secrets
+#### 2. Configurar user-secrets
 
 ```bash
 cd TiendaApi.Api
@@ -2323,7 +2323,7 @@ dotnet user-secrets set "Microsoft:ClientId" "xxxx"
 dotnet user-secrets set "Microsoft:ClientSecret" "xxxx"
 ```
 
-#### Paso 3: Activar proveedores
+#### 3. Activar proveedores
 
 **appsettings.json** (producción — todo apagado):
 ```json
@@ -2347,7 +2347,7 @@ dotnet user-secrets set "Microsoft:ClientSecret" "xxxx"
 }
 ```
 
-#### Paso 4: Probar
+#### 4. Probar
 
 ```bash
 # Abrir en navegador (no en Swagger — necesita redirect)

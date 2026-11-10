@@ -8,9 +8,9 @@ namespace TiendaApi.Api.Infrastructures;
 /// los servicios en UN solo documento, para conservar la experiencia del monolito
 /// (una única UI con toda la API).
 ///
-/// 🎓 T12: hasta aquí <c>/swagger</c> se proyectaba al monolito, que documentaba
-/// la API entera porque la tenía toda. Al repartirla, cada servicio expone SU
-/// spec (privado, solo detrás del gateway) y aquí se fusionan.
+/// La API está repartida: cada servicio expone SU spec (privada, solo
+/// detrás del gateway) y aquí se fusionan todas en un único documento,
+/// conservando la experiencia de una sola API.
 ///
 /// 🎓 Por qué no colisiona: cada servicio posee su prefijo de rutas
 /// (<c>/api/v1/auth</c>, <c>/api/v1/productos</c>, <c>/graphql</c>…), así que los
@@ -38,7 +38,7 @@ public static class SwaggerEndpoints
     ];
 
     /// <summary>
-    /// ?? T12.5: URL base de un servicio. En local, <c>http://localhost:{puerto}</c>;
+    /// ?? URL base de un servicio. En local, <c>http://localhost:{puerto}</c>;
     /// en Docker se sobreescribe con <c>Backends__{nombre}</c> (misma clave que
     /// usa el health: la red interna del compose es la única fuente de verdad).
     /// </summary>

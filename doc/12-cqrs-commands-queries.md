@@ -21,7 +21,7 @@
   - [12.11. Validación dentro del Handler](#1211-validacin-dentro-del-handler)
   - [12.12. Cuándo Usar CQRS y Cuándo No](#1212-cundo-usar-cqrs-y-cundo-no)
   - [12.13. Ventajas y Desventajas Reales](#1213-ventajas-y-desventajas-reales)
-  - [12.14. Resumen y Siguientes Pasos](#1214-resumen-y-siguientes-pasos)
+  - [12.14. Resumen y Tema siguiente](#1214-resumen-y-tema-siguiente)
   - [12.15. CQRS con Múltiples Bases de Datos (Teórico)](#1215-cqrs-con-mltiples-bases-de-datos-terico)
 
 ---
@@ -312,7 +312,7 @@ flowchart TB
 
 ## 12.5. Anatomía Completa de una Query
 
-Ahora vamos a ver una Query real de nuestro proyecto, paso a paso, para entender cómo funciona en la práctica.
+Ahora vamos a ver una Query real de nuestro proyecto, en detalle, para entender cómo funciona en la práctica.
 
 ### Estructura de una Query
 
@@ -459,7 +459,7 @@ public class CreateProductoCommandHandler(
         CreateProductoCommand request,
         CancellationToken cancellationToken)
     {
-        // Paso 1: Validar los datos de entrada
+        // 1. Validar los datos de entrada
         var validationResult = await validator.ValidateAsync(request.Dto, cancellationToken);
         
         if (!validationResult.IsValid)
@@ -472,7 +472,7 @@ public class CreateProductoCommandHandler(
                 ProductoError.ValidacionConCampos(errores));
         }
         
-        // Paso 2: Verificar reglas de negocio
+        // 2. Verificar reglas de negocio
         var existente = await repository.ExistsByNombreAsync(request.Dto.Nombre);
         if (existente)
         {
@@ -480,16 +480,16 @@ public class CreateProductoCommandHandler(
                 ProductoError.NombreDuplicado(request.Dto.Nombre));
         }
         
-        // Paso 3: Ejecutar la operación
+        // 3. Ejecutar la operación
         var producto = request.Dto.ToEntity();
         var saved = await repository.SaveAsync(producto);
         
-        // Paso 4: Publicar evento (efecto secundario)
+        // 4. Publicar evento (efecto secundario)
         await mediator.Publish(new ProductoCreadoNotification(saved.ToDto()), cancellationToken);
         
         logger.LogInformation("Producto creado: {Nombre}", saved.Nombre);
         
-        // Paso 5: Retornar resultado
+        // 5. Retornar resultado
 return Result.Success<ProductoDto, DomainError>(saved.ToDto());
     }
 }
@@ -777,7 +777,7 @@ sequenceDiagram
     Controller->>MediatR: Send(CreateProductoCommand)
     
     rect rgb(200, 240, 200)
-        Note over MediatR,CmdHandler: FASE 1: Procesar comando
+        Note over MediatR,CmdHandler: Procesar comando
         MediatR->>CmdHandler: Handle(CreateProductoCommand)
         CmdHandler->>DB: INSERT producto
         DB-->>CmdHandler: producto creado
@@ -785,7 +785,7 @@ sequenceDiagram
     end
 
     rect rgb(200, 240, 255)
-        Note over MediatR,Cache: FASE 2: Publicar evento (async)
+        Note over MediatR,Cache: Publicar evento (async)
         MediatR->>Notif: Publish(ProductoCreadoNotification)
         
         %% Ejecución en paralelo de los handlers
@@ -941,7 +941,7 @@ sequenceDiagram
     Controller->>MediatR: Send(CreateProductoCommand)
     MediatR->>Handler: Handle(command)
     
-    Note over Handler: FASE 1: Validación
+    Note over Handler: Validación
     Handler->>Validator: ValidateAsync(dto)
     alt Inválido
         Validator-->>Handler: Errores de validación
@@ -949,11 +949,11 @@ sequenceDiagram
         MediatR-->>Controller: Result.Failure
         Controller-->>Client: 400 Bad Request
     else Válido
-        Note over Handler: FASE 2: Lógica de negocio
+        Note over Handler: Lógica de negocio
         Handler->>Repo: SaveAsync(producto)
         Repo-->>Handler: producto guardado
         
-        Note over Handler: FASE 3: Efectos secundarios
+        Note over Handler: Efectos secundarios
         Handler->>MediatR: Publish(ProductoCreadoNotification)
         
         rect rgb(200, 255, 200)
@@ -1462,7 +1462,7 @@ Sobre el mito de que "MediatR es 52x más lento":
 
 ---
 
-## 12.14. Resumen y Siguientes Pasos
+## 12.14. Resumen y Tema siguiente
 
 ### Puntos clave del capítulo
 
@@ -1486,9 +1486,9 @@ Sobre el mito de que "MediatR es 52x más lento":
    - Ideal para sistemas complejos con lógica de negocio
    - Excesivo para CRUD simple
 
-### Siguientes pasos
+### Tema siguiente
 
-Con CQRS dominado, el siguiente paso es aprender sobre **Notificaciones y Eventos de Dominio**, donde profundizamos en cómo los handlers pueden comunicarse entre sí de forma desacoplada.
+Con CQRS dominado, el tema siguiente es aprender sobre **Notificaciones y Eventos de Dominio**, donde profundizamos en cómo los handlers pueden comunicarse entre sí de forma desacoplada.
 
 ### Recursos adicionales
 

@@ -1,4 +1,4 @@
-# Identity · T12.5 - build multi-etapa. Contexto = RAÍZ del repo:
+# Identity · build multi-stage. Contexto = RAÍZ del repo:
 #   docker build -f Services/Identity/Dockerfile .
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src

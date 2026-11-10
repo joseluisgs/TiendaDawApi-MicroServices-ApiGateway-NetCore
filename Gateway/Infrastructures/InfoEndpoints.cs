@@ -6,9 +6,8 @@ namespace TiendaApi.Api.Infrastructures;
 /// <summary>
 /// Endpoints de información del propio gateway: <c>/version</c> y <c>/</c>.
 ///
-/// 🎓 T12: hasta aquí el gateway los proyectaba al monolito (que era el backend
-/// temporal). Con el monolito retirado, el gateway sirve LO SUYO con el MISMO
-/// shape que daba el monolito, para que el cliente y las suites no noten cambio.
+/// El gateway sirve LO SUYO (info, version, health) con el MISMO shape que
+/// daba el monolito, para que el cliente y las suites no noten cambio.
 /// </summary>
 public static class InfoEndpoints
 {
@@ -20,7 +19,7 @@ public static class InfoEndpoints
     public static WebApplication MapInfoEndpoints(this WebApplication app)
     {
         // ── /version ──
-        // Mismo shape que el monolito: version (con el commit), fileVersion,
+        // Mismo shape que el monolito: version (con el hash de SourceLink), fileVersion,
         // runtime y framework. El E2E solo exige `version` no vacío, pero se
         // conserva el resto por si hay consumidores.
         app.MapGet("/version", () =>
@@ -96,7 +95,7 @@ public static class InfoEndpoints
 /// <summary>Lectores de atributos de assembly ausentes en el SDK minimal.</summary>
 file static class AssemblyExtensions
 {
-    /// <summary>InformationalVersion (incluye <c>+commit</c> cuando hay SourceLink).</summary>
+    /// <summary>InformationalVersion (incluye el hash de SourceLink).</summary>
     public static string? GetCustomInformationalVersion(this Assembly assembly) =>
         assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
