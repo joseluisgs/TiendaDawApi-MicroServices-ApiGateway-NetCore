@@ -1,5 +1,10 @@
 # 12. CQRS Commands Queries
 
+> **En la arquitectura de microservicios:** el CQRS vive **dentro** de cada
+> servicio. `catalog` conserva el patrón completo (commands PostgreSQL → read
+> model MongoDB); los servicios sin BD (statistics, backup, graphql) no tienen
+> CQRS propio: agregan por Refit. Ver [35 §35.6](35-arquitectura-microservicios.md).
+
 ## Índice
 
 [12. CQRS: Commands y Queries con MediatR](#12-cqrs-commands-y-queries-con-mediatr)

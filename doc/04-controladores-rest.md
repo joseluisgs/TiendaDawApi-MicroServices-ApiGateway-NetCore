@@ -1,5 +1,10 @@
 # 4. Controladores REST
 
+> **En la arquitectura de microservicios:** cada servicio expone **sus**
+> controllers (`Services/*/Controllers/`) — el gateway **no tiene ninguno**:
+> solo enruta. El patrón aquí documentado aplica por servicio y el contrato
+> REST que ve el cliente es idéntico. Ver [35](35-arquitectura-microservicios.md).
+
 ## Índice
 
 [4. Controladores REST](#4-controladores-rest)
