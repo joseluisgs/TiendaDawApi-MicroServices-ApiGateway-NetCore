@@ -65,6 +65,7 @@ TiendaDaw API Microservicios es una serie de servicios backend desarrollados con
     - [Testing y Calidad](#testing-y-calidad)
     - [DevOps y Producción](#devops-y-producción)
     - [Arquitectura](#arquitectura)
+    - [Microservicios y Gateway](#microservicios-y-gateway)
   - [📂 Estructura del Proyecto](#-estructura-del-proyecto)
     - [Descripción de Carpetas Principales](#descripción-de-carpetas-principales)
   - [🗺️ Arquitectura de Microservicios](#-arquitectura-de-microservicios)
@@ -336,7 +337,7 @@ docker compose up --build --abort-on-container-exit --exit-code-from bruno
 ```
 ## 📚 Documentación
 
-Para una comprensión profunda de la arquitectura y las tecnologías utilizadas, consulta los documentos en la carpeta [`doc/`](doc/) (34 guías, las mismas del monolito de origen):
+Para una comprensión profunda de la arquitectura y las tecnologías utilizadas, consulta los documentos en la carpeta [`doc/`](doc/) (38 guías):
 
 ### Fundamentos y Configuración
 | #   | Documento                                                          | Descripción                    |
@@ -420,6 +421,15 @@ Para una comprensión profunda de la arquitectura y las tecnologías utilizadas,
 | 31  | [Clean Architecture](doc/31-clean-architecture.md)        | Capas, estructura                 |
 | 32  | [Organización Program.cs](doc/32-organizacion-program.md) | Extension Methods, modularización |
 
+### Microservicios y Gateway
+
+| #   | Documento | Descripción |
+| --- | --- | --- |
+| 35  | [Arquitectura de Microservicios](doc/35-arquitectura-microservicios.md) | Topología, reglas, dueños de BD, CQRS interno, secuencia de pedido |
+| 36  | [API Gateway (YARP)](doc/36-api-gateway-yarp.md) | Mapa de rutas, clusters, JWT en el borde, Swagger agregado, proxy de hubs |
+| 37  | [Resiliencia (Polly)](doc/37-resiliencia-polly.md) | Timeout por intento, reintento por verbo, circuitos por autoridad |
+| 38  | [Comunicación entre microservicios](doc/38-comunicacion-microservicios.md) | REST con Refit, mapa de dependencias, rutas internas, mejor esfuerzo |
+
 ## 📂 Estructura del Proyecto
 
 ```
@@ -461,7 +471,7 @@ TiendaDawApi-MicroServices-ApiGateway-NetCore/
 │   ├── Bruno-Local/                  # Colección Bruno para CLI local
 │   └── Bruno-Cli/                    # Misma colección en Docker (usebruno/cli)
 │
-├── doc/                              # 34 guías técnicas (las del monolito de origen)
+├── doc/                              # 38 guías técnicas (35-38: microservicios y gateway)
 │
 └── README.md                         # Este archivo
 ```
@@ -474,7 +484,7 @@ TiendaDawApi-MicroServices-ApiGateway-NetCore/
 | **Gateway** | YARP: rutas por prefijo, validación de borde, Swagger agregado, health agregado |
 | **Services/** | 9 microservicios; cada uno con sus Features (CQRS), Controllers, Repositories, Validators e Infrastructures |
 | **tests/E2E** | Las 4 suites E2E del monolito, apuntando al gateway |
-| **doc/** | 34 guías técnicas reutilizadas del monolito |
+| **doc/** | 38 guías técnicas (34 reutilizadas del monolito + 4 de microservicios) |
 
 ## 🗺️ Arquitectura de Microservicios
 
