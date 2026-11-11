@@ -1,12 +1,11 @@
 using System.Text;
 using BuildingBlocks.Jwt;
-using MediatR;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Hosting;
 using Serilog.Sinks.SystemConsole.Themes;
 using TiendaApi.Api.Infrastructures;
-using TiendaApi.Api.Realtime.Pedidos;
+using TiendaApi.Api.Services.Auth;
 
 // ?? Salida por pantalla igual que el monolito (patrón SerilogConfig): consola
 // con template legible y filtros para que el mensaje del servicio no se pierda
@@ -25,7 +24,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando orders-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -58,10 +57,10 @@ try {
     // Clients Refit a catalog, identity y email.
     builder.Services.AddServices(builder.Configuration);
 
-    builder.Services.AddSingleton<TiendaApi.Api.Services.Auth.IJwtService,
-        TiendaApi.Api.Services.Auth.JwtService>();
-    builder.Services.AddSingleton<TiendaApi.Api.Services.Auth.IJwtTokenExtractor,
-        TiendaApi.Api.Services.Auth.JwtTokenExtractor>();
+    builder.Services.AddSingleton<IJwtService,
+        JwtService>();
+    builder.Services.AddSingleton<IJwtTokenExtractor,
+        JwtTokenExtractor>();
 
     // Caché HTTP (OutputCache + Age) — solo endpoints con [OutputCache].
     builder.Services.AddOutputCacheConfig();
@@ -71,7 +70,7 @@ try {
     // Health checks (sondeo de MongoDB y Redis en /health).
     builder.Services.AddHealthChecks(builder.Environment);
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     // Swagger solo en desarrollo (el servicio es privado: solo detrás del gateway).
     if (app.Environment.IsDevelopment()) {

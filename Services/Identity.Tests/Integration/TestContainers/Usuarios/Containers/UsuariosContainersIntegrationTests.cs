@@ -1,20 +1,16 @@
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TiendaApi.Api.Services.Cache;
 
 namespace TiendaApi.Tests.Integration.TestContainers.Usuarios.Containers;
 
 /// <summary>
-/// Tests de integración para Containers de Usuarios.
-/// Verifica la conectividad y configuración de containers Docker (PostgreSQL, MongoDB).
+///     Tests de integración para Containers de Usuarios.
+///     Verifica la conectividad y configuración de containers Docker (PostgreSQL, MongoDB).
 /// </summary>
 [TestFixture]
 [Category("Integration")]
 public class UsuariosContainersIntegrationTests {
-    private const string DatabaseName = "it_usuario_containers";
-    private string _connectionString = string.Empty;
-
     [OneTimeSetUp]
     public async Task OneTimeSetup() {
         _connectionString = await AssemblyContainerFixture.CreatePostgresDatabaseAsync(DatabaseName);
@@ -25,9 +21,12 @@ public class UsuariosContainersIntegrationTests {
         await AssemblyContainerFixture.DropPostgresDatabaseAsync(DatabaseName);
     }
 
+    private const string DatabaseName = "it_usuario_containers";
+    private string _connectionString = string.Empty;
+
     [Test]
     public async Task PostgreSQLContainer_ShouldBeRunning() {
-        var connectionString = _connectionString;
+        string connectionString = _connectionString;
         connectionString.Should().NotBeNullOrEmpty();
         connectionString.Should().Contain("Host=");
 
@@ -36,7 +35,7 @@ public class UsuariosContainersIntegrationTests {
 
     [Test]
     public async Task Configuration_CanBuildServiceProvider() {
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> {
                 { "ConnectionStrings:DefaultConnection", _connectionString },
                 { "Jwt:Key", "TestKeyWithAtLeast32CharactersForSecurity!" },
@@ -49,7 +48,7 @@ public class UsuariosContainersIntegrationTests {
         services.AddSingleton<IConfiguration>(configuration);
         services.AddMemoryCache();
 
-        using var provider = services.BuildServiceProvider();
+        using ServiceProvider provider = services.BuildServiceProvider();
         provider.Should().NotBeNull();
 
         await Task.CompletedTask;
@@ -57,7 +56,7 @@ public class UsuariosContainersIntegrationTests {
 
     [Test]
     public async Task Configuration_CanGetConnectionStrings() {
-        var postgresConn = _connectionString;
+        string postgresConn = _connectionString;
 
         postgresConn.Should().NotBeNullOrEmpty();
 

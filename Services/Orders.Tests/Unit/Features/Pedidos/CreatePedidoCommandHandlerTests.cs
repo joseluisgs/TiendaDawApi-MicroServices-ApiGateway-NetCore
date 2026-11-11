@@ -1,3 +1,4 @@
+using System.Net;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using FluentValidation;
@@ -6,7 +7,6 @@ using MediatR;
 using Microsoft.AspNetCore.OutputCaching;
 using Moq;
 using Refit;
-using System.Net;
 using TiendaApi.Api.Dtos.Pedidos;
 using TiendaApi.Api.Errors;
 using TiendaApi.Api.Features.Pedidos.Commands;
@@ -20,24 +20,25 @@ using TiendaApi.Api.Services.Identity;
 namespace TiendaApi.Tests.Unit.Features.Pedidos;
 
 /// <summary>
-/// Tests del comando de creación de pedido — el flujo con Refit.
-///
-/// 🎓 Equivalente al del monolito, pero la transacción Serializable pasa a ser
-/// <b>validación + decremento atómico en catalog</b>: aquí se mockean los
-/// clients Refit (<see cref="ICatalogApi"/> y <see cref="IUsersApi"/>) en vez
-/// de los repositorios de PostgreSQL.
+///     Tests del comando de creación de pedido — el flujo con Refit.
+///     🎓 Equivalente al del monolito, pero la transacción Serializable pasa a ser
+///     <b>validación + decremento atómico en catalog</b>: aquí se mockean los
+///     clients Refit (<see cref="ICatalogApi" /> y <see cref="IUsersApi" />) en vez
+///     de los repositorios de PostgreSQL.
 /// </summary>
 public class CreatePedidoCommandHandlerTests {
+    private Mock<ICacheService> _cache = null!;
+    private Mock<ICatalogApi> _catalog = null!;
+    private CreatePedidoCommandHandler _handler = null!;
+    private Mock<IValidator<PedidoItemRequestDto>> _itemValidator = null!;
+    private Mock<IMediator> _mediator = null!;
+
+    private Mock<IValidator<PedidoRequestDto>> _pedidoValidator = null!;
+
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<IPedidosRepository> _pedidos = null!;
-    private Mock<ICatalogApi> _catalog = null!;
     private Mock<IUsersApi> _users = null!;
-    private Mock<IValidator<PedidoRequestDto>> _pedidoValidator = null!;
-    private Mock<IValidator<PedidoItemRequestDto>> _itemValidator = null!;
-    private Mock<IMediator> _mediator = null!;
-    private Mock<ICacheService> _cache = null!;
-    private CreatePedidoCommandHandler _handler = null!;
 
     [SetUp]
     public void SetUp() {
@@ -64,29 +65,34 @@ public class CreatePedidoCommandHandlerTests {
             _mediator.Object, _cache.Object, Mock.Of<IOutputCacheStore>());
     }
 
-    private static PedidoRequestDto Request() => new() {
-        Destinatario = new DestinatarioDto { NombreCompleto = "User DAW", Email = "u@t.com" },
-        Items = [new PedidoItemRequestDto { ProductoId = 1, Cantidad = 2 }]
-    };
+    private static PedidoRequestDto Request() {
+        return new PedidoRequestDto {
+            Destinatario = new DestinatarioDto { NombreCompleto = "User DAW", Email = "u@t.com" },
+            Items = [new PedidoItemRequestDto { ProductoId = 1, Cantidad = 2 }]
+        };
+    }
 
     /// <summary>Excepción Refit con el status indicado (como la que lanza el client real).</summary>
-    private static async Task<ApiException> ApiExceptionCon(HttpStatusCode status) =>
-        await ApiException.Create(
+    private static async Task<ApiException> ApiExceptionCon(HttpStatusCode status) {
+        return await ApiException.Create(
             new HttpRequestMessage(HttpMethod.Get, "http://test"),
             HttpMethod.Get,
             new HttpResponseMessage(status),
             new RefitSettings());
+    }
 
     /// <summary>El producto existe en catalog con el snapshot de la semilla.</summary>
-    private void ProductoExiste() =>
+    private void ProductoExiste() {
         _catalog.Setup(c => c.GetProductoAsync(1))
             .ReturnsAsync(new ProductoSnapshotDto(1, "Laptop Dell XPS 15", 1299.99m, 10));
+    }
 
     [Test]
     public async Task Handle_PedidoValido_DevuelveSuccessYPublicaNotification() {
         ProductoExiste();
 
-        var result = await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
+        Result<PedidoDto, DomainError> result =
+            await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Estado.Should().Be(PedidoEstado.PENDIENTE, "un pedido nuevo nace PENDIENTE");
@@ -94,7 +100,8 @@ public class CreatePedidoCommandHandlerTests {
         result.Value.Items.Should().ContainSingle()
             .Which.NombreProducto.Should().Be("Laptop Dell XPS 15",
                 "el nombre se congela desde catalog al crear el pedido");
-        _mediator.Verify(m => m.Publish(It.IsAny<PedidoCreadoNotification>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mediator.Verify(m => m.Publish(It.IsAny<PedidoCreadoNotification>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Test]
@@ -111,7 +118,8 @@ public class CreatePedidoCommandHandlerTests {
     public async Task Handle_UsuarioNoEncontrado_DevuelveNotFoundError() {
         _users.Setup(u => u.GetUsuarioAsync(1)).ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound));
 
-        var result = await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
+        Result<PedidoDto, DomainError> result =
+            await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<NotFoundError>();
@@ -128,7 +136,8 @@ public class CreatePedidoCommandHandlerTests {
             Items = [new PedidoItemRequestDto { ProductoId = 999, Cantidad = 1 }]
         };
 
-        var result = await _handler.Handle(new CreatePedidoCommand(1, dto), CancellationToken.None);
+        Result<PedidoDto, DomainError> result =
+            await _handler.Handle(new CreatePedidoCommand(1, dto), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<NotFoundError>();
@@ -142,7 +151,8 @@ public class CreatePedidoCommandHandlerTests {
         _catalog.Setup(c => c.DecrementarStockAsync(It.IsAny<long>(), It.IsAny<DecrementoStock>()))
             .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.UnprocessableEntity));
 
-        var result = await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
+        Result<PedidoDto, DomainError> result =
+            await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<BusinessRuleError>(
@@ -156,7 +166,8 @@ public class CreatePedidoCommandHandlerTests {
         _pedidoValidator.Setup(v => v.ValidateAsync(It.IsAny<PedidoRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("Items", "vacío") }));
 
-        var result = await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
+        Result<PedidoDto, DomainError> result =
+            await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();

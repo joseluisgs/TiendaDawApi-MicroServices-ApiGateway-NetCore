@@ -2,19 +2,17 @@ using Refit;
 using TiendaApi.Api.Dtos.Categorias;
 using TiendaApi.Api.Dtos.Common;
 using TiendaApi.Api.Dtos.Productos;
-
 // ⚠️ HotChocolate trae un atributo Query homónimo: aquí solo se usa el de Refit.
 using Query = Refit.QueryAttribute;
 
 namespace TiendaApi.Api.Services.Catalog;
 
 /// <summary>
-/// Contrato Refit del microservicio <b>catalog</b> (R7) para el BFF GraphQL.
-///
-/// 🎓 GraphQL no tiene dominio propio: traduce cada query/mutation a la llamada
-/// REST equivalente. Los errores de negocio se reenvían tal cual para que
-/// aparezcan en el array <c>errors</c> de la respuesta GraphQL (mismo contrato
-/// que el monolito, donde el mutation lanzaba excepción).
+///     Contrato Refit del microservicio <b>catalog</b> (R7) para el BFF GraphQL.
+///     🎓 GraphQL no tiene dominio propio: traduce cada query/mutation a la llamada
+///     REST equivalente. Los errores de negocio se reenvían tal cual para que
+///     aparezcan en el array <c>errors</c> de la respuesta GraphQL (mismo contrato
+///     que el monolito, donde el mutation lanzaba excepción).
 /// </summary>
 public interface ICatalogApi {
     // ── Queries ────────────────────────────────────────────────────────

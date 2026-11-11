@@ -1,11 +1,10 @@
 namespace TiendaApi.Api.Dtos.Backup;
 
 /// <summary>
-/// Una categoría tal como se recibe en un import (ID explícito).
-///
-/// 🎓 Mismos campos que <c>BackupCategoriaDto</c> del monolito: el backup
-/// exporta e importa con el MISMO formato, así que el round-trip no cambia
-/// datos. El upsert es por clave <c>id</c>.
+///     Una categoría tal como se recibe en un import (ID explícito).
+///     🎓 Mismos campos que <c>BackupCategoriaDto</c> del monolito: el backup
+///     exporta e importa con el MISMO formato, así que el round-trip no cambia
+///     datos. El upsert es por clave <c>id</c>.
 /// </summary>
 public record ImportCategoriaDto(
     long Id,

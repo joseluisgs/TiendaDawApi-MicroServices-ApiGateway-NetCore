@@ -1,26 +1,25 @@
-using CSharpFunctionalExtensions;
+using System.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage;
 using TiendaApi.Api.Dtos.Backup;
-using TiendaApi.Api.Errors;
 using TiendaApi.Api.Errors.Productos;
 using TiendaApi.Api.Extensions;
+using TiendaApi.Api.Models;
 using TiendaApi.Api.Repositories.Productos;
 
 namespace TiendaApi.Api.Controllers;
 
 /// <summary>
-/// API interna de <c>catalog</c> (rutas <c>/internal/*</c>, R7): la consume
-/// <b>orders</b> por Refit para descontar stock al crear un pedido.
-///
-/// 🎓 Reparto de la transacción: en el monolito, <c>CreatePedidoCommand</c>
-/// hacía <c>producto.Stock -= cantidad</c> DENTRO de una transacción
-/// <c>Serializable</c> junto con el alta del pedido. En microservicios esa
-/// transacción se parte en dos: orders escribe SU pedido (Mongo) y pide aquí el
-/// descuento atómico — que se ejecuta con el MISMO nivel de aislamiento, así
-/// que dos pedidos simultáneos no pueden dejar el stock en negativo.
-///
-/// El cliente NUNCA llega aquí (no hay ruta en el gateway) y solo es accesible
-/// por la red interna (R12).
+///     API interna de <c>catalog</c> (rutas <c>/internal/*</c>, R7): la consume
+///     <b>orders</b> por Refit para descontar stock al crear un pedido.
+///     🎓 Reparto de la transacción: en el monolito, <c>CreatePedidoCommand</c>
+///     hacía <c>producto.Stock -= cantidad</c> DENTRO de una transacción
+///     <c>Serializable</c> junto con el alta del pedido. En microservicios esa
+///     transacción se parte en dos: orders escribe SU pedido (Mongo) y pide aquí el
+///     descuento atómico — que se ejecuta con el MISMO nivel de aislamiento, así
+///     que dos pedidos simultáneos no pueden dejar el stock en negativo.
+///     El cliente NUNCA llega aquí (no hay ruta en el gateway) y solo es accesible
+///     por la red interna (R12).
 /// </summary>
 [ApiController]
 [Route("internal/productos")]
@@ -29,13 +28,13 @@ public class ProductosInternalController(
     IProductoRepository productoRepository,
     ILogger<ProductosInternalController> logger) : ControllerBase {
     /// <summary>
-    /// Descuenta stock de forma atómica con validación.
+    ///     Descuenta stock de forma atómica con validación.
     /// </summary>
     /// <param name="id">Producto a descontar.</param>
     /// <param name="body">Cantidad a restar (mayor que 0).</param>
     /// <returns>
-    /// 204 descontado · 404 si el producto no existe · 422 si no hay stock
-    /// suficiente (mismo mensaje que el monolito) · 400 si la cantidad no es válida.
+    ///     204 descontado · 404 si el producto no existe · 422 si no hay stock
+    ///     suficiente (mismo mensaje que el monolito) · 400 si la cantidad no es válida.
     /// </returns>
     [HttpPost("{id:long}/stock/decremento")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -45,17 +44,18 @@ public class ProductosInternalController(
     public async Task<ActionResult<object>> DecrementarStock(
         long id,
         [FromBody] DecrementoStockDto body) {
-        if (body.Cantidad <= 0)
+        if (body.Cantidad <= 0) {
             return BadRequest(new { message = "La cantidad debe ser mayor que 0" });
+        }
 
         // Mismo nivel de aislamiento que la transacción del monolito: dos
         // descuentos simultáneos se serializan en vez de perder stock.
-        await using var transaction = await productoRepository.BeginTransactionAsync(
-            System.Data.IsolationLevel.Serializable);
+        await using IDbContextTransaction transaction = await productoRepository.BeginTransactionAsync(
+            IsolationLevel.Serializable);
         try {
             // Tracking (el FindByIdAsync lo trae con tracking) y filtro de
             // soft-delete global: un producto borrado "no existe" → 404.
-            var producto = await productoRepository.FindByIdAsync(id);
+            Producto? producto = await productoRepository.FindByIdAsync(id);
             if (producto is null) {
                 await transaction.RollbackAsync();
                 return NotFound(new { message = ProductoError.NotFound(id).Message });

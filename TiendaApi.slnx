@@ -1,29 +1,29 @@
 <Solution>
-  <Configurations>
-    <Platform Name="Any CPU" />
-    <Platform Name="x64" />
-    <Platform Name="x86" />
-  </Configurations>
-  <Project Path="BuildingBlocks/BuildingBlocks.csproj" />
-  <Project Path="BuildingBlocks.Tests/BuildingBlocks.Tests.csproj" />
-  <Project Path="Gateway/Gateway.csproj" />
-  <Project Path="Gateway.Tests/Gateway.Tests.csproj" />
-  <Project Path="Services/Identity/Identity.csproj" />
-  <Project Path="Services/Identity.Tests/Identity.Tests.csproj" />
-  <Project Path="Services/Historical/Historical.csproj" />
-  <Project Path="Services/Storage/Storage.csproj" />
-  <Project Path="Services/Storage.Tests/Storage.Tests.csproj" />
-  <Project Path="Services/Email/Email.csproj" />
-  <Project Path="Services/Email.Tests/Email.Tests.csproj" />
-  <Project Path="Services/Historical.Tests/Historical.Tests.csproj" />
-  <Project Path="Services/Catalog/Catalog.csproj" />
-  <Project Path="Services/Catalog.Tests/Catalog.Tests.csproj" />
-  <Project Path="Services/Orders/Orders.csproj" />
-  <Project Path="Services/Orders.Tests/Orders.Tests.csproj" />
-  <Project Path="Services/Statistics/Statistics.csproj" />
-  <Project Path="Services/Statistics.Tests/Statistics.Tests.csproj" />
-  <Project Path="Services/Backup/Backup.csproj" />
-  <Project Path="Services/Backup.Tests/Backup.Tests.csproj" />
-  <Project Path="Services/GraphQL/GraphQL.csproj" />
-  <Project Path="Services/GraphQL.Tests/GraphQL.Tests.csproj" />
+    <Configurations>
+        <Platform Name="Any CPU"/>
+        <Platform Name="x64"/>
+        <Platform Name="x86"/>
+    </Configurations>
+    <Project Path="BuildingBlocks/BuildingBlocks.csproj"/>
+    <Project Path="BuildingBlocks.Tests/BuildingBlocks.Tests.csproj"/>
+    <Project Path="Gateway/Gateway.csproj"/>
+    <Project Path="Gateway.Tests/Gateway.Tests.csproj"/>
+    <Project Path="Services/Identity/Identity.csproj"/>
+    <Project Path="Services/Identity.Tests/Identity.Tests.csproj"/>
+    <Project Path="Services/Historical/Historical.csproj"/>
+    <Project Path="Services/Storage/Storage.csproj"/>
+    <Project Path="Services/Storage.Tests/Storage.Tests.csproj"/>
+    <Project Path="Services/Email/Email.csproj"/>
+    <Project Path="Services/Email.Tests/Email.Tests.csproj"/>
+    <Project Path="Services/Historical.Tests/Historical.Tests.csproj"/>
+    <Project Path="Services/Catalog/Catalog.csproj"/>
+    <Project Path="Services/Catalog.Tests/Catalog.Tests.csproj"/>
+    <Project Path="Services/Orders/Orders.csproj"/>
+    <Project Path="Services/Orders.Tests/Orders.Tests.csproj"/>
+    <Project Path="Services/Statistics/Statistics.csproj"/>
+    <Project Path="Services/Statistics.Tests/Statistics.Tests.csproj"/>
+    <Project Path="Services/Backup/Backup.csproj"/>
+    <Project Path="Services/Backup.Tests/Backup.Tests.csproj"/>
+    <Project Path="Services/GraphQL/GraphQL.csproj"/>
+    <Project Path="Services/GraphQL.Tests/GraphQL.Tests.csproj"/>
 </Solution>

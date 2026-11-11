@@ -1,20 +1,16 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.DependencyInjection;
 using TiendaApi.Api.Realtime.Productos;
 
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Configuración de SignalR de catalog.
-///
-/// 🎓 R4 · SignalR solo hacia el navegador: el hub de productos vive en el
-/// servicio DUEÑO del dato (aquí) y el gateway hace de proxy en
-/// <c>/hubs/productos</c>. El hub de pedidos es de <b>orders</b>.
+///     Configuración de SignalR de catalog.
+///     🎓 R4 · SignalR solo hacia el navegador: el hub de productos vive en el
+///     servicio DUEÑO del dato (aquí) y el gateway hace de proxy en
+///     <c>/hubs/productos</c>. El hub de pedidos es de <b>orders</b>.
 /// </summary>
 public static class SignalRExtensions {
     /// <summary>
-    /// Configura el hub de SignalR de productos.
+    ///     Configura el hub de SignalR de productos.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <returns>IServiceCollection.</returns>
@@ -30,7 +26,7 @@ public static class SignalRExtensions {
     }
 
     /// <summary>
-    /// Mapea el endpoint de SignalR de productos (/hubs/productos).
+    ///     Mapea el endpoint de SignalR de productos (/hubs/productos).
     /// </summary>
     /// <param name="app">Application builder.</param>
     /// <returns>Application builder.</returns>

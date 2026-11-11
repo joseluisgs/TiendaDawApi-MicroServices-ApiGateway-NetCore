@@ -11,19 +11,24 @@ using Polly.Timeout;
 namespace BuildingBlocks.Tests.Unit.Http;
 
 /// <summary>
-/// Tests educativos de la política de resiliencia Refit.
-///
-/// 🎓 Cubren los tres comportamientos que la auditoría exigió:
-/// <list type="bullet">
-/// <item><b>Idempotencia por verbo</b>: GET reintenta, escritura NO salvo
-/// conexión nunca establecida (un reintento ciego duplicaría stock/emails).</item>
-/// <item><b>Nunca 4xx</b>: los 404/422 que traducen orders/catalog llegan a la
-/// primera, intactos.</item>
-/// <item><b>Cortacircuitos</b>: tras 5 fallos consecutivos deja de llamar
-/// (BrokenCircuit sin invocar el callback) en vez de seguir colgándose.</item>
-/// </list>
-/// Los delays se anulan (delay: TimeSpan.Zero) para que los tests sean instantáneos,
-/// igual que PollyConfigTests de email.
+///     Tests educativos de la política de resiliencia Refit.
+///     🎓 Cubren los tres comportamientos que la auditoría exigió:
+///     <list type="bullet">
+///         <item>
+///             <b>Idempotencia por verbo</b>: GET reintenta, escritura NO salvo
+///             conexión nunca establecida (un reintento ciego duplicaría stock/emails).
+///         </item>
+///         <item>
+///             <b>Nunca 4xx</b>: los 404/422 que traducen orders/catalog llegan a la
+///             primera, intactos.
+///         </item>
+///         <item>
+///             <b>Cortacircuitos</b>: tras 5 fallos consecutivos deja de llamar
+///             (BrokenCircuit sin invocar el callback) en vez de seguir colgándose.
+///         </item>
+///     </list>
+///     Los delays se anulan (delay: TimeSpan.Zero) para que los tests sean instantáneos,
+///     igual que PollyConfigTests de email.
 /// </summary>
 public class RefitResilienceTests {
     // ───────────────────────── selección por verbo ─────────────────────────
@@ -103,7 +108,7 @@ public class RefitResilienceTests {
 
     [Test]
     public async Task Lectura_Retrae5xxYErroresDeRed_YNo4xx() {
-        var opciones = RefitResilience.LecturaRetryOptions();
+        RetryStrategyOptions<HttpResponseMessage> opciones = RefitResilience.LecturaRetryOptions();
 
         (await Evaluar(opciones.ShouldHandle, HttpStatusCode.InternalServerError)).Should().BeTrue();
         (await Evaluar(opciones.ShouldHandle, HttpStatusCode.NotFound)).Should().BeFalse();
@@ -116,7 +121,7 @@ public class RefitResilienceTests {
 
     [Test]
     public async Task Escritura_SoloRetraeSiLaConexionNuncaSeEstablecio() {
-        var opciones = RefitResilience.EscrituraRetryOptions();
+        RetryStrategyOptions<HttpResponseMessage> opciones = RefitResilience.EscrituraRetryOptions();
 
         var rechazada = new HttpRequestException(
             "refused", new SocketException((int)SocketError.ConnectionRefused));
@@ -128,35 +133,37 @@ public class RefitResilienceTests {
     }
 
     /// <summary>
-    /// Invoca <c>ShouldHandle</c> con un Outcome construido desde el código HTTP
-    /// o la excepción indicada (la firma de Polly es RetryPredicateArguments:
-    /// contexto + outcome + nº de intento).
+    ///     Invoca <c>ShouldHandle</c> con un Outcome construido desde el código HTTP
+    ///     o la excepción indicada (la firma de Polly es RetryPredicateArguments:
+    ///     contexto + outcome + nº de intento).
     /// </summary>
     private static ValueTask<bool> Evaluar(
         Func<RetryPredicateArguments<HttpResponseMessage>, ValueTask<bool>> shouldHandle,
-        HttpStatusCode codigo)
-        => shouldHandle(new RetryPredicateArguments<HttpResponseMessage>(
+        HttpStatusCode codigo) {
+        return shouldHandle(new RetryPredicateArguments<HttpResponseMessage>(
             ResilienceContextPool.Shared.Get(),
             Outcome.FromResult(new HttpResponseMessage(codigo)),
             0));
+    }
 
-    /// <inheritdoc cref="Evaluar"/>
+    /// <inheritdoc cref="Evaluar" />
     private static ValueTask<bool> Evaluar(
         Func<RetryPredicateArguments<HttpResponseMessage>, ValueTask<bool>> shouldHandle,
-        Exception excepcion)
-        => shouldHandle(new RetryPredicateArguments<HttpResponseMessage>(
+        Exception excepcion) {
+        return shouldHandle(new RetryPredicateArguments<HttpResponseMessage>(
             ResilienceContextPool.Shared.Get(),
             Outcome.FromException<HttpResponseMessage>(excepcion),
             0));
+    }
 
     // ────────────────────────── comportamiento real ────────────────────────
 
     [Test]
     public async Task Lectura_Retrae500_DosReintentos_AlTerceroPasa() {
-        var pipeline = RefitResilience.ConstruirLectura(delay: TimeSpan.Zero);
-        var intentos = 0;
+        ResiliencePipeline<HttpResponseMessage> pipeline = RefitResilience.ConstruirLectura(delay: TimeSpan.Zero);
+        int intentos = 0;
 
-        var respuesta = await pipeline.ExecuteAsync(_ => {
+        HttpResponseMessage respuesta = await pipeline.ExecuteAsync(_ => {
             intentos++;
             return new ValueTask<HttpResponseMessage>(intentos < 3
                 ? new HttpResponseMessage(HttpStatusCode.InternalServerError)
@@ -169,10 +176,10 @@ public class RefitResilienceTests {
 
     [Test]
     public async Task Lectura_NoToca404_UnSoloIntento() {
-        var pipeline = RefitResilience.ConstruirLectura(delay: TimeSpan.Zero);
-        var intentos = 0;
+        ResiliencePipeline<HttpResponseMessage> pipeline = RefitResilience.ConstruirLectura(delay: TimeSpan.Zero);
+        int intentos = 0;
 
-        var respuesta = await pipeline.ExecuteAsync(_ => {
+        HttpResponseMessage respuesta = await pipeline.ExecuteAsync(_ => {
             intentos++;
             return new ValueTask<HttpResponseMessage>(
                 new HttpResponseMessage(HttpStatusCode.NotFound));
@@ -184,10 +191,10 @@ public class RefitResilienceTests {
 
     [Test]
     public async Task Escritura_NoRetrae500_UnSoloIntento() {
-        var pipeline = RefitResilience.ConstruirEscritura(delay: TimeSpan.Zero);
-        var intentos = 0;
+        ResiliencePipeline<HttpResponseMessage> pipeline = RefitResilience.ConstruirEscritura(delay: TimeSpan.Zero);
+        int intentos = 0;
 
-        var respuesta = await pipeline.ExecuteAsync(_ => {
+        HttpResponseMessage respuesta = await pipeline.ExecuteAsync(_ => {
             intentos++;
             return new ValueTask<HttpResponseMessage>(
                 new HttpResponseMessage(HttpStatusCode.InternalServerError));
@@ -199,14 +206,17 @@ public class RefitResilienceTests {
 
     [Test]
     public async Task Escritura_RetraeCuandoLaConexionNuncaSeEstablecio() {
-        var pipeline = RefitResilience.ConstruirEscritura(delay: TimeSpan.Zero);
-        var intentos = 0;
+        ResiliencePipeline<HttpResponseMessage> pipeline = RefitResilience.ConstruirEscritura(delay: TimeSpan.Zero);
+        int intentos = 0;
         var rechazada = new HttpRequestException(
             "refused", new SocketException((int)SocketError.ConnectionRefused));
 
-        var respuesta = await pipeline.ExecuteAsync(_ => {
+        HttpResponseMessage respuesta = await pipeline.ExecuteAsync(_ => {
             intentos++;
-            if (intentos < 3) throw rechazada;
+            if (intentos < 3) {
+                throw rechazada;
+            }
+
             return new ValueTask<HttpResponseMessage>(new HttpResponseMessage(HttpStatusCode.OK));
         }, CancellationToken.None);
 
@@ -217,11 +227,11 @@ public class RefitResilienceTests {
     [Test]
     public async Task Escritura_NOReintentaTrasUnTimeout() {
         // Timeout corto para el test: el callback cuelga 1 s, el timeout corta a 50 ms.
-        var pipeline = RefitResilience.ConstruirEscritura(
+        ResiliencePipeline<HttpResponseMessage> pipeline = RefitResilience.ConstruirEscritura(
             delay: TimeSpan.Zero, timeout: TimeSpan.FromMilliseconds(50));
-        var intentos = 0;
+        int intentos = 0;
 
-        var act = async () => await pipeline.ExecuteAsync(async ct => {
+        Func<Task<HttpResponseMessage>> act = async () => await pipeline.ExecuteAsync(async ct => {
             intentos++;
             // El callback DEBE observar el token (como hace HttpClient.SendAsync):
             // solo así el timeout puede cancelarlo y convertirse en TimeoutRejectedException.
@@ -237,8 +247,8 @@ public class RefitResilienceTests {
 
     [Test]
     public async Task Circuito_SaltaTrasCincoFallos_YDejaDeInvocarElCallback() {
-        var pipeline = RefitResilience.ConstruirEscritura(delay: TimeSpan.Zero);
-        var intentos = 0;
+        ResiliencePipeline<HttpResponseMessage> pipeline = RefitResilience.ConstruirEscritura(delay: TimeSpan.Zero);
+        int intentos = 0;
 
         Func<Task> llamar = async () => await pipeline.ExecuteAsync(_ => {
             intentos++;
@@ -247,15 +257,15 @@ public class RefitResilienceTests {
         }, CancellationToken.None);
 
         // 2 llamadas × hasta 3 intentos bastan para acumular los 5 fallos.
-        for (var i = 0; i < 10 && intentos < RefitResilience.FallosCircuito + 1; i++) {
+        for (int i = 0; i < 10 && intentos < RefitResilience.FallosCircuito + 1; i++) {
             try { await llamar(); } catch (BrokenCircuitException) { break; }
         }
 
         intentos.Should().Be(RefitResilience.FallosCircuito,
             "el circuito abre exactamente en el umbral de fallos");
 
-        var intentosAlAbrir = intentos;
-        var act = llamar;
+        int intentosAlAbrir = intentos;
+        Func<Task> act = llamar;
         await act.Should().ThrowAsync<BrokenCircuitException>(
             "con el circuito abierto ni se intenta llamar");
         intentos.Should().Be(intentosAlAbrir, "el callback NO se invoca con el circuito abierto");
@@ -268,11 +278,11 @@ public class RefitResilienceTests {
         var fake = new FakeHandler(HttpStatusCode.InternalServerError);
         var handler = new ResilienceDelegatingHandler(
             new ResiliencePipelineProvider(NullLoggerFactory.Instance, TimeSpan.Zero)) {
-            InnerHandler = fake,
+            InnerHandler = fake
         };
         using var cliente = new HttpClient(handler);
 
-        var respuesta = await cliente.GetAsync("http://catalogo-prueba/api/productos");
+        HttpResponseMessage respuesta = await cliente.GetAsync("http://catalogo-prueba/api/productos");
 
         respuesta.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         fake.Chamadas.Should().Be(3, "GET ante 5xx: 1 intento + 2 reintentos");
@@ -283,11 +293,11 @@ public class RefitResilienceTests {
         var fake = new FakeHandler(HttpStatusCode.InternalServerError);
         var handler = new ResilienceDelegatingHandler(
             new ResiliencePipelineProvider(NullLoggerFactory.Instance, TimeSpan.Zero)) {
-            InnerHandler = fake,
+            InnerHandler = fake
         };
         using var cliente = new HttpClient(handler);
 
-        var respuesta = await cliente.PostAsync(
+        HttpResponseMessage respuesta = await cliente.PostAsync(
             "http://catalogo-prueba/api/pedidos", new StringContent("{}"));
 
         respuesta.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
@@ -300,9 +310,9 @@ public class RefitResilienceTests {
     public void Proveedor_CacheaPorAutoridad_CircuitosAislados() {
         var proveedor = new ResiliencePipelineProvider(NullLoggerFactory.Instance);
 
-        var catalogoA = proveedor.Obtener(new Uri("http://catalog:5105/api/x"));
-        var catalogoB = proveedor.Obtener(new Uri("http://catalog:5105/api/y"));
-        var identity = proveedor.Obtener(new Uri("http://identity:5101/api/z"));
+        Pipelines catalogoA = proveedor.Obtener(new Uri("http://catalog:5105/api/x"));
+        Pipelines catalogoB = proveedor.Obtener(new Uri("http://catalog:5105/api/y"));
+        Pipelines identity = proveedor.Obtener(new Uri("http://identity:5101/api/z"));
 
         catalogoA.Should().BeSameAs(catalogoB, "misma autoridad → mismo circuito (cacheado)");
         identity.Should().NotBeSameAs(catalogoA, "autoridades distintas → circuitos aislados");

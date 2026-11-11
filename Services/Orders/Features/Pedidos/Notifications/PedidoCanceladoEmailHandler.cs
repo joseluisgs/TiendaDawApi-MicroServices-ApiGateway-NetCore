@@ -1,36 +1,39 @@
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using Serilog;
 using TiendaApi.Api.Services.Email;
 
 namespace TiendaApi.Api.Features.Pedidos.Notifications;
 
 /// <summary>
-/// Handler que envía un email al admin cuando un usuario cancela su pedido.
+///     Handler que envía un email al admin cuando un usuario cancela su pedido.
 /// </summary>
 public class PedidoCanceladoEmailHandler(
     IEmailApi emailService,
     IConfiguration configuration)
     : INotificationHandler<PedidoCanceladoNotification> {
     /// <summary>
-    /// Procesa la cancelación de un pedido y envía el email de aviso al administrador.
+    ///     Procesa la cancelación de un pedido y envía el email de aviso al administrador.
     /// </summary>
     public async Task Handle(PedidoCanceladoNotification notification, CancellationToken cancellationToken) {
-        var adminEmail = configuration["Smtp:AdminEmail"];
-        if (string.IsNullOrEmpty(adminEmail)) return;
+        string? adminEmail = configuration["Smtp:AdminEmail"];
+        if (string.IsNullOrEmpty(adminEmail)) {
+            return;
+        }
 
-        var content = EmailTemplates.PedidoEliminadoAdmin(
+        string content = EmailTemplates.PedidoEliminadoAdmin(
             notification.PedidoId,
             notification.Total,
             notification.UserId
         );
-        var body = EmailTemplates.CreateBase("Pedido Cancelado por Usuario", content);
+        string body = EmailTemplates.CreateBase("Pedido Cancelado por Usuario", content);
 
-        var emailMessage = new EmailRequest(adminEmail, $"📧 Pedido #{notification.PedidoId} Cancelado por Usuario", body, IsHtml: true);
+        var emailMessage = new EmailRequest(adminEmail, $"📧 Pedido #{notification.PedidoId} Cancelado por Usuario",
+            body, true);
 
         try {
             await emailService.EnqueueAsync(emailMessage);
-            Log.Information("📧 [EMAIL] Notificación enviada: Pedido cancelado por usuario ID={PedidoId}", notification.PedidoId);
+            Log.Information("📧 [EMAIL] Notificación enviada: Pedido cancelado por usuario ID={PedidoId}",
+                notification.PedidoId);
         } catch (Exception ex) {
             // 📧 Mejor esfuerzo: email caído NO rompe la operación del pedido.
             Log.Warning(ex, "PedidoCanceladoEmailHandler: email-service no disponible, no se encoló el aviso");

@@ -5,21 +5,21 @@ using Serilog;
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Configuración de Health Checks de <b>statistics</b>.
-///
-/// 🎓 Statistics no tiene base de datos: agrega al vuelo lo que pide por Refit.
-/// Solo se expone el health del propio proceso (los servicios de los que depende
-/// se sondean en SU /health, no aquí — sondearlos desde aquí acoplaría el
-/// despliegue de statistics al de todos los demás).
+///     Configuración de Health Checks de <b>statistics</b>.
+///     🎓 Statistics no tiene base de datos: agrega al vuelo lo que pide por Refit.
+///     Solo se expone el health del propio proceso (los servicios de los que depende
+///     se sondean en SU /health, no aquí — sondearlos desde aquí acoplaría el
+///     despliegue de statistics al de todos los demás).
 /// </summary>
 public static class HealthChecksConfig {
     /// <summary>
-    /// Registra los health checks (solo el del proceso).
+    ///     Registra los health checks (solo el del proceso).
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="environment">Entorno de la app.</param>
     /// <returns>IServiceCollection para encadenar.</returns>
-    public static IServiceCollection AddHealthChecks(this IServiceCollection services, IWebHostEnvironment environment) {
+    public static IServiceCollection
+        AddHealthChecks(this IServiceCollection services, IWebHostEnvironment environment) {
         Log.Information("Configurando Health Checks (/health)...");
 
         services.AddHealthChecks()
@@ -29,7 +29,7 @@ public static class HealthChecksConfig {
     }
 
     /// <summary>
-    /// Expone endpoints de salud: /health, /health/ready, /health/live.
+    ///     Expone endpoints de salud: /health, /health/ready, /health/live.
     /// </summary>
     public static IEndpointRouteBuilder MapHealthEndpoint(this IEndpointRouteBuilder endpoints) {
         endpoints.MapHealthChecks("/health", new HealthCheckOptions {
@@ -51,7 +51,7 @@ public static class HealthChecksConfig {
     }
 
     /// <summary>
-    /// Escribe el informe de salud como JSON: status, totalDuration y checks[].
+    ///     Escribe el informe de salud como JSON: status, totalDuration y checks[].
     /// </summary>
     private static Task WriteHealthReportAsync(HttpContext context, HealthReport report) {
         var payload = new {
@@ -70,19 +70,22 @@ public static class HealthChecksConfig {
     }
 
     /// <summary>
-    /// Traduce el estado interno al semáforo de la API: OK / DEGRADED / ERROR.
+    ///     Traduce el estado interno al semáforo de la API: OK / DEGRADED / ERROR.
     /// </summary>
-    private static string MapStatus(HealthStatus status) => status switch {
-        HealthStatus.Healthy => "OK",
-        HealthStatus.Degraded => "DEGRADED",
-        _ => "ERROR"
-    };
+    private static string MapStatus(HealthStatus status) {
+        return status switch {
+            HealthStatus.Healthy => "OK",
+            HealthStatus.Degraded => "DEGRADED",
+            _ => "ERROR"
+        };
+    }
 
     /// <summary>Comprobación trivial: el proceso responde.</summary>
     public class ProcesoCheck : IHealthCheck {
         /// <inheritdoc />
         public Task<HealthCheckResult> CheckHealthAsync(
-            HealthCheckContext context, CancellationToken cancellationToken = default) =>
-            Task.FromResult(HealthCheckResult.Healthy("statistics respondiendo"));
+            HealthCheckContext context, CancellationToken cancellationToken = default) {
+            return Task.FromResult(HealthCheckResult.Healthy("statistics respondiendo"));
+        }
     }
 }

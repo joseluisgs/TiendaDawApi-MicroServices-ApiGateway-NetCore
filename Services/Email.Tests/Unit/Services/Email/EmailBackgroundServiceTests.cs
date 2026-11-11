@@ -8,10 +8,10 @@ using TiendaApi.Api.Services.Email;
 namespace TiendaApi.Tests.Unit.Services.Email;
 
 /// <summary>
-/// Tests de EmailBackgroundService: constructor y, sobre todo, el ciclo real
-/// de vida de la cola — consume mensajes del Channel, los envía con el
-/// IEmailService del scope y NO se corta si un envío revienta (el siguiente
-/// mensaje de la cola se procesa igualmente: mejor esfuerzo, como el monolito).
+///     Tests de EmailBackgroundService: constructor y, sobre todo, el ciclo real
+///     de vida de la cola — consume mensajes del Channel, los envía con el
+///     IEmailService del scope y NO se corta si un envío revienta (el siguiente
+///     mensaje de la cola se procesa igualmente: mejor esfuerzo, como el monolito).
 /// </summary>
 public class EmailBackgroundServiceTests {
     private Channel<EmailMessage> _emailChannel = null!;
@@ -26,7 +26,7 @@ public class EmailBackgroundServiceTests {
         var mockServiceProvider = new Mock<IServiceProvider>();
         var mockLogger = new Mock<ILogger<EmailBackgroundService>>();
 
-        var act = () => new EmailBackgroundService(
+        Func<EmailBackgroundService> act = () => new EmailBackgroundService(
             _emailChannel,
             mockServiceProvider.Object,
             mockLogger.Object);
@@ -54,7 +54,7 @@ public class EmailBackgroundServiceTests {
         });
 
         // El consumidor debe tomar el mensaje y pasárselo al servicio de envío.
-        var mensaje = await recibido.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        EmailMessage mensaje = await recibido.Task.WaitAsync(TimeSpan.FromSeconds(5));
         mensaje.To.Should().Be("destinatario@test.com");
         mensaje.Subject.Should().Be("Asunto");
 
@@ -68,7 +68,8 @@ public class EmailBackgroundServiceTests {
             .Setup(e => e.SendEmailAsync(It.Is<EmailMessage>(m => m.To == "roto@test.com")))
             .ThrowsAsync(new InvalidOperationException("SMTP caído"));
 
-        var segundoRecibido = new TaskCompletionSource<EmailMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var segundoRecibido =
+            new TaskCompletionSource<EmailMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         emailService
             .Setup(e => e.SendEmailAsync(It.Is<EmailMessage>(m => m.To == "sano@test.com")))
             .Callback<EmailMessage>(m => segundoRecibido.TrySetResult(m))
@@ -82,15 +83,15 @@ public class EmailBackgroundServiceTests {
         await _emailChannel.Writer.WriteAsync(new EmailMessage { To = "sano@test.com", Subject = "x", Body = "x" });
 
         // Un fallo no detiene el bucle: el segundo mensaje DEBE procesarse.
-        var mensaje = await segundoRecibido.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        EmailMessage mensaje = await segundoRecibido.Task.WaitAsync(TimeSpan.FromSeconds(5));
         mensaje.To.Should().Be("sano@test.com");
 
         await servicio.StopAsync(CancellationToken.None);
     }
 
     /// <summary>
-    /// IServiceProvider falso con el mínimo de la cadena real del servicio:
-    /// CreateScope() → scope.ServiceProvider → GetRequiredService&lt;IEmailService&gt;().
+    ///     IServiceProvider falso con el mínimo de la cadena real del servicio:
+    ///     CreateScope() → scope.ServiceProvider → GetRequiredService&lt;IEmailService&gt;().
     /// </summary>
     private static IServiceProvider CrearProveedor(Mock<IEmailService> emailService) {
         var scopeProvider = new Mock<IServiceProvider>();

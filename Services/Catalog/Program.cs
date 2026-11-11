@@ -1,14 +1,10 @@
 using System.Text;
 using BuildingBlocks.Jwt;
-using MediatR;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Hosting;
 using Serilog.Sinks.SystemConsole.Themes;
-using TiendaApi.Api.Data;
 using TiendaApi.Api.Infrastructures;
-using TiendaApi.Api.Realtime.Productos;
-using TiendaApi.Api.Services.Background.Jobs;
 
 // 📺 Salida por pantalla igual que el monolito (patrón SerilogConfig): consola
 // con template legible y filtros para que el mensaje del servicio no se pierda
@@ -29,7 +25,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando catalog-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -78,7 +74,7 @@ try {
     // Health checks (sondeo de PostgreSQL, MongoDB y Redis en /health).
     builder.Services.AddHealthChecks(builder.Environment);
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     // Swagger solo en desarrollo (el servicio es privado: solo se ve detrás del gateway).
     if (app.Environment.IsDevelopment()) {

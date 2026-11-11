@@ -34,7 +34,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando identity-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -67,14 +67,14 @@ try {
     // Solo Identity (sin Auth:Mode, sin cookies): misma política de contraseñas
     // que el monolito (mínimo 8, dígito, mayúscula, minúscula; sin símbolos).
     builder.Services.AddIdentityCore<User>(options => {
-        options.Password.RequireDigit = true;
-        options.Password.RequireLowercase = true;
-        options.Password.RequireUppercase = true;
-        options.Password.RequiredLength = 8;
-        options.Password.RequireNonAlphanumeric = false;
-        options.Lockout.MaxFailedAccessAttempts = 5;
-        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-    })
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 8;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Lockout.MaxFailedAccessAttempts = 5;
+            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        })
         .AddRoles<IdentityRole<long>>()
         .AddSignInManager()
         .AddEntityFrameworkStores<TiendaDbContext>()
@@ -102,7 +102,7 @@ try {
     // Puertas de login externo (Google, GitHub, Microsoft) — misma config Auth.
     builder.Services.AddOAuthDoors(builder.Configuration);
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     // Swagger solo en desarrollo (el servicio es privado: solo se ve detrás del gateway).
     if (app.Environment.IsDevelopment()) {
@@ -119,8 +119,8 @@ try {
     app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "identity" }));
     app.MapControllers();
 
-    using (var scope = app.Services.CreateScope()) {
-        var db = scope.ServiceProvider.GetRequiredService<TiendaDbContext>();
+    using (IServiceScope scope = app.Services.CreateScope()) {
+        TiendaDbContext db = scope.ServiceProvider.GetRequiredService<TiendaDbContext>();
 
         if (app.Environment.IsDevelopment()) {
             // Como el monolito (y como catalog): en desarrollo se recrea la BD en

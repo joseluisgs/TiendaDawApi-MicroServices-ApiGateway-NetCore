@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using TiendaApi.Api.Models;
@@ -6,14 +5,14 @@ using TiendaApi.Api.Models;
 namespace TiendaApi.Api.Data.Seed.Mongo;
 
 /// <summary>
-/// Seeder que inserta pedidos de ejemplo directamente en MongoDB.
+///     Seeder que inserta pedidos de ejemplo directamente en MongoDB.
 /// </summary>
 public class MongoDbSeeder {
-    private readonly IMongoCollection<Pedido> _pedidosCollection;
     private readonly ILogger<MongoDbSeeder> _logger;
+    private readonly IMongoCollection<Pedido> _pedidosCollection;
 
     /// <summary>
-    /// Crea una instancia del seeder de pedidos de MongoDB.
+    ///     Crea una instancia del seeder de pedidos de MongoDB.
     /// </summary>
     /// <param name="pedidosCollection">Colección de pedidos de MongoDB.</param>
     /// <param name="logger">Logger de la aplicación.</param>
@@ -23,11 +22,11 @@ public class MongoDbSeeder {
     }
 
     /// <summary>
-    /// Siembra pedidos de ejemplo en MongoDB cuando la colección está vacía.
+    ///     Siembra pedidos de ejemplo en MongoDB cuando la colección está vacía.
     /// </summary>
     public async Task SeedAsync() {
         try {
-            var count = await _pedidosCollection.CountDocumentsAsync(_ => true);
+            long count = await _pedidosCollection.CountDocumentsAsync(_ => true);
 
             if (count == 0) {
                 _logger.LogInformation("Sembrando datos iniciales de pedidos en MongoDB...");

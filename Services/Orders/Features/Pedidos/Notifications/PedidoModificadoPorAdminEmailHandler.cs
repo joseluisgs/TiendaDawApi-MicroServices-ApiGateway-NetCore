@@ -1,25 +1,31 @@
 using MediatR;
 using Serilog;
+using TiendaApi.Api.Dtos.Pedidos;
 using TiendaApi.Api.Services.Email;
+
 namespace TiendaApi.Api.Features.Pedidos.Notifications;
 
 /// <summary>
-/// Handler que avisa al CLIENTE cuando un administrador modifica los datos
-/// de su pedido (sin cambio de estado).
+///     Handler que avisa al CLIENTE cuando un administrador modifica los datos
+///     de su pedido (sin cambio de estado).
 /// </summary>
 public class PedidoModificadoPorAdminEmailHandler(IEmailApi emailService)
     : INotificationHandler<PedidoModificadoPorAdminNotification> {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task Handle(PedidoModificadoPorAdminNotification notification, CancellationToken cancellationToken) {
-        var destinatario = notification.Pedido.Destinatario;
-        if (string.IsNullOrWhiteSpace(destinatario?.Email)) return;
+        DestinatarioDto? destinatario = notification.Pedido.Destinatario;
+        if (string.IsNullOrWhiteSpace(destinatario?.Email)) {
+            return;
+        }
 
-        var content = EmailTemplates.PedidoModificadoCliente(
+        string content = EmailTemplates.PedidoModificadoCliente(
             notification.Pedido.Id,
             destinatario.NombreCompleto);
 
         try {
-            await emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"✏️ Tu pedido #{notification.Pedido.Id} ha sido modificado", EmailTemplates.CreateBase($"Pedido #{notification.Pedido.Id} modificado", content), IsHtml: true));
+            await emailService.EnqueueAsync(new EmailRequest(destinatario.Email,
+                $"✏️ Tu pedido #{notification.Pedido.Id} ha sido modificado",
+                EmailTemplates.CreateBase($"Pedido #{notification.Pedido.Id} modificado", content), true));
             Log.Information("📧 [EMAIL] Aviso de modificación encolado para el cliente: {PedidoId} -> {Email}",
                 notification.Pedido.Id, destinatario.Email);
         } catch (Exception ex) {

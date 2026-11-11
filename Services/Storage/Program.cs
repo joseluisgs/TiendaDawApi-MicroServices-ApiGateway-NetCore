@@ -22,7 +22,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando storage-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -42,7 +42,7 @@ try {
     builder.Services.AddControllers();
     builder.Services.AddStorage();
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     // Prepara el directorio de subidas (patrón del monolito).
     app.InitializeStorage(app.Environment.IsDevelopment());

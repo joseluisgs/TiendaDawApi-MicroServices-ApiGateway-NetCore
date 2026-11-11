@@ -1,11 +1,11 @@
 namespace TiendaApi.Api.Services.Email;
 
 /// <summary>
-/// Plantillas base para emails de la tienda.
+///     Plantillas base para emails de la tienda.
 /// </summary>
 public static class EmailTemplates {
     /// <summary>
-    /// Crea el HTML base para un email de la tienda.
+    ///     Crea el HTML base para un email de la tienda.
     /// </summary>
     public static string CreateBase(string title, string content) {
         return $@"<!DOCTYPE html>
@@ -44,7 +44,7 @@ public static class EmailTemplates {
     }
 
     /// <summary>
-    /// Genera el contenido para email de nuevo producto.
+    ///     Genera el contenido para email de nuevo producto.
     /// </summary>
     public static string ProductoCreado(string nombre, decimal precio, int stock, long id) {
         return $@"

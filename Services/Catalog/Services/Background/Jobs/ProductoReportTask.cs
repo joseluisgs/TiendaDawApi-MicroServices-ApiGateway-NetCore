@@ -1,6 +1,4 @@
 using CSharpFunctionalExtensions;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using TiendaApi.Api.Errors;
 using TiendaApi.Api.Models.Read;
 using TiendaApi.Api.Services.Email;
@@ -10,17 +8,15 @@ using TiendaApi.Api.Services.Productos;
 namespace TiendaApi.Api.Services.Background.Jobs;
 
 /// <summary>
-/// Servicio de reportes de productos.
-/// Obtiene productos nuevos y envía notificaciones por email.
-///
-/// La lectura de productos pasa por IProductoService
-/// (fachada → MongoDB); PostgreSQL solo interviene en las escrituras.
-///
-/// 🎓 Reparto en microservicios (mismo flujo que el monolito):
-/// - usuarios activos → <b>identity</b> por Refit (<c>GET /internal/users/activos</c>,
-///   endpoint interno de identity),
-/// - envío → <b>email</b> por Refit (<c>POST /internal/emails</c>).
-/// Si alguno no responde, el reporte no lanza: se registra y se reintenta.
+///     Servicio de reportes de productos.
+///     Obtiene productos nuevos y envía notificaciones por email.
+///     La lectura de productos pasa por IProductoService
+///     (fachada → MongoDB); PostgreSQL solo interviene en las escrituras.
+///     🎓 Reparto en microservicios (mismo flujo que el monolito):
+///     - usuarios activos → <b>identity</b> por Refit (<c>GET /internal/users/activos</c>,
+///     endpoint interno de identity),
+///     - envío → <b>email</b> por Refit (<c>POST /internal/emails</c>).
+///     Si alguno no responde, el reporte no lanza: se registra y se reintenta.
 /// </summary>
 public class ProductoReportTask(
     IProductoService productoService,
@@ -29,11 +25,11 @@ public class ProductoReportTask(
     ILogger<ProductoReportTask> logger,
     IConfiguration configuration
 ) : IProductoReportTask {
-    private readonly int _days = configuration.GetValue<int>("Scheduler:ProductoReportDays", 7);
+    private readonly int _days = configuration.GetValue("Scheduler:ProductoReportDays", 7);
     private readonly bool _isDevelopment = configuration.GetValue<bool>("IsDevelopment");
 
     /// <summary>
-    /// Ejecuta el reporte de productos nuevos.
+    ///     Ejecuta el reporte de productos nuevos.
     /// </summary>
     /// <returns>UnitResult con error en caso de fallo.</returns>
     public async Task<UnitResult<DomainError>> ExecuteAsync() {
@@ -50,19 +46,19 @@ public class ProductoReportTask(
     }
 
     /// <summary>
-    /// Obtiene productos creados en los últimos X días.
+    ///     Obtiene productos creados en los últimos X días.
     /// </summary>
     private async Task<Result<IEnumerable<ProductoRead>, DomainError>> GetRecentlyCreatedProductsAsync() {
         logger.LogDebug("Obteniendo productos de los ultimos {Dias} dias", _days);
 
-        var productos = await productoService.GetRecentlyCreatedAsync(_days);
+        IReadOnlyList<ProductoRead> productos = await productoService.GetRecentlyCreatedAsync(_days);
 
         logger.LogInformation("Encontrados {Cantidad} productos nuevos", productos.Count);
         return Result.Success<IEnumerable<ProductoRead>, DomainError>(productos);
     }
 
     /// <summary>
-    /// Envía emails a todos los usuarios activos con los productos nuevos.
+    ///     Envía emails a todos los usuarios activos con los productos nuevos.
     /// </summary>
     private async Task<UnitResult<DomainError>> SendEmailsToActiveUsersAsync(IEnumerable<ProductoRead> productos) {
         if (!productos.Any()) {
@@ -87,12 +83,12 @@ public class ProductoReportTask(
             return UnitResult.Success<DomainError>();
         }
 
-        foreach (var user in usuarios) {
+        foreach (UsuarioActivoDto user in usuarios) {
             var email = new EmailRequest(
                 user.Email ?? string.Empty,
                 $"Novedades en Tienda: {productos.Count()} productos nuevos",
                 GenerateHtmlEmail(productos, user.Username ?? string.Empty),
-                IsHtml: true);
+                true);
 
             try {
                 await emailApi.EnqueueAsync(email);
@@ -108,10 +104,10 @@ public class ProductoReportTask(
     }
 
     /// <summary>
-    /// Genera el cuerpo del email en formato HTML.
+    ///     Genera el cuerpo del email en formato HTML.
     /// </summary>
     private static string GenerateHtmlEmail(IEnumerable<ProductoRead> productos, string userName) {
-        var productosHtml = string.Concat(productos.Select(p => string.Format(@"
+        string productosHtml = string.Concat(productos.Select(p => string.Format(@"
             <div style=""border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px;"">
                 <h3 style=""margin: 0 0 10px 0;"">{0}</h3>
                 <p style=""margin: 0; color: #666;"">{1}</p>

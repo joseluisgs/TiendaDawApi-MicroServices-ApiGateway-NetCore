@@ -3,12 +3,15 @@ using Refit;
 namespace TiendaApi.Api.Services.Storage;
 
 /// <summary>
-/// Contrato Refit del microservicio <b>storage</b> (rutas internas, R7).
-///
-/// 🎓 Decisión de imagen : <b>storage es el
-/// dueño de los ficheros</b> — catalog le pasa el archivo por Refit y guarda la
-/// ruta pública que él devuelve. El gateway sirve <c>/images/uploads/*</c> desde
-/// storage, que es donde el fichero vive.
+///     Contrato Refit del microservicio <b>storage</b> (rutas internas, R7).
+///     🎓 Decisión de imagen :
+///     <b>
+///         storage es el
+///         dueño de los ficheros
+///     </b>
+///     — catalog le pasa el archivo por Refit y guarda la
+///     ruta pública que él devuelve. El gateway sirve <c>/images/uploads/*</c> desde
+///     storage, que es donde el fichero vive.
 /// </summary>
 public interface IStorageApi {
     /// <summary>Sube un fichero y devuelve su ruta pública.</summary>

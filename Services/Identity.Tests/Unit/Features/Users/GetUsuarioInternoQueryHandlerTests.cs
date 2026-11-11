@@ -10,14 +10,14 @@ using TiendaApi.Api.Repositories.Usuarios;
 namespace TiendaApi.Tests.Unit.Features.Users;
 
 /// <summary>
-/// Tests de GetUsuarioInternoQueryHandler: la comprobación de existencia que
-/// hace orders al crear un pedido (equivalente al FindByIdAsync de
-/// CreatePedidoCommand). Lectura fresca SIN caché — un usuario borrado no
-/// debe "seguir existiendo" durante el TTL de la ruta pública.
+///     Tests de GetUsuarioInternoQueryHandler: la comprobación de existencia que
+///     hace orders al crear un pedido (equivalente al FindByIdAsync de
+///     CreatePedidoCommand). Lectura fresca SIN caché — un usuario borrado no
+///     debe "seguir existiendo" durante el TTL de la ruta pública.
 /// </summary>
 public class GetUsuarioInternoQueryHandlerTests {
-    private readonly Mock<IUserRepository> _repository = new();
     private readonly GetUsuarioInternoQueryHandler _handler;
+    private readonly Mock<IUserRepository> _repository = new();
 
     public GetUsuarioInternoQueryHandlerTests() {
         _handler = new GetUsuarioInternoQueryHandler(_repository.Object);
@@ -28,7 +28,8 @@ public class GetUsuarioInternoQueryHandlerTests {
         _repository.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new User { Id = 1, UserName = "juan", Email = "juan@test.com", IsDeleted = false });
 
-        var result = await _handler.Handle(new GetUsuarioInternoQuery(1), CancellationToken.None);
+        Result<UserDto, DomainError> result =
+            await _handler.Handle(new GetUsuarioInternoQuery(1), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(1);
@@ -39,7 +40,8 @@ public class GetUsuarioInternoQueryHandlerTests {
     public async Task Handle_UsuarioNoExiste_DevuelveNotFound() {
         _repository.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((User?)null);
 
-        var result = await _handler.Handle(new GetUsuarioInternoQuery(999), CancellationToken.None);
+        Result<UserDto, DomainError> result =
+            await _handler.Handle(new GetUsuarioInternoQuery(999), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<NotFoundError>();
@@ -51,7 +53,8 @@ public class GetUsuarioInternoQueryHandlerTests {
         _repository.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new User { Id = 1, IsDeleted = true });
 
-        var result = await _handler.Handle(new GetUsuarioInternoQuery(1), CancellationToken.None);
+        Result<UserDto, DomainError> result =
+            await _handler.Handle(new GetUsuarioInternoQuery(1), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<NotFoundError>();

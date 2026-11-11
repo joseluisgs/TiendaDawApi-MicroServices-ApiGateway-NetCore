@@ -4,12 +4,11 @@ using TiendaApi.Api.Dtos.Historial;
 namespace TiendaApi.Api.Services.Historial;
 
 /// <summary>
-/// Contrato Refit del microservicio <b>historical</b> (rutas internas, R7).
-///
-/// 🎓 En el monolito, las series vivían en el mismo proceso con Cassandra; aquí
-/// catalog solo <b>pide</b> y <b>escribe</b> en el dueño de los datos. Los
-/// consumidores de la serie (catalog) validan antes la existencia del producto
-/// contra su propia PostgreSQL.
+///     Contrato Refit del microservicio <b>historical</b> (rutas internas, R7).
+///     🎓 En el monolito, las series vivían en el mismo proceso con Cassandra; aquí
+///     catalog solo <b>pide</b> y <b>escribe</b> en el dueño de los datos. Los
+///     consumidores de la serie (catalog) validan antes la existencia del producto
+///     contra su propia PostgreSQL.
 /// </summary>
 public interface IHistorialApi {
     /// <summary>Serie histórica de precios de un producto.</summary>
@@ -25,8 +24,8 @@ public interface IHistorialApi {
     Task RegistrarVistaAsync([Body] RegistrarVistaRequest body);
 
     /// <summary>
-    /// Registra un punto de precio en las series (dual-write del catálogo:
-    /// nacimiento al crear y cambios reales al actualizar).
+    ///     Registra un punto de precio en las series (dual-write del catálogo:
+    ///     nacimiento al crear y cambios reales al actualizar).
     /// </summary>
     [Post("/internal/historial/precios")]
     Task RegistrarPrecioAsync([Body] RegistrarPrecioRequest body);

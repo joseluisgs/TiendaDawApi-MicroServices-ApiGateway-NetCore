@@ -4,22 +4,20 @@ using TiendaApi.Api.Models;
 namespace TiendaApi.Api.Data.Seed.Sql;
 
 /// <summary>
-/// Seeder para datos iniciales de <c>catalog_db</c>: categorías, proveedores y
-/// productos de ejemplo.
-///
-/// 🎓 Los usuarios NO se siembran aquí: pertenecen a <c>identity_db</c> y los
-/// crea el seeder de identity (R5 · una BD por microservicio). Los IDs de
-/// categoría son fijos (1, 2, 3) porque la semilla de productos los referencia
-/// y los tests E2E cuentan con ellos.
-///
-/// Copiado del <c>SqlSeeder</c> del monolito y podado de los usuarios.
+///     Seeder para datos iniciales de <c>catalog_db</c>: categorías, proveedores y
+///     productos de ejemplo.
+///     🎓 Los usuarios NO se siembran aquí: pertenecen a <c>identity_db</c> y los
+///     crea el seeder de identity (R5 · una BD por microservicio). Los IDs de
+///     categoría son fijos (1, 2, 3) porque la semilla de productos los referencia
+///     y los tests E2E cuentan con ellos.
+///     Copiado del <c>SqlSeeder</c> del monolito y podado de los usuarios.
 /// </summary>
 public class CatalogSeeder {
     private readonly CatalogDbContext _context;
     private readonly ILogger<CatalogSeeder> _logger;
 
     /// <summary>
-    /// Crea una instancia del seeder de PostgreSQL de catalog.
+    ///     Crea una instancia del seeder de PostgreSQL de catalog.
     /// </summary>
     /// <param name="context">Contexto de base de datos.</param>
     /// <param name="logger">Logger de la aplicación.</param>
@@ -29,7 +27,7 @@ public class CatalogSeeder {
     }
 
     /// <summary>
-    /// Sembrar datos iniciales si no existen.
+    ///     Sembrar datos iniciales si no existen.
     /// </summary>
     public async Task SeedAsync() {
         try {
@@ -90,34 +88,34 @@ public class CatalogSeeder {
         // los tests E2E puedan referenciarlos. La generación aleatoria estilo YouTube es el
         // camino por defecto cuando un cliente crea un proveedor sin enviar código.
         var proveedores = new List<Proveedor> {
-                new() {
-                    Codigo = "TiendaDAW01",
-                    Nombre = "Tienda DAW Interna",
-                    Descripcion = "Proveedor interno para material de laboratorio",
-                    Contacto = "lab@tiendadaw.example",
-                    IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new() {
-                    Codigo = "Distribuc01",
-                    Nombre = "Distribuciones DAW",
-                    Descripcion = "Distribuidor general de electrónica y periféricos",
-                    Contacto = "pedidos@distribucionesdaw.example",
-                    IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                },
-                new() {
-                    Codigo = "Editorial01",
-                    Nombre = "Editorial Código Limpio",
-                    Descripcion = "Librería técnica especializada",
-                    Contacto = "ventas@editorialcodigolimpio.example",
-                    IsDeleted = false,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                }
-            };
+            new() {
+                Codigo = "TiendaDAW01",
+                Nombre = "Tienda DAW Interna",
+                Descripcion = "Proveedor interno para material de laboratorio",
+                Contacto = "lab@tiendadaw.example",
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            },
+            new() {
+                Codigo = "Distribuc01",
+                Nombre = "Distribuciones DAW",
+                Descripcion = "Distribuidor general de electrónica y periféricos",
+                Contacto = "pedidos@distribucionesdaw.example",
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            },
+            new() {
+                Codigo = "Editorial01",
+                Nombre = "Editorial Código Limpio",
+                Descripcion = "Librería técnica especializada",
+                Contacto = "ventas@editorialcodigolimpio.example",
+                IsDeleted = false,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            }
+        };
 
         await _context.Proveedores.AddRangeAsync(proveedores);
         await _context.SaveChangesAsync();

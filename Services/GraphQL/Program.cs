@@ -23,7 +23,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando graphql-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -50,7 +50,7 @@ try {
     // Swagger del endpoint GraphQL (solo en desarrollo).
     builder.Services.AddSwagger();
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     // Swagger solo en desarrollo (el servicio es privado: solo detrás del gateway).
     if (app.Environment.IsDevelopment()) {

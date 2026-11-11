@@ -13,27 +13,27 @@ using TiendaApi.Api.Models;
 using TiendaApi.Api.Repositories.Categorias;
 using TiendaApi.Api.Repositories.Productos;
 using TiendaApi.Api.Services.Cache;
-using TiendaApi.Api.Services.Productos;
 
 namespace TiendaApi.Tests.Unit.Features.Productos;
 
 /// <summary>
-/// Tests del command de alta de producto (CQRS: lado de escritura).
-///
-/// 🎓 Orden que hay que preservar (el monolito lo documenta): PRIMERO replicar
-/// (publicar → sync a MongoDB) y DESPUÉS invalidar las cachés; si se invierte,
-/// un lector puede repoblar la caché con el modelo de lectura viejo.
+///     Tests del command de alta de producto (CQRS: lado de escritura).
+///     🎓 Orden que hay que preservar (el monolito lo documenta): PRIMERO replicar
+///     (publicar → sync a MongoDB) y DESPUÉS invalidar las cachés; si se invierte,
+///     un lector puede repoblar la caché con el modelo de lectura viejo.
 /// </summary>
 public class CreateProductoCommandHandlerTests {
+    private Mock<ICacheService> _cache = null!;
+    private Mock<ICategoriaRepository> _categorias = null!;
+    private CreateProductoCommandHandler _handler = null!;
+    private Mock<IMediator> _mediator = null!;
+
+    private Mock<IOutputCacheStore> _outputCache = null!;
+
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IProductoRepository> _productos = null!;
-    private Mock<ICategoriaRepository> _categorias = null!;
-    private Mock<IMediator> _mediator = null!;
-    private Mock<ICacheService> _cache = null!;
-    private Mock<IOutputCacheStore> _outputCache = null!;
     private Mock<IValidator<ProductoRequestDto>> _validador = null!;
-    private CreateProductoCommandHandler _handler = null!;
 
     [SetUp]
     public void SetUp() {
@@ -52,13 +52,15 @@ public class CreateProductoCommandHandlerTests {
             _mediator.Object, _cache.Object, _outputCache.Object);
     }
 
-    private static ProductoRequestDto Request(long categoriaId = 1) => new() {
-        Nombre = "Laptop Dell XPS 15",
-        Descripcion = "Alto rendimiento",
-        Precio = 1299.99m,
-        Stock = 10,
-        CategoriaId = categoriaId,
-    };
+    private static ProductoRequestDto Request(long categoriaId = 1) {
+        return new ProductoRequestDto {
+            Nombre = "Laptop Dell XPS 15",
+            Descripcion = "Alto rendimiento",
+            Precio = 1299.99m,
+            Stock = 10,
+            CategoriaId = categoriaId
+        };
+    }
 
     [Test]
     public async Task Handle_Invalido_Devuelve400ConErroresPorCampo() {
@@ -67,7 +69,8 @@ public class CreateProductoCommandHandlerTests {
                 new ValidationFailure("Precio", "El precio debe ser mayor a 0")
             }));
 
-        var result = await _handler.Handle(new CreateProductoCommand(Request()), CancellationToken.None);
+        Result<ProductoDto, DomainError> result =
+            await _handler.Handle(new CreateProductoCommand(Request()), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();
@@ -79,10 +82,11 @@ public class CreateProductoCommandHandlerTests {
         // El handler comprueba la FK con FindByIdAsync (no con ExistsByIdAsync).
         _categorias.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((Categoria?)null);
 
-        var result = await _handler.Handle(new CreateProductoCommand(Request(categoriaId: 999)), CancellationToken.None);
+        Result<ProductoDto, DomainError> result =
+            await _handler.Handle(new CreateProductoCommand(Request(999)), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
-        var error = result.Error.Should().BeOfType<ValidationError>().Subject;
+        ValidationError error = result.Error.Should().BeOfType<ValidationError>().Subject;
         error.ValidationErrors.Should().ContainKey("CategoriaId");
         error.ValidationErrors["CategoriaId"][0].Should().Contain("999",
             "el mensaje debe identificar la categoría que falta (lo reenvía el E2E)");
@@ -96,7 +100,8 @@ public class CreateProductoCommandHandlerTests {
         _productos.Setup(r => r.SaveAsync(It.IsAny<Producto>()))
             .ReturnsAsync(new Producto { Id = 15, Nombre = "Laptop Dell XPS 15", CategoriaId = 1 });
 
-        var result = await _handler.Handle(new CreateProductoCommand(Request()), CancellationToken.None);
+        Result<ProductoDto, DomainError> result =
+            await _handler.Handle(new CreateProductoCommand(Request()), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(15);
@@ -131,7 +136,7 @@ public class CreateProductoCommandHandlerTests {
         _productos.Setup(r => r.SaveAsync(It.IsAny<Producto>()))
             .ReturnsAsync(new Producto { Id = 15, CategoriaId = 3 });
 
-        await _handler.Handle(new CreateProductoCommand(Request(categoriaId: 3)), CancellationToken.None);
+        await _handler.Handle(new CreateProductoCommand(Request(3)), CancellationToken.None);
 
         _cache.Verify(c => c.RemoveAsync("productos:categoria:3"), Times.Once);
         _outputCache.Verify(o => o.EvictByTagAsync("productos", It.IsAny<CancellationToken>()), Times.Once);

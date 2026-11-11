@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <!-- Núcleo compartido de ASP.NET (IConfiguration, IServiceCollection, auth) -->
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-    <!-- resiliencia de las llamadas Refit entre microservicios (Http/RefitResilience). -->
-    <PackageReference Include="Polly" />
-  </ItemGroup>
+    <ItemGroup>
+        <!-- Núcleo compartido de ASP.NET (IConfiguration, IServiceCollection, auth) -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+        <!-- resiliencia de las llamadas Refit entre microservicios (Http/RefitResilience). -->
+        <PackageReference Include="Polly"/>
+    </ItemGroup>
 
 </Project>

@@ -8,12 +8,11 @@ using TiendaApi.Api.Dtos.Proveedores;
 namespace TiendaApi.Api;
 
 /// <summary>
-/// Contexto source-gen de JSON del microservicio <b>backup</b>.
-///
-/// 🎓 Es el equivalente reducido al del monolito: los tipos que este servicio
-/// serializa (el propio backup, el informe de importación y los DTOs públicos de
-/// catalog que consume). Se comparte con <c>BackupService.OpcionesJson</c> para
-/// que el round-trip export→import lea exactamente lo que escribió (camelCase).
+///     Contexto source-gen de JSON del microservicio <b>backup</b>.
+///     🎓 Es el equivalente reducido al del monolito: los tipos que este servicio
+///     serializa (el propio backup, el informe de importación y los DTOs públicos de
+///     catalog que consume). Se comparte con <c>BackupService.OpcionesJson</c> para
+///     que el round-trip export→import lea exactamente lo que escribió (camelCase).
 /// </summary>
 [JsonSerializable(typeof(BackupDto))]
 [JsonSerializable(typeof(ManifestBackupDto))]

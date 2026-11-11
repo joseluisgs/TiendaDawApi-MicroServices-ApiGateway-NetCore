@@ -25,7 +25,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando historical-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -48,20 +48,21 @@ try {
     builder.Services.AddScoped<IHistorialService, HistorialService>();
     builder.Services.AddControllers();
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     // SIEMPRE inicializa el keyspace (patrón catalog/identity): sin esto, en
     // producción el keyspace `tienda` no llegaría
     // a crearse. Con isDevelopment: false es CREATE IF NOT EXISTS + tablas
     // IF NOT EXISTS: nunca hace DROP, así que en desarrollo el seed del E2E se
     // conserva igual que hasta ahora.
-    using (var scope = app.Services.CreateScope()) {
-        await app.InitializeCassandraAsync(isDevelopment: false);
+    using (IServiceScope scope = app.Services.CreateScope()) {
+        await app.InitializeCassandraAsync(false);
 
         // Semilla idempotente (omite si el historial ya existe).
-        var seeder = scope.ServiceProvider.GetService<CassandraSeeder>();
-        if (seeder is not null)
+        CassandraSeeder? seeder = scope.ServiceProvider.GetService<CassandraSeeder>();
+        if (seeder is not null) {
             await seeder.SeedAsync();
+        }
     }
 
     app.UseAuthorization();

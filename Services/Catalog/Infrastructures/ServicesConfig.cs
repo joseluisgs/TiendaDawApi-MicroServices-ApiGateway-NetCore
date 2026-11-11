@@ -1,6 +1,4 @@
 using BuildingBlocks.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Refit;
 using Serilog;
 using TiendaApi.Api.Services.Email;
@@ -13,11 +11,11 @@ using TiendaApi.Api.Services.Storage;
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Registra los servicios de catalog y sus conexiones con otros microservicios.
+///     Registra los servicios de catalog y sus conexiones con otros microservicios.
 /// </summary>
 public static class ServicesConfig {
     /// <summary>
-    /// Registra servicios internos y clients Refit (R4 · REST con Refit).
+    ///     Registra servicios internos y clients Refit (R4 · REST con Refit).
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>

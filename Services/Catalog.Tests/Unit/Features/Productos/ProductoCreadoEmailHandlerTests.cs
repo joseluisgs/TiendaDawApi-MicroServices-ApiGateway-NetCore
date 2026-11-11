@@ -8,11 +8,10 @@ using TiendaApi.Api.Services.Email;
 namespace TiendaApi.Tests.Unit.Features.Productos;
 
 /// <summary>
-/// Tests del handler que avisa al admin de un producto nuevo.
-///
-/// 🎓 En el monolito encolaba el email en el mismo proceso; aquí lo manda a
-/// <b>email</b> por Refit y es <b>mejor esfuerzo</b>: si el servicio no está,
-/// la creación del producto no puede fallar.
+///     Tests del handler que avisa al admin de un producto nuevo.
+///     🎓 En el monolito encolaba el email en el mismo proceso; aquí lo manda a
+///     <b>email</b> por Refit y es <b>mejor esfuerzo</b>: si el servicio no está,
+///     la creación del producto no puede fallar.
 /// </summary>
 public class ProductoCreadoEmailHandlerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
@@ -23,19 +22,21 @@ public class ProductoCreadoEmailHandlerTests {
     [SetUp]
     public void SetUp() {
         _email = new Mock<IEmailApi>();
-        _handler = new ProductoCreadoEmailHandler(_email.Object, Configuracion(admin: "admin@tienda.com"));
+        _handler = new ProductoCreadoEmailHandler(_email.Object, Configuracion("admin@tienda.com"));
     }
 
-    private static IConfiguration Configuracion(string? admin) =>
-        new ConfigurationBuilder()
+    private static IConfiguration Configuracion(string? admin) {
+        return new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> {
                 ["Smtp:AdminEmail"] = admin
             })
             .Build();
+    }
 
-    private static ProductoCreadoNotification Notificacion() =>
-        new(new ProductoDto(1, "Laptop", "desc", 1299.99m, 10, null,
+    private static ProductoCreadoNotification Notificacion() {
+        return new ProductoCreadoNotification(new ProductoDto(1, "Laptop", "desc", 1299.99m, 10, null,
             new CategoriaResumenDto(1, "Electrónica"), null, DateTime.UtcNow, DateTime.UtcNow));
+    }
 
     [Test]
     public async Task Handle_ConAdminConfigurado_EncolaElAviso() {
@@ -49,7 +50,7 @@ public class ProductoCreadoEmailHandlerTests {
 
     [Test]
     public async Task Handle_SinAdminConfigurado_NoEnviaNada() {
-        var sinAdmin = new ProductoCreadoEmailHandler(_email.Object, Configuracion(admin: null));
+        var sinAdmin = new ProductoCreadoEmailHandler(_email.Object, Configuracion(null));
 
         await sinAdmin.Handle(Notificacion(), CancellationToken.None);
 
@@ -61,7 +62,7 @@ public class ProductoCreadoEmailHandlerTests {
         _email.Setup(e => e.EnqueueAsync(It.IsAny<EmailRequest>()))
             .ThrowsAsync(new InvalidOperationException("email-service caído"));
 
-        var act = async () => await _handler.Handle(Notificacion(), CancellationToken.None);
+        Func<Task> act = async () => await _handler.Handle(Notificacion(), CancellationToken.None);
 
         await act.Should().NotThrowAsync("el aviso es mejor esfuerzo: no rompe la creación del producto");
     }

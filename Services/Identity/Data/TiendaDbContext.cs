@@ -7,21 +7,19 @@ using TiendaApi.Api.Models;
 namespace TiendaApi.Api.Data;
 
 /// <summary>
-/// Contexto de datos del microservicio <b>identity</b>: solo usuarios, roles
-/// (Identity) y vinculaciones OAuth externas. Cada microservicio tiene su
-/// propia base de datos y aquí NO existe nada de catálogo, pedidos ni réplicas.
-///
-/// Se mantiene el nombre <c>TiendaDbContext</c> para que los repositorios
-/// copiados del monolito compilen sin cambios de firma; la clase es distinta:
-/// su modelo termina en usuarios.
+///     Contexto de datos del microservicio <b>identity</b>: solo usuarios, roles
+///     (Identity) y vinculaciones OAuth externas. Cada microservicio tiene su
+///     propia base de datos y aquí NO existe nada de catálogo, pedidos ni réplicas.
+///     Se mantiene el nombre <c>TiendaDbContext</c> para que los repositorios
+///     copiados del monolito compilen sin cambios de firma; la clase es distinta:
+///     su modelo termina en usuarios.
 /// </summary>
 public class TiendaDbContext : IdentityDbContext<User, IdentityRole<long>, long> {
     private static readonly TimestampInterceptor _timestampInterceptor = new();
 
     /// <summary>Crea el contexto con las opciones del contenedor de dependencias.</summary>
     public TiendaDbContext(DbContextOptions<TiendaDbContext> options)
-        : base(options) {
-    }
+        : base(options) { }
 
     /// <summary>Usuarios (sombrea el Users heredado de IdentityDbContext).</summary>
     public new DbSet<User> Users { get; set; } = null!;

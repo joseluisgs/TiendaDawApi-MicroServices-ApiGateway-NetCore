@@ -3,11 +3,10 @@ using Refit;
 namespace TiendaApi.Api.Services.Orders;
 
 /// <summary>
-/// Contrato Refit del microservicio <b>orders</b> (rutas públicas, R7).
-///
-/// 🎓 Statistics no tiene <c>orders_db</c>: pide TODOS los pedidos (el endpoint
-/// admin no pagina) y acota la ventana en memoria, con el mismo resultado
-/// numérico que <c>FindByRangoFechasAsync</c> del monolito.
+///     Contrato Refit del microservicio <b>orders</b> (rutas públicas, R7).
+///     🎓 Statistics no tiene <c>orders_db</c>: pide TODOS los pedidos (el endpoint
+///     admin no pagina) y acota la ventana en memoria, con el mismo resultado
+///     numérico que <c>FindByRangoFechasAsync</c> del monolito.
 /// </summary>
 public interface IOrdersApi {
     /// <summary>Todos los pedidos, ordenados por fecha descendente.</summary>

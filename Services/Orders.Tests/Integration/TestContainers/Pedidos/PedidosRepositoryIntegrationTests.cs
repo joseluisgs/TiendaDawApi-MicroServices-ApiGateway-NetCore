@@ -8,30 +8,15 @@ using TiendaApi.Api.Repositories.Pedidos;
 namespace TiendaApi.Tests.Integration.TestContainers.Pedidos;
 
 /// <summary>
-/// Tests de integración del repositorio de pedidos sobre <b>MongoDB real</b>.
-///
-/// 🎓 Recorren el camino de persistencia de orders: documentos con ObjectId,
-/// items desnormalizados, paginación por ventana y pertenencia por usuario
-/// (lo que usan los endpoints <c>/me</c> para no filtrar pedidos ajenos).
+///     Tests de integración del repositorio de pedidos sobre <b>MongoDB real</b>.
+///     🎓 Recorren el camino de persistencia de orders: documentos con ObjectId,
+///     items desnormalizados, paginación por ventana y pertenencia por usuario
+///     (lo que usan los endpoints <c>/me</c> para no filtrar pedidos ajenos).
 /// </summary>
 [TestFixture]
 [Category("Integration")]
 [NonParallelizable]
 public class PedidosRepositoryIntegrationTests {
-    private const string DatabaseName = "it_orders_repo";
-    private IMongoDatabase _database = null!;
-    private PedidosNativeRepository _repo = null!;
-
-    private static Pedido Pedido(long userId, string nombre, decimal total, DateTime? creado = null) => new() {
-        Id = ObjectId.GenerateNewId(),
-        UserId = userId,
-        Items = [new PedidoItem { ProductoId = 1, NombreProducto = nombre, Cantidad = 1, Precio = total, Subtotal = total }],
-        Total = total,
-        Estado = PedidoEstado.PENDIENTE,
-        CreatedAt = creado ?? DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow,
-    };
-
     [SetUp]
     public void Setup() {
         // GetMongoDatabase hace drop: cada test arranca de colección vacía.
@@ -39,13 +24,32 @@ public class PedidosRepositoryIntegrationTests {
         _repo = new PedidosNativeRepository(_database, NullLogger<PedidosNativeRepository>.Instance);
     }
 
+    private const string DatabaseName = "it_orders_repo";
+    private IMongoDatabase _database = null!;
+    private PedidosNativeRepository _repo = null!;
+
+    private static Pedido Pedido(long userId, string nombre, decimal total, DateTime? creado = null) {
+        return new Pedido {
+            Id = ObjectId.GenerateNewId(),
+            UserId = userId,
+            Items = [
+                new PedidoItem
+                    { ProductoId = 1, NombreProducto = nombre, Cantidad = 1, Precio = total, Subtotal = total }
+            ],
+            Total = total,
+            Estado = PedidoEstado.PENDIENTE,
+            CreatedAt = creado ?? DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
     [Test]
     public async Task Save_LuegoFindById_DevuelveElPedidoConSusItems() {
-        var guardado = await _repo.SaveAsync(Pedido(1, "Laptop Dell XPS 15", 1299.99m));
+        Pedido guardado = await _repo.SaveAsync(Pedido(1, "Laptop Dell XPS 15", 1299.99m));
 
         guardado.Id.Should().NotBe(ObjectId.Empty, "MongoDB asigna el ObjectId");
 
-        var leido = await _repo.FindByIdAsync(guardado.Id.ToString());
+        Pedido? leido = await _repo.FindByIdAsync(guardado.Id.ToString());
 
         leido.Should().NotBeNull();
         leido!.UserId.Should().Be(1);
@@ -58,7 +62,7 @@ public class PedidosRepositoryIntegrationTests {
 
     [Test]
     public async Task FindById_Inexistente_DevuelveNull() {
-        var leido = await _repo.FindByIdAsync(ObjectId.GenerateNewId().ToString());
+        Pedido? leido = await _repo.FindByIdAsync(ObjectId.GenerateNewId().ToString());
 
         leido.Should().BeNull("un miss no es un error: es un 404 en la capa superior");
     }
@@ -88,10 +92,11 @@ public class PedidosRepositoryIntegrationTests {
 
     [Test]
     public async Task FindByUserIdPaged_DevuelvePaginaYTotal() {
-        for (var i = 1; i <= 5; i++)
+        for (int i = 1; i <= 5; i++) {
             await _repo.SaveAsync(Pedido(1, "P" + i, i, DateTime.UtcNow.AddMinutes(i)));
+        }
 
-        var (items, total) = await _repo.FindByUserIdPagedAsync(1, page: 0, size: 2);
+        (IEnumerable<Pedido> items, int total) = await _repo.FindByUserIdPagedAsync(1, 0, 2);
 
         total.Should().Be(5, "el total es del filtro, no de la página");
         items.Should().HaveCount(2);
@@ -100,8 +105,8 @@ public class PedidosRepositoryIntegrationTests {
 
     [Test]
     public async Task FindByRangoFechas_IncluyeElInicio_ExcluyeElFinal() {
-        var desde = DateTime.UtcNow.AddDays(-1);
-        var hasta = DateTime.UtcNow;
+        DateTime desde = DateTime.UtcNow.AddDays(-1);
+        DateTime hasta = DateTime.UtcNow;
 
         await _repo.SaveAsync(Pedido(1, "Antes", 1m, desde.AddDays(-1)));
         await _repo.SaveAsync(Pedido(1, "Dentro", 2m, desde.AddHours(1)));
@@ -115,7 +120,7 @@ public class PedidosRepositoryIntegrationTests {
 
     [Test]
     public async Task Update_CambiaElEstado_SinDuplicar() {
-        var pedido = await _repo.SaveAsync(Pedido(1, "P", 10m));
+        Pedido pedido = await _repo.SaveAsync(Pedido(1, "P", 10m));
 
         pedido.Estado = PedidoEstado.ENVIADO;
         await _repo.UpdateAsync(pedido);

@@ -1,6 +1,4 @@
 using BuildingBlocks.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Refit;
 using Serilog;
 using TiendaApi.Api.Services.Catalog;
@@ -9,17 +7,16 @@ using TiendaApi.Api.Services.Orders;
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Registra los services Refit del BFF GraphQL y su propagación de autenticación.
-///
-/// 🎓 R4 — GraphQL no tiene BD: todo lo consulta por REST a los dueños. Los
-/// endpoints de usuarios y pedidos exigen ADMIN, así que el JWT del llamante
-/// viaja en la cabecera (mismo criterio que statistics y backup).
+///     Registra los services Refit del BFF GraphQL y su propagación de autenticación.
+///     🎓 R4 — GraphQL no tiene BD: todo lo consulta por REST a los dueños. Los
+///     endpoints de usuarios y pedidos exigen ADMIN, así que el JWT del llamante
+///     viaja en la cabecera (mismo criterio que statistics y backup).
 /// </summary>
 public static class ServicesConfig {
     /// <summary>
-    /// Registra los clients Refit (R4 — REST con Refit): direcciones por
-    /// configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
-    /// en desarrollo, localhost.
+    ///     Registra los clients Refit (R4 — REST con Refit): direcciones por
+    ///     configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
+    ///     en desarrollo, localhost.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>

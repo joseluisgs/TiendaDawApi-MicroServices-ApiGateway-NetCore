@@ -4,11 +4,10 @@ using TiendaApi.Api.Dtos.Common;
 namespace TiendaApi.Api.Services.Identity;
 
 /// <summary>
-/// Contrato Refit del microservicio <b>identity</b> (rutas públicas, R7).
-///
-/// 🎓 Statistics no consulta <c>identity_db</c> (R5): pide el listado de
-/// usuarios al dueño para cruzarlo con los pedidos (ranking de clientes y
-/// cifras de "usuarios nuevos en el periodo").
+///     Contrato Refit del microservicio <b>identity</b> (rutas públicas, R7).
+///     🎓 Statistics no consulta <c>identity_db</c> (R5): pide el listado de
+///     usuarios al dueño para cruzarlo con los pedidos (ranking de clientes y
+///     cifras de "usuarios nuevos en el periodo").
 /// </summary>
 public interface IUsersApi {
     /// <summary>Página de usuarios (solo ADMIN, igual que en el monolito).</summary>

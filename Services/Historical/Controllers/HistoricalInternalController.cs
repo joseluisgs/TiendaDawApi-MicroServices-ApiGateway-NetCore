@@ -1,15 +1,16 @@
+using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using TiendaApi.Api.Dtos.Historial;
+using TiendaApi.Api.Errors;
 using TiendaApi.Api.Services.Historial;
 
 namespace TiendaApi.Api.Controllers;
 
 /// <summary>
-/// API interna del microservicio <c>historical</c> (rutas <c>/internal/*</c>, R7):
-/// la consumen identity (feed) y catalog (serie y vistas) por Refit.
-///
-/// 🎓 Este servicio no valida la existencia del producto: esa certificación la
-/// hace el dueño (catalog) antes de llamar. Aquí solo se sirven las series.
+///     API interna del microservicio <c>historical</c> (rutas <c>/internal/*</c>, R7):
+///     la consumen identity (feed) y catalog (serie y vistas) por Refit.
+///     🎓 Este servicio no valida la existencia del producto: esa certificación la
+///     hace el dueño (catalog) antes de llamar. Aquí solo se sirven las series.
 /// </summary>
 [ApiController]
 [Route("internal/historial")]
@@ -19,8 +20,9 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
     [ProducesResponseType(typeof(IReadOnlyList<VistaFeedDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<VistaFeedDto>>> GetFeed(
         [FromQuery] long usuarioId,
-        [FromQuery] int limit = 20)
-        => Ok(await service.GetFeedVistasAsync(usuarioId, limit));
+        [FromQuery] int limit = 20) {
+        return Ok(await service.GetFeedVistasAsync(usuarioId, limit));
+    }
 
     /// <summary>Serie histórica de precios de un producto.</summary>
     [HttpGet("productos/{productoId:long}")]
@@ -30,9 +32,11 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
         [FromQuery] DateTime? desde,
         [FromQuery] DateTime? hasta,
         [FromQuery] int limit = 50) {
-        var resultado = await service.GetHistorialPreciosAsync(productoId, desde, hasta, limit);
-        if (resultado.IsFailure)
+        Result<IReadOnlyList<HistorialPrecioDto>, DomainError> resultado =
+            await service.GetHistorialPreciosAsync(productoId, desde, hasta, limit);
+        if (resultado.IsFailure) {
             return BadRequest(new { message = resultado.Error.Message });
+        }
 
         return Ok(resultado.Value);
     }
@@ -41,24 +45,27 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
     [HttpPost("vistas")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> RegistrarVista([FromBody] RegistrarVistaRequest body) {
-        var resultado = await service.RegistrarVistaAsync(body.UsuarioId, body.ProductoId, body.NombreProducto);
-        if (resultado.IsFailure)
+        UnitResult<DomainError> resultado =
+            await service.RegistrarVistaAsync(body.UsuarioId, body.ProductoId, body.NombreProducto);
+        if (resultado.IsFailure) {
             return BadRequest(new { message = resultado.Error.Message });
+        }
 
         return NoContent();
     }
 
     /// <summary>
-    /// Registra un punto de precio en las series (dual-write). Lo llama catalog
-    /// (dueño del producto) al crearlo (punto de nacimiento) y al cambiar el
-    /// precio de verdad — con su propio try/catch degradado, como el monolito.
+    ///     Registra un punto de precio en las series (dual-write). Lo llama catalog
+    ///     (dueño del producto) al crearlo (punto de nacimiento) y al cambiar el
+    ///     precio de verdad — con su propio try/catch degradado, como el monolito.
     /// </summary>
     [HttpPost("precios")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> RegistrarPrecio([FromBody] RegistrarPrecioRequest body) {
-        var resultado = await service.RegistrarPrecioAsync(body.ProductoId, body.Precio);
-        if (resultado.IsFailure)
+        UnitResult<DomainError> resultado = await service.RegistrarPrecioAsync(body.ProductoId, body.Precio);
+        if (resultado.IsFailure) {
             return BadRequest(new { message = resultado.Error.Message });
+        }
 
         return NoContent();
     }

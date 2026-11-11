@@ -8,10 +8,9 @@ using TiendaApi.Api.Dtos.Proveedores;
 namespace TiendaApi.Api;
 
 /// <summary>
-/// Contexto source-gen de JSON del microservicio <b>graphql</b>.
-///
-/// ðŸŽ“ Solo los DTOs que este servicio serializa en sus respuestas REST
-/// (la propia GraphQL usa HotChocolate y sus propios serializadores).
+///     Contexto source-gen de JSON del microservicio <b>graphql</b>.
+///     ðŸŽ“ Solo los DTOs que este servicio serializa en sus respuestas REST
+///     (la propia GraphQL usa HotChocolate y sus propios serializadores).
 /// </summary>
 [JsonSerializable(typeof(ProductoDto))]
 [JsonSerializable(typeof(ProductoRequestDto))]
