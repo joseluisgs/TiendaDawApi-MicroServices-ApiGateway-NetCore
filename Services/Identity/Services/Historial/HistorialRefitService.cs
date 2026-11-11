@@ -12,17 +12,12 @@ namespace TiendaApi.Api.Services.Historial;
 /// también trataba el feed como dato derivado tolerante a fallos.
 /// </summary>
 public class HistorialRefitService(IHistorialApi api, ILogger<HistorialRefitService> logger)
-    : IHistorialService
-{
+    : IHistorialService {
     /// <inheritdoc />
-    public async Task<IReadOnlyList<VistaFeedDto>> GetFeedVistasAsync(long usuarioId, int limit)
-    {
-        try
-        {
+    public async Task<IReadOnlyList<VistaFeedDto>> GetFeedVistasAsync(long usuarioId, int limit) {
+        try {
             return await api.GetFeedVistasAsync(usuarioId, limit);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             logger.LogWarning(ex, "Feed: historical no responde; se devuelve lista vacía");
             return new List<VistaFeedDto>();
         }

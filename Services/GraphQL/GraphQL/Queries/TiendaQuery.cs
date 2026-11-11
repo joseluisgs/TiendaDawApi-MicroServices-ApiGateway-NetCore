@@ -27,8 +27,7 @@ namespace TiendaApi.Api.GraphQL.Queries;
 /// (<c>AuthorizationForwardingHandler</c>), de modo que la autorización se
 /// resuelve en el dueño — no se confía en el filtro local.
 /// </summary>
-public class TiendaQuery
-{
+public class TiendaQuery {
     // ── productos ──────────────────────────────────────────────────────
 
     /// <summary>Obtiene todos los productos (primera página del listado público).</summary>
@@ -37,8 +36,7 @@ public class TiendaQuery
     /// <returns>Lista de productos (DTOs).</returns>
     public async Task<IReadOnlyList<ProductoDto>> GetProductos(
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
+        CancellationToken ct = default) {
         var pagina = await catalogApi.GetProductosAsync(page: 0, size: 100);
         return (pagina.Items ?? []).ToList();
     }
@@ -51,14 +49,10 @@ public class TiendaQuery
     public async Task<ProductoDto?> GetProducto(
         long id,
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
-        try
-        {
+        CancellationToken ct = default) {
+        try {
             return await catalogApi.GetProductoAsync(id);
-        }
-        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
+        } catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound) {
             // GraphQL devuelve null (no error) cuando el recurso no existe.
             return null;
         }
@@ -74,8 +68,7 @@ public class TiendaQuery
         [Service] ICatalogApi catalogApi,
         int page = 1,
         int size = 10,
-        CancellationToken ct = default)
-    {
+        CancellationToken ct = default) {
         // GraphQL expone paginación base 1; la API REST trabaja con base 0.
         var pagina = await catalogApi.GetProductosAsync(Math.Max(page - 1, 0), size);
         return pagina with { Page = page };
@@ -89,8 +82,7 @@ public class TiendaQuery
     /// <returns>Lista de categorías (DTOs).</returns>
     public async Task<IReadOnlyList<CategoriaDto>> GetCategorias(
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
+        CancellationToken ct = default) {
         var pagina = await catalogApi.GetCategoriasAsync(page: 0, size: 100);
         return (pagina.Items ?? []).ToList();
     }
@@ -103,14 +95,10 @@ public class TiendaQuery
     public async Task<CategoriaDto?> GetCategoria(
         long id,
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
-        try
-        {
+        CancellationToken ct = default) {
+        try {
             return await catalogApi.GetCategoriaAsync(id);
-        }
-        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
+        } catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound) {
             return null;
         }
     }
@@ -125,8 +113,7 @@ public class TiendaQuery
         [Service] ICatalogApi catalogApi,
         int page = 1,
         int size = 10,
-        CancellationToken ct = default)
-    {
+        CancellationToken ct = default) {
         var pagina = await catalogApi.GetCategoriasAsync(Math.Max(page - 1, 0), size);
         return pagina with { Page = page };
     }
@@ -142,8 +129,7 @@ public class TiendaQuery
     [Authorize(policy: "AdminOnly")]
     public async Task<IReadOnlyList<PedidoDto>> GetPedidos(
         [Service] IOrdersApi ordersApi,
-        CancellationToken ct = default)
-    {
+        CancellationToken ct = default) {
         return await ordersApi.GetPedidosAsync();
     }
 
@@ -162,8 +148,7 @@ public class TiendaQuery
     public async Task<IReadOnlyList<PedidoDto>> GetMisPedidos(
         ClaimsPrincipal user,
         [Service] IOrdersApi ordersApi,
-        CancellationToken ct = default)
-    {
+        CancellationToken ct = default) {
         // Comprobación local mínima: si no hay identidad, no se llama (evita
         // que un token sin claims pida /me y reciba un 401 opaco).
         var claim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;

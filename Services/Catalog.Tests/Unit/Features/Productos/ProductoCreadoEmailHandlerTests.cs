@@ -14,24 +14,21 @@ namespace TiendaApi.Tests.Unit.Features.Productos;
 /// <b>email</b> por Refit y es <b>mejor esfuerzo</b>: si el servicio no está,
 /// la creación del producto no puede fallar.
 /// </summary>
-public class ProductoCreadoEmailHandlerTests
-{
+public class ProductoCreadoEmailHandlerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IEmailApi> _email = null!;
     private ProductoCreadoEmailHandler _handler = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _email = new Mock<IEmailApi>();
         _handler = new ProductoCreadoEmailHandler(_email.Object, Configuracion(admin: "admin@tienda.com"));
     }
 
     private static IConfiguration Configuracion(string? admin) =>
         new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
+            .AddInMemoryCollection(new Dictionary<string, string?> {
                 ["Smtp:AdminEmail"] = admin
             })
             .Build();
@@ -41,8 +38,7 @@ public class ProductoCreadoEmailHandlerTests
             new CategoriaResumenDto(1, "Electrónica"), null, DateTime.UtcNow, DateTime.UtcNow));
 
     [Test]
-    public async Task Handle_ConAdminConfigurado_EncolaElAviso()
-    {
+    public async Task Handle_ConAdminConfigurado_EncolaElAviso() {
         await _handler.Handle(Notificacion(), CancellationToken.None);
 
         _email.Verify(e => e.EnqueueAsync(It.Is<EmailRequest>(m =>
@@ -52,8 +48,7 @@ public class ProductoCreadoEmailHandlerTests
     }
 
     [Test]
-    public async Task Handle_SinAdminConfigurado_NoEnviaNada()
-    {
+    public async Task Handle_SinAdminConfigurado_NoEnviaNada() {
         var sinAdmin = new ProductoCreadoEmailHandler(_email.Object, Configuracion(admin: null));
 
         await sinAdmin.Handle(Notificacion(), CancellationToken.None);
@@ -62,8 +57,7 @@ public class ProductoCreadoEmailHandlerTests
     }
 
     [Test]
-    public async Task Handle_ServicioEmailCaido_NoPropagaLaExcepcion()
-    {
+    public async Task Handle_ServicioEmailCaido_NoPropagaLaExcepcion() {
         _email.Setup(e => e.EnqueueAsync(It.IsAny<EmailRequest>()))
             .ThrowsAsync(new InvalidOperationException("email-service caído"));
 

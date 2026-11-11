@@ -31,8 +31,7 @@ Log.Logger = new LoggerConfiguration()
         theme: AnsiConsoleTheme.Code)
     .CreateLogger();
 
-try
-{
+try {
     Log.Information("arrancando identity-service...");
 
     var builder = WebApplication.CreateBuilder(args);
@@ -67,16 +66,15 @@ try
 
     // Solo Identity (sin Auth:Mode, sin cookies): misma política de contraseñas
     // que el monolito (mínimo 8, dígito, mayúscula, minúscula; sin símbolos).
-    builder.Services.AddIdentityCore<User>(options =>
-        {
-            options.Password.RequireDigit = true;
-            options.Password.RequireLowercase = true;
-            options.Password.RequireUppercase = true;
-            options.Password.RequiredLength = 8;
-            options.Password.RequireNonAlphanumeric = false;
-            options.Lockout.MaxFailedAccessAttempts = 5;
-            options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
-        })
+    builder.Services.AddIdentityCore<User>(options => {
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequiredLength = 8;
+        options.Password.RequireNonAlphanumeric = false;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+    })
         .AddRoles<IdentityRole<long>>()
         .AddSignInManager()
         .AddEntityFrameworkStores<TiendaDbContext>()
@@ -107,8 +105,7 @@ try
     var app = builder.Build();
 
     // Swagger solo en desarrollo (el servicio es privado: solo se ve detrás del gateway).
-    if (app.Environment.IsDevelopment())
-    {
+    if (app.Environment.IsDevelopment()) {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
@@ -122,12 +119,10 @@ try
     app.MapGet("/health", () => Results.Ok(new { status = "ok", service = "identity" }));
     app.MapControllers();
 
-    using (var scope = app.Services.CreateScope())
-    {
+    using (var scope = app.Services.CreateScope()) {
         var db = scope.ServiceProvider.GetRequiredService<TiendaDbContext>();
 
-        if (app.Environment.IsDevelopment())
-        {
+        if (app.Environment.IsDevelopment()) {
             // Como el monolito (y como catalog): en desarrollo se recrea la BD en
             // cada arranque, para que "reiniciar la API entre corridas" vuelva al
             // estado semilla - sin esto los usuarios de las suites (p. ej. newuser)
@@ -156,12 +151,8 @@ try
     Log.Information("=================================================================");
 
     app.Run();
-}
-catch (Exception ex)
-{
+} catch (Exception ex) {
     Log.Fatal(ex, "identity-service terminó inesperadamente");
-}
-finally
-{
+} finally {
     Log.CloseAndFlush();
 }

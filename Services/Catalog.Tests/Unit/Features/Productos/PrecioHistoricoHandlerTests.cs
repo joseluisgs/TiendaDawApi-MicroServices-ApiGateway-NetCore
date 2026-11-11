@@ -16,16 +16,14 @@ namespace TiendaApi.Tests.Unit.Features.Productos;
 /// - Actualización → punto SOLO si el precio cambió de verdad.
 /// - Si el servicio remoto falla → no se propaga (modo degradado).
 /// </summary>
-public class PrecioHistoricoHandlerTests
-{
+public class PrecioHistoricoHandlerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IHistorialService> _historial = null!;
     private PrecioHistoricoHandler _handler = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _historial = new Mock<IHistorialService>();
         _handler = new PrecioHistoricoHandler(_historial.Object);
     }
@@ -36,16 +34,14 @@ public class PrecioHistoricoHandlerTests
         null, DateTime.UtcNow, DateTime.UtcNow);
 
     [Test]
-    public async Task Handle_ProductoCreado_RegistraElPrecioDeNacimiento()
-    {
+    public async Task Handle_ProductoCreado_RegistraElPrecioDeNacimiento() {
         await _handler.Handle(new ProductoCreadoNotification(Producto(1299.99m)), CancellationToken.None);
 
         _historial.Verify(h => h.RegistrarPrecioAsync(7, 1299.99d), Times.Once);
     }
 
     [Test]
-    public async Task Handle_Actualizado_PrecioCambiado_RegistraElNuevoPrecio()
-    {
+    public async Task Handle_Actualizado_PrecioCambiado_RegistraElNuevoPrecio() {
         await _handler.Handle(new ProductoActualizadoNotification(
             Producto(999.99m), PrecioAnterior: 1299.99m), CancellationToken.None);
 
@@ -53,8 +49,7 @@ public class PrecioHistoricoHandlerTests
     }
 
     [Test]
-    public async Task Handle_Actualizado_PrecioIgual_NoRegistraNada()
-    {
+    public async Task Handle_Actualizado_PrecioIgual_NoRegistraNada() {
         // Solo cambió el stock: el historial registra cambios de precio, no ediciones.
         await _handler.Handle(new ProductoActualizadoNotification(
             Producto(1299.99m), PrecioAnterior: 1299.99m), CancellationToken.None);
@@ -63,8 +58,7 @@ public class PrecioHistoricoHandlerTests
     }
 
     [Test]
-    public async Task Handle_ServicioNoDisponible_NoPropagaLaExcepcion()
-    {
+    public async Task Handle_ServicioNoDisponible_NoPropagaLaExcepcion() {
         _historial.Setup(h => h.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()))
             .ThrowsAsync(new InvalidOperationException("historical caído"));
 

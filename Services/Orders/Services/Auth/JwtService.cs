@@ -13,16 +13,13 @@ namespace TiendaApi.Api.Services.Auth;
 ///
 /// 🎓 Sin <c>GenerateToken</c>: la emisión vive en identity (R6 — firma única).
 /// </summary>
-public class JwtService(IConfiguration configuration, ILogger<JwtService> logger) : IJwtService
-{
+public class JwtService(IConfiguration configuration, ILogger<JwtService> logger) : IJwtService {
     private readonly IConfiguration _configuration = configuration;
     private readonly ILogger<JwtService> _logger = logger;
 
     /// <inheritdoc />
-    public string? ValidateToken(string token)
-    {
-        try
-        {
+    public string? ValidateToken(string token) {
+        try {
             var key = _configuration["Jwt:Key"]
                 ?? throw new InvalidOperationException("JWT Key no configurada");
             var issuer = _configuration["Jwt:Issuer"] ?? "TiendaApi";
@@ -31,8 +28,7 @@ public class JwtService(IConfiguration configuration, ILogger<JwtService> logger
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
 
-            tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
+            tokenHandler.ValidateToken(token, new TokenValidationParameters {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = securityKey,
                 ValidateIssuer = true,
@@ -47,9 +43,7 @@ public class JwtService(IConfiguration configuration, ILogger<JwtService> logger
             var username = jwtToken.Claims.First(x => x.Type == "username").Value;
 
             return username;
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             _logger.LogWarning(ex, "Validación de token JWT fallida");
             return null;
         }

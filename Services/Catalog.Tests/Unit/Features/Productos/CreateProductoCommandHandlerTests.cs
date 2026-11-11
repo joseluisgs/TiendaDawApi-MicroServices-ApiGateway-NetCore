@@ -24,8 +24,7 @@ namespace TiendaApi.Tests.Unit.Features.Productos;
 /// (publicar → sync a MongoDB) y DESPUÉS invalidar las cachés; si se invierte,
 /// un lector puede repoblar la caché con el modelo de lectura viejo.
 /// </summary>
-public class CreateProductoCommandHandlerTests
-{
+public class CreateProductoCommandHandlerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IProductoRepository> _productos = null!;
@@ -37,8 +36,7 @@ public class CreateProductoCommandHandlerTests
     private CreateProductoCommandHandler _handler = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _productos = new Mock<IProductoRepository>();
         _categorias = new Mock<ICategoriaRepository>();
         _mediator = new Mock<IMediator>();
@@ -54,8 +52,7 @@ public class CreateProductoCommandHandlerTests
             _mediator.Object, _cache.Object, _outputCache.Object);
     }
 
-    private static ProductoRequestDto Request(long categoriaId = 1) => new()
-    {
+    private static ProductoRequestDto Request(long categoriaId = 1) => new() {
         Nombre = "Laptop Dell XPS 15",
         Descripcion = "Alto rendimiento",
         Precio = 1299.99m,
@@ -64,11 +61,9 @@ public class CreateProductoCommandHandlerTests
     };
 
     [Test]
-    public async Task Handle_Invalido_Devuelve400ConErroresPorCampo()
-    {
+    public async Task Handle_Invalido_Devuelve400ConErroresPorCampo() {
         _validador.Setup(v => v.ValidateAsync(It.IsAny<ProductoRequestDto>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ValidationResult(new[]
-            {
+            .ReturnsAsync(new ValidationResult(new[] {
                 new ValidationFailure("Precio", "El precio debe ser mayor a 0")
             }));
 
@@ -80,8 +75,7 @@ public class CreateProductoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_CategoriaNoExiste_Devuelve400ConElIdEnElCampo()
-    {
+    public async Task Handle_CategoriaNoExiste_Devuelve400ConElIdEnElCampo() {
         // El handler comprueba la FK con FindByIdAsync (no con ExistsByIdAsync).
         _categorias.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((Categoria?)null);
 
@@ -96,8 +90,7 @@ public class CreateProductoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_Ok_DevuelveElDtoCreado()
-    {
+    public async Task Handle_Ok_DevuelveElDtoCreado() {
         _categorias.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new Categoria { Id = 1, Nombre = "Electrónica" });
         _productos.Setup(r => r.SaveAsync(It.IsAny<Producto>()))
@@ -110,8 +103,7 @@ public class CreateProductoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_Ok_PublicaLaNotificacion_YDespuesInvalidaCaches()
-    {
+    public async Task Handle_Ok_PublicaLaNotificacion_YDespuesInvalidaCaches() {
         _categorias.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new Categoria { Id = 1, Nombre = "Electrónica" });
         _productos.Setup(r => r.SaveAsync(It.IsAny<Producto>()))
@@ -133,8 +125,7 @@ public class CreateProductoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_Ok_InvalidaLaCachedeLaCategoria()
-    {
+    public async Task Handle_Ok_InvalidaLaCachedeLaCategoria() {
         _categorias.Setup(r => r.FindByIdAsync(3))
             .ReturnsAsync(new Categoria { Id = 3, Nombre = "Libros" });
         _productos.Setup(r => r.SaveAsync(It.IsAny<Producto>()))

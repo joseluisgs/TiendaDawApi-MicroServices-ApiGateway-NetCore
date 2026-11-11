@@ -12,18 +12,15 @@ namespace TiendaApi.Api.Infrastructures;
 /// servicio DUEÑO del dato (aquí) y el gateway hace de proxy en
 /// <c>/hubs/productos</c>. El hub de pedidos es de <b>orders</b>.
 /// </summary>
-public static class SignalRExtensions
-{
+public static class SignalRExtensions {
     /// <summary>
     /// Configura el hub de SignalR de productos.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <returns>IServiceCollection.</returns>
-    public static IServiceCollection AddRealtimeSignalR(this IServiceCollection services)
-    {
+    public static IServiceCollection AddRealtimeSignalR(this IServiceCollection services) {
         services.AddSignalR()
-            .AddHubOptions<ProductosHub>(options =>
-            {
+            .AddHubOptions<ProductosHub>(options => {
                 options.EnableDetailedErrors = true;
                 options.MaximumReceiveMessageSize = 1024 * 4;
                 options.KeepAliveInterval = TimeSpan.FromSeconds(15);
@@ -37,8 +34,7 @@ public static class SignalRExtensions
     /// </summary>
     /// <param name="app">Application builder.</param>
     /// <returns>Application builder.</returns>
-    public static IApplicationBuilder MapSignalRHubs(this IApplicationBuilder app)
-    {
+    public static IApplicationBuilder MapSignalRHubs(this IApplicationBuilder app) {
         var webApp = (WebApplication)app;
 
         webApp.MapHub<ProductosHub>("/hubs/productos");

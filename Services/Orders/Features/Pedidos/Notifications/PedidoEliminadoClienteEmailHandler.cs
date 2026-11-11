@@ -11,11 +11,9 @@ namespace TiendaApi.Api.Features.Pedidos.Notifications;
 /// admin no se notifica su propia acción (lo ve en el panel y en tiempo real).
 /// </summary>
 public class PedidoEliminadoClienteEmailHandler(IEmailApi emailService)
-    : INotificationHandler<PedidoEliminadoNotification>
-{
+    : INotificationHandler<PedidoEliminadoNotification> {
     /// <inheritdoc/>
-    public async Task Handle(PedidoEliminadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(PedidoEliminadoNotification notification, CancellationToken cancellationToken) {
         var destinatario = notification.Destinatario;
         if (string.IsNullOrWhiteSpace(destinatario?.Email)) return;
 
@@ -24,14 +22,11 @@ public class PedidoEliminadoClienteEmailHandler(IEmailApi emailService)
             notification.Total,
             destinatario.NombreCompleto);
 
-        try
-        {
+        try {
             await emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"🚫 Tu pedido #{notification.PedidoId} ha sido cancelado", EmailTemplates.CreateBase($"Pedido #{notification.PedidoId} cancelado", content), IsHtml: true));
             Log.Information("📧 [EMAIL] Aviso de eliminación encolado para el cliente: {PedidoId} -> {Email}",
                 notification.PedidoId, destinatario.Email);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // 📧 Mejor esfuerzo: email caído NO rompe la operación del pedido.
             Log.Warning(ex, "PedidoEliminadoClienteEmailHandler: email-service no disponible, no se encoló el aviso");
         }

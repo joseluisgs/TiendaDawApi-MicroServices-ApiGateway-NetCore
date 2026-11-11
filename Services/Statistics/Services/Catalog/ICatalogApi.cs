@@ -11,8 +11,7 @@ namespace TiendaApi.Api.Services.Catalog;
 /// los modelos de dominio que consume <c>EstadisticasCalculator</c> — así el
 /// cálculo es BYTE IDÉNTICO al del monolito.
 /// </summary>
-public interface ICatalogApi
-{
+public interface ICatalogApi {
     /// <summary>Página de productos (el read model de Mongo).</summary>
     /// <param name="page">Página base 0.</param>
     /// <param name="size">Tamaño (máx. 100 por la validación).</param>

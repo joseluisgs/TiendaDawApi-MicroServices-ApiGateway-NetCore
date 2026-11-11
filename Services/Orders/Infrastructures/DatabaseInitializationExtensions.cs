@@ -15,22 +15,17 @@ namespace TiendaApi.Api.Infrastructures;
 ///
 /// Idempotente: si ya hay pedidos, no se vuelve a sembrar.
 /// </summary>
-public static class DatabaseInitializationExtensions
-{
+public static class DatabaseInitializationExtensions {
     /// <summary>
     /// Siembra <c>orders_db</c> si está vacía.
     /// </summary>
     /// <param name="app">Aplicación en marcha.</param>
-    public static async Task InitializeDatabaseAsync(this WebApplication app)
-    {
-        try
-        {
+    public static async Task InitializeDatabaseAsync(this WebApplication app) {
+        try {
             using var scope = app.Services.CreateScope();
             var seeder = scope.ServiceProvider.GetRequiredService<MongoDbSeeder>();
             await seeder.SeedAsync();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // Mismo criterio que el monolito: el sembrado no debe tumbar el arranque
             // (si MongoDB no está, /health lo dirá).
             Log.Warning(ex, "No se pudo sembrar orders_db (continuando)");

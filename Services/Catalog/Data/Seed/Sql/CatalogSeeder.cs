@@ -14,8 +14,7 @@ namespace TiendaApi.Api.Data.Seed.Sql;
 ///
 /// Copiado del <c>SqlSeeder</c> del monolito y podado de los usuarios.
 /// </summary>
-public class CatalogSeeder
-{
+public class CatalogSeeder {
     private readonly CatalogDbContext _context;
     private readonly ILogger<CatalogSeeder> _logger;
 
@@ -24,8 +23,7 @@ public class CatalogSeeder
     /// </summary>
     /// <param name="context">Contexto de base de datos.</param>
     /// <param name="logger">Logger de la aplicación.</param>
-    public CatalogSeeder(CatalogDbContext context, ILogger<CatalogSeeder> logger)
-    {
+    public CatalogSeeder(CatalogDbContext context, ILogger<CatalogSeeder> logger) {
         _context = context;
         _logger = logger;
     }
@@ -33,10 +31,8 @@ public class CatalogSeeder
     /// <summary>
     /// Sembrar datos iniciales si no existen.
     /// </summary>
-    public async Task SeedAsync()
-    {
-        try
-        {
+    public async Task SeedAsync() {
+        try {
             _logger.LogInformation("Sembrando datos iniciales en catalog_db...");
 
             await SeedCategoriasAsync();
@@ -44,41 +40,33 @@ public class CatalogSeeder
             await SeedProductosAsync();
 
             _logger.LogInformation("Datos de catalog_db sembrados correctamente");
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             _logger.LogWarning(ex, "Error al sembrar datos en catalog_db");
         }
     }
 
-    private async Task SeedCategoriasAsync()
-    {
-        if (await _context.Categorias.AnyAsync())
-        {
+    private async Task SeedCategoriasAsync() {
+        if (await _context.Categorias.AnyAsync()) {
             _logger.LogInformation("Categorías ya presentes, semilla omitida");
             return;
         }
 
-        var categorias = new List<Categoria>
-        {
-            new()
-            {
+        var categorias = new List<Categoria> {
+            new() {
                 Nombre = "Electrónica",
                 Descripcion = "Dispositivos electrónicos y gadgets",
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             },
-            new()
-            {
+            new() {
                 Nombre = "Ropa",
                 Descripcion = "Prendas de vestir para todas las edades",
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             },
-            new()
-            {
+            new() {
                 Nombre = "Libros",
                 Descripcion = "Libros de todos los géneros y temáticas",
                 IsDeleted = false,
@@ -92,10 +80,8 @@ public class CatalogSeeder
         _logger.LogInformation("Insertadas {Count} categorías de ejemplo", categorias.Count);
     }
 
-    private async Task SeedProveedoresAsync()
-    {
-        if (await _context.Proveedores.AnyAsync())
-        {
+    private async Task SeedProveedoresAsync() {
+        if (await _context.Proveedores.AnyAsync()) {
             _logger.LogInformation("Proveedores ya presentes, semilla omitida");
             return;
         }
@@ -103,10 +89,8 @@ public class CatalogSeeder
         // Los códigos son fijos y no aleatorios: la semilla debe ser determinista para que
         // los tests E2E puedan referenciarlos. La generación aleatoria estilo YouTube es el
         // camino por defecto cuando un cliente crea un proveedor sin enviar código.
-        var proveedores = new List<Proveedor>
-            {
-                new()
-                {
+        var proveedores = new List<Proveedor> {
+                new() {
                     Codigo = "TiendaDAW01",
                     Nombre = "Tienda DAW Interna",
                     Descripcion = "Proveedor interno para material de laboratorio",
@@ -115,8 +99,7 @@ public class CatalogSeeder
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 },
-                new()
-                {
+                new() {
                     Codigo = "Distribuc01",
                     Nombre = "Distribuciones DAW",
                     Descripcion = "Distribuidor general de electrónica y periféricos",
@@ -125,8 +108,7 @@ public class CatalogSeeder
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 },
-                new()
-                {
+                new() {
                     Codigo = "Editorial01",
                     Nombre = "Editorial Código Limpio",
                     Descripcion = "Librería técnica especializada",
@@ -142,18 +124,14 @@ public class CatalogSeeder
         _logger.LogInformation("Insertados {Count} proveedores de ejemplo", proveedores.Count);
     }
 
-    private async Task SeedProductosAsync()
-    {
-        if (await _context.Productos.AnyAsync())
-        {
+    private async Task SeedProductosAsync() {
+        if (await _context.Productos.AnyAsync()) {
             _logger.LogInformation("Productos ya presentes, semilla omitida");
             return;
         }
 
-        var productos = new List<Producto>
-        {
-            new()
-            {
+        var productos = new List<Producto> {
+            new() {
                 Nombre = "Laptop Dell XPS 15",
                 Descripcion = "Laptop de alto rendimiento",
                 Precio = 1299.99m,
@@ -165,8 +143,7 @@ public class CatalogSeeder
                 UpdatedAt = DateTime.UtcNow,
                 RowVersion = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }
             },
-            new()
-            {
+            new() {
                 Nombre = "Camiseta Nike",
                 Descripcion = "Camiseta deportiva",
                 Precio = 29.99m,
@@ -178,8 +155,7 @@ public class CatalogSeeder
                 UpdatedAt = DateTime.UtcNow,
                 RowVersion = new byte[] { 2, 3, 4, 5, 6, 7, 8, 9 }
             },
-            new()
-            {
+            new() {
                 Nombre = "Clean Code",
                 Descripcion = "Libro de Robert C. Martin",
                 Precio = 42.99m,

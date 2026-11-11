@@ -1,4 +1,4 @@
-﻿using Cassandra;
+using Cassandra;
 using FluentAssertions;
 using TiendaApi.Api.Models;
 using TiendaApi.Api.Repositories.Historial;
@@ -11,8 +11,7 @@ namespace TiendaApi.Tests.Integration.TestContainers.Historical;
 /// el mismo esquema de producciÃ³n creado por InitializeSchemaAsync). Sin mocks:
 /// se verifican las 5 garantÃ­as del diseÃ±o de la pizarra.
 /// </summary>
-public class CassandraHistorialRepositoryTests
-{
+public class CassandraHistorialRepositoryTests {
     // IDs y usuarios EXCLUSIVOS de estos tests: no pisan a los seeds ni a otros
     // tests dentro del contenedor compartido.
     private const long ProductoSerie = 9101;
@@ -23,15 +22,13 @@ public class CassandraHistorialRepositoryTests
     private static CassandraHistorialRepository _repositorio = null!;
 
     [OneTimeSetUp]
-    public static async Task OneTimeSetUp()
-    {
+    public static async Task OneTimeSetUp() {
         _session = await AssemblyContainerFixture.GetCassandraSessionAsync();
         _repositorio = new CassandraHistorialRepository(_session);
     }
 
     [SetUp]
-    public async Task SetUp()
-    {
+    public async Task SetUp() {
         // Particiones limpias por test: idempotencia dentro de la suite.
         await _session.ExecuteAsync(new SimpleStatement(
             "DELETE FROM historial_precios_por_producto WHERE producto_id = ?", ProductoSerie));
@@ -44,8 +41,7 @@ public class CassandraHistorialRepositoryTests
     }
 
     [Test]
-    public async Task GetHistorialPrecios_ParticionVacia_DevuelveListaVacia_NoError()
-    {
+    public async Task GetHistorialPrecios_ParticionVacia_DevuelveListaVacia_NoError() {
         var serie = await _repositorio.GetHistorialPreciosAsync(ProductoSerie, null, null, 50);
 
         // Una particiÃ³n que nunca se escribiÃ³ no es un error: es una lista vacÃ­a.
@@ -53,16 +49,14 @@ public class CassandraHistorialRepositoryTests
     }
 
     [Test]
-    public async Task GetFeedVistas_ParticionVacia_DevuelveListaVacia_NoError()
-    {
+    public async Task GetFeedVistas_ParticionVacia_DevuelveListaVacia_NoError() {
         var feed = await _repositorio.GetFeedVistasAsync(UsuarioFeed, 20);
 
         feed.Should().BeEmpty();
     }
 
     [Test]
-    public async Task RegistrarPrecio_EscribeEnLasDosTablas_QA_Y_QC()
-    {
+    public async Task RegistrarPrecio_EscribeEnLasDosTablas_QA_Y_QC() {
         await _repositorio.RegistrarPrecioAsync(ProductoDual, 1299.99);
 
         // Q-A: el punto aparece en la serie del producto.
@@ -81,8 +75,7 @@ public class CassandraHistorialRepositoryTests
     }
 
     [Test]
-    public async Task GetHistorialPrecios_OrdenDescPorClustering_SinOrderBy()
-    {
+    public async Task GetHistorialPrecios_OrdenDescPorClustering_SinOrderBy() {
         // Tres puntos con fechas fijas: el orden DEBE salir solo de la tabla.
         await InsertarPuntoAsync(ProductoSerie, DateTime.UtcNow.AddDays(-30), 100.0);
         await InsertarPuntoAsync(ProductoSerie, DateTime.UtcNow.AddDays(-10), 200.0);
@@ -105,8 +98,7 @@ public class CassandraHistorialRepositoryTests
     }
 
     [Test]
-    public async Task RegistrarVista_DenormalizaElNombre_Y_AplicaElTtlDe180Dias()
-    {
+    public async Task RegistrarVista_DenormalizaElNombre_Y_AplicaElTtlDe180Dias() {
         await _repositorio.RegistrarVistaAsync(UsuarioFeed, ProductoDual, "Laptop de prueba");
 
         // Q-B: la fila trae el nombre COPIADO (el feed se pinta sin cruces).
@@ -127,11 +119,9 @@ public class CassandraHistorialRepositoryTests
     }
 
     [Test]
-    public void CodigoDeLasSeries_SinAllowFiltering()
-    {
+    public void CodigoDeLasSeries_SinAllowFiltering() {
         var api = EncontrarRaizDelHistorical();
-        var carpetas = new[]
-        {
+        var carpetas = new[] {
             Path.Combine(api, "Repositories", "Historial"),
             Path.Combine(api, "Services", "Historial"),
             Path.Combine(api, "Data", "Seed", "Cassandra")
@@ -144,8 +134,7 @@ public class CassandraHistorialRepositoryTests
 
         ficheros.Should().NotBeEmpty("deben existir los ficheros de series del proyecto Historical");
 
-        foreach (var fichero in ficheros)
-        {
+        foreach (var fichero in ficheros) {
             // Anti-patrÃ³n: ALLOW FILTERING escanea la tabla entera; el
             // diseno por particiones no debe necesitarlo jamas.
             File.ReadAllText(fichero).ToUpperInvariant().Should().NotContain("ALLOW FILTERING",
@@ -162,19 +151,16 @@ public class CassandraHistorialRepositoryTests
     /// LocalDate del dÃ­a de hoy (UTC), al ESTILO del repositorio: el driver
     /// 3.23 no expone LocalDate.FromDateTime, se construye con los tres nÃºmeros.
     /// </summary>
-    private static LocalDate HoyUtc()
-    {
+    private static LocalDate HoyUtc() {
         var hoy = DateTime.UtcNow;
         return new LocalDate(hoy.Year, hoy.Month, hoy.Day);
     }
 
-    private static string EncontrarRaizDelHistorical()
-    {
+    private static string EncontrarRaizDelHistorical() {
         // Desde bin/Debug/net10.0 caminamos hacia arriba hasta el csproj del
         // microservicio Historical (Services/Historical/Historical.csproj).
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
+        while (dir is not null) {
             var csproj = Path.Combine(dir.FullName, "Services", "Historical", "Historical.csproj");
             if (File.Exists(csproj))
                 return Path.Combine(dir.FullName, "Services", "Historical");

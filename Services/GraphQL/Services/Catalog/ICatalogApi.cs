@@ -16,8 +16,7 @@ namespace TiendaApi.Api.Services.Catalog;
 /// aparezcan en el array <c>errors</c> de la respuesta GraphQL (mismo contrato
 /// que el monolito, donde el mutation lanzaba excepción).
 /// </summary>
-public interface ICatalogApi
-{
+public interface ICatalogApi {
     // ── Queries ────────────────────────────────────────────────────────
 
     /// <summary>Página de productos (base 0).</summary>

@@ -16,8 +16,7 @@ namespace BuildingBlocks.Http;
 /// Singleton: el estado del circuito debe sobrevivir a la rotación de cadenas de
 /// handlers de <c>IHttpClientFactory</c> (~10 min), si no se resetearía solo.
 /// </summary>
-public sealed class ResiliencePipelineProvider
-{
+public sealed class ResiliencePipelineProvider {
     private readonly ConcurrentDictionary<string, Pipelines> _cache = new();
     private readonly ILoggerFactory _loggerFactory;
     private readonly TimeSpan? _delay;
@@ -25,8 +24,7 @@ public sealed class ResiliencePipelineProvider
     /// <summary>
     /// Crea el proveedor. <paramref name="delay"/> solo para tests (backoff instantáneo).
     /// </summary>
-    public ResiliencePipelineProvider(ILoggerFactory loggerFactory, TimeSpan? delay = null)
-    {
+    public ResiliencePipelineProvider(ILoggerFactory loggerFactory, TimeSpan? delay = null) {
         _loggerFactory = loggerFactory;
         _delay = delay;
     }
@@ -36,16 +34,14 @@ public sealed class ResiliencePipelineProvider
     /// primera llamada. Cada destino comparte su circuito entre todos los clients
     /// del servicio que apunten a él.
     /// </summary>
-    public Pipelines Obtener(Uri? destino)
-    {
+    public Pipelines Obtener(Uri? destino) {
         // Guarda contra URIs relativas (en teoría HttpClient ya resuelve el
         // BaseAddress antes de la cadena de handlers, pero si acaso llegara una
         // relativa, Scheme lanzaría): cae al bucket compartido "desconocido".
         var clave = destino is { IsAbsoluteUri: true } d
             ? d.Scheme + "://" + d.Authority
             : "desconocido";
-        return _cache.GetOrAdd(clave, k =>
-        {
+        return _cache.GetOrAdd(clave, k => {
             // Categoría de log con la autoridad: se ve qué backend está fallando.
             var logger = _loggerFactory.CreateLogger($"Polly.Refit[{k}]");
             return new Pipelines(

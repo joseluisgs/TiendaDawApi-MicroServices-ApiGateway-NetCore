@@ -21,8 +21,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// Solo en desarrollo (igual que el monolito): en producción la introspección
 /// completa del API es información para un atacante.
 /// </summary>
-public static class SwaggerEndpoints
-{
+public static class SwaggerEndpoints {
     /// <summary>Servicios cuya spec se fusiona (nombre lógico y puerto por defecto en local).</summary>
     private static readonly (string Nombre, int Puerto)[] Servicios =
     [
@@ -55,10 +54,8 @@ public static class SwaggerEndpoints
     /// </summary>
     /// <param name="app">Aplicación en marcha.</param>
     /// <returns>Application builder.</returns>
-    public static WebApplication MapSwaggerEndpoints(this WebApplication app)
-    {
-        app.MapGet("/swagger/v1/swagger.json", async () =>
-        {
+    public static WebApplication MapSwaggerEndpoints(this WebApplication app) {
+        app.MapGet("/swagger/v1/swagger.json", async () => {
             var json = await ObtenerSpecAsync(app.Configuration);
             return Results.Text(json, "application/json; charset=utf-8");
         });
@@ -71,18 +68,15 @@ public static class SwaggerEndpoints
     }
 
     /// <summary>Spec agregado (con caché corta para no re-fetchear en cada carga).</summary>
-    private static async Task<string> ObtenerSpecAsync(IConfiguration configuracion)
-    {
-        lock (Candado)
-        {
+    private static async Task<string> ObtenerSpecAsync(IConfiguration configuracion) {
+        lock (Candado) {
             if (_documento is not null && DateTime.UtcNow - _generadoEn < TimeSpan.FromMinutes(5))
                 return _documento;
         }
 
         var documento = await ConstruirAsync(configuracion);
 
-        lock (Candado)
-        {
+        lock (Candado) {
             _documento = documento;
             _generadoEn = DateTime.UtcNow;
         }
@@ -91,15 +85,12 @@ public static class SwaggerEndpoints
     }
 
     /// <summary>Recorre los servicios y fusiona sus specs.</summary>
-    private static async Task<string> ConstruirAsync(IConfiguration configuracion)
-    {
+    private static async Task<string> ConstruirAsync(IConfiguration configuracion) {
         using var cliente = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
 
-        var raiz = new JsonObject
-        {
+        var raiz = new JsonObject {
             ["openapi"] = "3.0.1",
-            ["info"] = new JsonObject
-            {
+            ["info"] = new JsonObject {
                 ["title"] = "Tienda DAW · API (agregada por el gateway)",
                 ["description"] =
                     "Fusión de las especificaciones de los microservicios. " +
@@ -115,26 +106,20 @@ public static class SwaggerEndpoints
         var schemas = (JsonObject)raiz["components"]!["schemas"]!;
         var serviciosOk = new List<string>();
 
-        foreach (var (nombre, puerto) in Servicios)
-        {
+        foreach (var (nombre, puerto) in Servicios) {
             JsonNode? spec;
-            try
-            {
+            try {
                 var texto = await cliente.GetStringAsync($"{BaseUrl(configuracion, nombre, puerto)}/swagger/v1/swagger.json");
                 spec = JsonNode.Parse(texto);
-            }
-            catch
-            {
+            } catch {
                 // Servicio caído o sin Swagger (producción): se omite, no tumble.
                 continue;
             }
 
             serviciosOk.Add(nombre);
 
-            if (spec?["paths"] is JsonObject servicioPaths)
-            {
-                foreach (var (clave, valor) in servicioPaths)
-                {
+            if (spec?["paths"] is JsonObject servicioPaths) {
+                foreach (var (clave, valor) in servicioPaths) {
                     // Sin colisión esperada (cada servicio posee su prefijo);
                     // si la hubiera, gana la primera y se registra en x-gateway.
                     if (!paths.ContainsKey(clave))
@@ -142,12 +127,9 @@ public static class SwaggerEndpoints
                 }
             }
 
-            if (spec?["components"]?["schemas"] is JsonObject servicioSchemas)
-            {
-                foreach (var (clave, valor) in servicioSchemas)
-                {
-                    if (!schemas.ContainsKey(clave))
-                    {
+            if (spec?["components"]?["schemas"] is JsonObject servicioSchemas) {
+                foreach (var (clave, valor) in servicioSchemas) {
+                    if (!schemas.ContainsKey(clave)) {
                         schemas[clave] = valor?.DeepClone();
                         continue;
                     }

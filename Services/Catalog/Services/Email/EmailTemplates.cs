@@ -3,13 +3,11 @@ namespace TiendaApi.Api.Services.Email;
 /// <summary>
 /// Plantillas base para emails de la tienda.
 /// </summary>
-public static class EmailTemplates
-{
+public static class EmailTemplates {
     /// <summary>
     /// Crea el HTML base para un email de la tienda.
     /// </summary>
-    public static string CreateBase(string title, string content)
-    {
+    public static string CreateBase(string title, string content) {
         return $@"<!DOCTYPE html>
 <html lang='es'>
 <head>
@@ -48,8 +46,7 @@ public static class EmailTemplates
     /// <summary>
     /// Genera el contenido para email de nuevo producto.
     /// </summary>
-    public static string ProductoCreado(string nombre, decimal precio, int stock, long id)
-    {
+    public static string ProductoCreado(string nombre, decimal precio, int stock, long id) {
         return $@"
             <table style='width: 100%; border-collapse: collapse; margin: 20px 0;'>
                 <tr>
@@ -72,5 +69,5 @@ public static class EmailTemplates
             <p style='margin-top: 20px; padding: 15px; background-color: #e7f3ff; border-left: 4px solid #667eea; border-radius: 4px;'>
                 ✅ El producto ya está disponible en la tienda.
             </p>";
-      }
     }
+}

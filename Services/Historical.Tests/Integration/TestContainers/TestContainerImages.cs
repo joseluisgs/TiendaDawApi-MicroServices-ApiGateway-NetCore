@@ -7,8 +7,7 @@ namespace TiendaApi.Tests.Integration.TestContainers;
 /// (cassandra:5.0). Si cada vía usa una tag distinta, Docker acumula entradas
 /// duplicadas en `docker images` y se descargan más bytes de los necesarios.
 /// </summary>
-public static class TestContainerImages
-{
+public static class TestContainerImages {
     /// <summary>Tag unificada con docker-compose.*.yml.</summary>
     public const string Cassandra = "cassandra:5.0";
 }

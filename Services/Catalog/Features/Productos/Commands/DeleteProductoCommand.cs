@@ -27,28 +27,22 @@ public class DeleteProductoCommandHandler(
     IMediator mediator,
     ICacheService cacheService,
     IOutputCacheStore outputCacheStore)
-    : IRequestHandler<DeleteProductoCommand, UnitResult<DomainError>>
-{
+    : IRequestHandler<DeleteProductoCommand, UnitResult<DomainError>> {
     /// <inheritdoc/>
     public async Task<UnitResult<DomainError>> Handle(
-        DeleteProductoCommand request, CancellationToken cancellationToken)
-    {
+        DeleteProductoCommand request, CancellationToken cancellationToken) {
         var producto = await repository.FindByIdAsync(request.Id);
         if (producto is null)
             return UnitResult.Failure<DomainError>(ProductoError.NotFound(request.Id));
 
         var categoriaId = producto.CategoriaId;
 
-        if (producto.IsLocalImage() && !string.IsNullOrWhiteSpace(producto.Imagen))
-        {
+        if (producto.IsLocalImage() && !string.IsNullOrWhiteSpace(producto.Imagen)) {
             // 🎓 El fichero vive en storage (dueño): se le pide borrarlo por Refit.
             // Si no responde, el producto se elimina igual (mejor esfuerzo).
-            try
-            {
+            try {
                 await storageApi.DeleteAsync(producto.Imagen);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Log.Warning(ex, "storage no disponible: no se borró la imagen {Imagen} del producto {Id}",
                     producto.Imagen, request.Id);
             }

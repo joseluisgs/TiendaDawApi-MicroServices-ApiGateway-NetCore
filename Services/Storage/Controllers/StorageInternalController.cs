@@ -20,8 +20,7 @@ namespace TiendaApi.Api.Controllers;
 [Route("internal/storage")]
 [Produces("application/json")]
 public class StorageInternalController(IStorageService storageService, ILogger<StorageInternalController> logger)
-    : ControllerBase
-{
+    : ControllerBase {
     /// <summary>
     /// Guarda un fichero subido en la carpeta indicada y devuelve su ruta pública.
     /// </summary>
@@ -34,8 +33,7 @@ public class StorageInternalController(IStorageService storageService, ILogger<S
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<StorageFileDto>> Upload(
         IFormFile file,
-        [FromForm] string folder = "productos")
-    {
+        [FromForm] string folder = "productos") {
         if (file is null or { Length: 0 })
             return BadRequest(new { message = "Debe proporcionar un archivo" });
 
@@ -54,8 +52,7 @@ public class StorageInternalController(IStorageService storageService, ILogger<S
     /// <returns>204 No Content.</returns>
     [HttpDelete("files")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Delete([FromQuery] string url)
-    {
+    public async Task<IActionResult> Delete([FromQuery] string url) {
         if (string.IsNullOrWhiteSpace(url))
             return BadRequest(new { message = "Debe indicar la ruta del archivo" });
 

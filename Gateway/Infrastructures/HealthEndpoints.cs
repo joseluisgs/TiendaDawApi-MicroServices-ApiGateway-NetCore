@@ -16,8 +16,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// <item><c>/health/ready</c> → 200 si los backends responden, 503 si alguno cae</item>
 /// </list>
 /// </summary>
-public static class HealthEndpoints
-{
+public static class HealthEndpoints {
     /// <summary>Backends que el gateway sondea (nombre y puerto por defecto en local).</summary>
     private static readonly (string Nombre, int Puerto)[] Backends =
     [
@@ -45,22 +44,19 @@ public static class HealthEndpoints
     /// </summary>
     /// <param name="app">Aplicación en marcha.</param>
     /// <returns>Application builder.</returns>
-    public static WebApplication MapHealthEndpoint(this WebApplication app)
-    {
+    public static WebApplication MapHealthEndpoint(this WebApplication app) {
         // Liveness: solo el proceso. No sondea nada (para orquestadores).
         app.MapGet("/health/live", () => Results.Ok(new { status = "OK" }));
 
         // Readiness + health agregado: sondea los backends (en paralelo).
-        app.MapGet("/health/ready", async () =>
-        {
+        app.MapGet("/health/ready", async () => {
             var informe = await SondearAsync(app.Configuration);
             return informe.TodosOk
                 ? Results.Ok(informe.Payload)
                 : Results.Json(informe.Payload, statusCode: StatusCodes.Status503ServiceUnavailable);
         });
 
-        app.MapGet("/health", async () =>
-        {
+        app.MapGet("/health", async () => {
             var informe = await SondearAsync(app.Configuration);
             // El contrato pide 200 con "OK" mientras el gateway esté vivo;
             // el detalle de qué backend cae está en el body y en /health/ready.
@@ -74,23 +70,18 @@ public static class HealthEndpoints
     /// Sondea todos los backends en PARALELO con un timeout corto: el health del
     /// gateway no puede tardar más que lo que tarda el backend más lento.
     /// </summary>
-    private static async Task<(bool TodosOk, object Payload)> SondearAsync(IConfiguration configuracion)
-    {
+    private static async Task<(bool TodosOk, object Payload)> SondearAsync(IConfiguration configuracion) {
         var reloj = Stopwatch.StartNew();
         // Timeout corto: el health del gateway no puede tardar más que el
         // polling que hacen los orquestadores (2s en reiniciar-api.ps1).
         using var cliente = new HttpClient { Timeout = TimeSpan.FromMilliseconds(1200) };
 
-        var tareas = Backends.Select(async b =>
-        {
-            try
-            {
+        var tareas = Backends.Select(async b => {
+            try {
                 // Los servicios exponen `/health` (no todos `/health/live`).
                 var respuesta = await cliente.GetAsync($"{BaseUrl(configuracion, b.Nombre, b.Puerto)}/health");
                 return (b.Nombre, Ok: respuesta.IsSuccessStatusCode, Error: (string?)null);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 return (b.Nombre, Ok: false, Error: ex.GetType().Name);
             }
         });
@@ -99,13 +90,11 @@ public static class HealthEndpoints
         reloj.Stop();
 
         var ok = resultados.Count(r => r.Ok);
-        var payload = new
-        {
+        var payload = new {
             // "OK" literal: las suites (Postman/Bruno) buscan esa cadena.
             status = ok == resultados.Length ? "OK" : "DEGRADED",
             totalDuration = reloj.Elapsed.ToString(),
-            checks = resultados.Select(r => new
-            {
+            checks = resultados.Select(r => new {
                 name = r.Nombre,
                 status = r.Ok ? "OK" : "ERROR",
                 description = r.Ok ? "respondiendo" : (r.Error ?? "sin respuesta"),

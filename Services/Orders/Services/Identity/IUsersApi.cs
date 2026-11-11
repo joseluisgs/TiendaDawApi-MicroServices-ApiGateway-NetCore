@@ -9,8 +9,7 @@ namespace TiendaApi.Api.Services.Identity;
 /// comprueba contra el dueño, equivalente al <c>FindByIdAsync</c> del monolito
 /// (que devolvía <c>null</c> o un usuario borrado → 404).
 /// </summary>
-public interface IUsersApi
-{
+public interface IUsersApi {
     /// <summary>
     /// Usuario por ID (<c>GET /internal/users/{id}</c>).
     /// </summary>

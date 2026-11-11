@@ -14,15 +14,13 @@ using TiendaApi.Api.Services.Cache;
 
 namespace TiendaApi.Tests.Unit.Features.Users;
 
-public class UpdateUserCommandHandlerTests
-{
+public class UpdateUserCommandHandlerTests {
     [Test]
-    public async Task Handle_UsuarioExistente_DevuelveSuccess()
-    {
+    public async Task Handle_UsuarioExistente_DevuelveSuccess() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<UserUpdateDto>>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new UserUpdateDto { Email = "new@test.com" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByIdAsync(1)).ReturnsAsync(new User { Id = 1, Email = "old@test.com", IsDeleted = false });
@@ -35,12 +33,11 @@ public class UpdateUserCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_UsuarioNoExiste_DevuelveNotFound()
-    {
+    public async Task Handle_UsuarioNoExiste_DevuelveNotFound() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<UserUpdateDto>>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new UserUpdateDto { Email = "new@test.com" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((User?)null);
@@ -52,12 +49,11 @@ public class UpdateUserCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_UsuarioEliminado_DevuelveNotFound()
-    {
+    public async Task Handle_UsuarioEliminado_DevuelveNotFound() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<UserUpdateDto>>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new UserUpdateDto { Email = "new@test.com" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByIdAsync(1)).ReturnsAsync(new User { Id = 1, IsDeleted = true });
@@ -69,8 +65,7 @@ public class UpdateUserCommandHandlerTests
     }
 
     /// <summary>Mock de UserManager que aprueba los cambios de password.</summary>
-    private static Mock<UserManager<User>> MockuserManagerExito()
-    {
+    private static Mock<UserManager<User>> MockuserManagerExito() {
         var store = new Mock<IUserStore<User>>();
         var mock = new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
         mock.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);

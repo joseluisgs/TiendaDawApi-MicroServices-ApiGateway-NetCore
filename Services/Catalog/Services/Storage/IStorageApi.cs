@@ -10,8 +10,7 @@ namespace TiendaApi.Api.Services.Storage;
 /// ruta pública que él devuelve. El gateway sirve <c>/images/uploads/*</c> desde
 /// storage, que es donde el fichero vive.
 /// </summary>
-public interface IStorageApi
-{
+public interface IStorageApi {
     /// <summary>Sube un fichero y devuelve su ruta pública.</summary>
     /// <param name="file">Archivo (multipart, campo <c>file</c>).</param>
     /// <param name="folder">Carpeta destino (por defecto productos).</param>

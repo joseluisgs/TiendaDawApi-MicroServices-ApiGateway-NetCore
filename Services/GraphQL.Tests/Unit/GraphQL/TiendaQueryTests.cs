@@ -21,8 +21,7 @@ namespace TiendaApi.Tests.Unit.GraphQL;
 /// aquÃ­ son la llamada REST equivalente. Se cubre tambiÃ©n el mapeo de errores
 /// (404 â†’ null) y el hecho de que <c>misPedidos</c> delega el filtro en orders.
 /// </summary>
-public class TiendaQueryTests
-{
+public class TiendaQueryTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<ICatalogApi> _catalog = null!;
@@ -30,29 +29,25 @@ public class TiendaQueryTests
     private TiendaQuery _query = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _catalog = new Mock<ICatalogApi>();
         _orders = new Mock<IOrdersApi>();
         _query = new TiendaQuery();
 
         _catalog.Setup(c => c.GetProductosAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(Pagina(new List<ProductoDto>
-            {
+            .ReturnsAsync(Pagina(new List<ProductoDto> {
                 new(1, "Laptop", "desc", 1299.99m, 10, null,
                     new CategoriaResumenDto(1, "ElectrÃ³nica", null),
                     new ProveedorResumenDto("Distribuc01", "Dist", null),
                     DateTime.UtcNow, DateTime.UtcNow),
             }));
         _catalog.Setup(c => c.GetCategoriasAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ReturnsAsync(Pagina(new List<CategoriaDto>
-            {
+            .ReturnsAsync(Pagina(new List<CategoriaDto> {
                 new(1, "ElectrÃ³nica", "dispositivos", DateTime.UtcNow, DateTime.UtcNow),
             }));
     }
 
-    private static PagedResult<T> Pagina<T>(List<T> items) => new()
-    {
+    private static PagedResult<T> Pagina<T>(List<T> items) => new() {
         Items = items,
         TotalCount = items.Count,
         Page = 1,
@@ -62,8 +57,7 @@ public class TiendaQueryTests
     // â”€â”€ productos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [Test]
-    public async Task GetProductos_DevuelveLosDeLaPrimeraPagina()
-    {
+    public async Task GetProductos_DevuelveLosDeLaPrimeraPagina() {
         var resultado = await _query.GetProductos(_catalog.Object);
 
         resultado.Should().HaveCount(1);
@@ -73,8 +67,7 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetProducto_Existente_DevuelveElDto()
-    {
+    public async Task GetProducto_Existente_DevuelveElDto() {
         _catalog.Setup(c => c.GetProductoAsync(1))
             .ReturnsAsync(new ProductoDto(1, "Laptop", "d", 10m, 5, null,
                 new CategoriaResumenDto(1, "ElectrÃ³nica", null), null,
@@ -87,8 +80,7 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetProducto_CatalogResponde404_DevuelveNull()
-    {
+    public async Task GetProducto_CatalogResponde404_DevuelveNull() {
         // GraphQL devuelve null (no error) cuando el recurso no existe.
         _catalog.Setup(c => c.GetProductoAsync(999999))
             .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound));
@@ -99,8 +91,7 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetProductosPaged_ConvierteABase1()
-    {
+    public async Task GetProductosPaged_ConvierteABase1() {
         // GraphQL expone base 1; la API REST trabaja con base 0.
         await _query.GetProductosPaged(_catalog.Object, page: 3, size: 25);
 
@@ -109,8 +100,7 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetCategoria_Existente_DevuelveElDto()
-    {
+    public async Task GetCategoria_Existente_DevuelveElDto() {
         _catalog.Setup(c => c.GetCategoriaAsync(1))
             .ReturnsAsync(new CategoriaDto(1, "ElectrÃ³nica", "d", DateTime.UtcNow, DateTime.UtcNow));
 
@@ -122,11 +112,9 @@ public class TiendaQueryTests
     // â”€â”€ pedidos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     [Test]
-    public async Task GetPedidos_DevuelveLoQueOrdersDiga()
-    {
+    public async Task GetPedidos_DevuelveLoQueOrdersDiga() {
         _orders.Setup(o => o.GetPedidosAsync())
-            .ReturnsAsync(new List<PedidoDto>
-            {
+            .ReturnsAsync(new List<PedidoDto> {
                 new("6af0b4ed01265a8f9a0bebe8", 2, null!, [], 10m, "PENDIENTE", null, DateTime.UtcNow),
             });
 
@@ -137,8 +125,7 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetMisPedidos_SinClaim_DejaDeLlamar()
-    {
+    public async Task GetMisPedidos_SinClaim_DejaDeLlamar() {
         var sinClaims = new ClaimsPrincipal(new ClaimsIdentity());
 
         var lanzada = await CapturarAsync(() => _query.GetMisPedidos(sinClaims, _orders.Object));
@@ -148,15 +135,13 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetMisPedidos_ConClaim_DelegaElFiltroEnOrders()
-    {
+    public async Task GetMisPedidos_ConClaim_DelegaElFiltroEnOrders() {
         // El filtro por usuario lo aplica orders con el JWT: GraphQL solo propaga.
         var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "2") }, "test");
         var user = new ClaimsPrincipal(identity);
 
         _orders.Setup(o => o.GetMisPedidosAsync())
-            .ReturnsAsync(new List<PedidoDto>
-            {
+            .ReturnsAsync(new List<PedidoDto> {
                 new("6af0b4ed01265a8f9a0bebe9", 2, null!, [], 5m, "PENDIENTE", null, DateTime.UtcNow),
             });
 
@@ -168,8 +153,7 @@ public class TiendaQueryTests
     }
 
     [Test]
-    public async Task GetMisPedidos_ClaimNoNumerico_DejaDeLlamar()
-    {
+    public async Task GetMisPedidos_ClaimNoNumerico_DejaDeLlamar() {
         var identity = new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, "abc") }, "test");
         var user = new ClaimsPrincipal(identity);
 
@@ -183,15 +167,11 @@ public class TiendaQueryTests
     /// Ejecuta y devuelve la <see cref="GraphQLException"/> lanzada (o null si no
     /// lanzó nada): se comprueba que se lanza Y que no se llamó al servicio remoto.
     /// </summary>
-    private static async Task<GraphQLException?> CapturarAsync(Func<Task> operacion)
-    {
-        try
-        {
+    private static async Task<GraphQLException?> CapturarAsync(Func<Task> operacion) {
+        try {
             await operacion();
             return null;
-        }
-        catch (GraphQLException ex)
-        {
+        } catch (GraphQLException ex) {
             return ex;
         }
     }

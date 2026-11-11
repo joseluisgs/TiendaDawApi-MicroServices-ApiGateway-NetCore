@@ -23,12 +23,10 @@ public record GetUsuarioInternoQuery(long Id)
 /// debe seguir "existiendo" en el caché durante el TTL de la ruta pública).
 /// </summary>
 public class GetUsuarioInternoQueryHandler(IUserRepository repository)
-    : IRequestHandler<GetUsuarioInternoQuery, Result<UserDto, DomainError>>
-{
+    : IRequestHandler<GetUsuarioInternoQuery, Result<UserDto, DomainError>> {
     /// <inheritdoc/>
     public async Task<Result<UserDto, DomainError>> Handle(
-        GetUsuarioInternoQuery request, CancellationToken cancellationToken)
-    {
+        GetUsuarioInternoQuery request, CancellationToken cancellationToken) {
         var user = await repository.FindByIdAsync(request.Id);
         if (user is null or { IsDeleted: true })
             return Result.Failure<UserDto, DomainError>(UsuarioError.NotFound(request.Id));

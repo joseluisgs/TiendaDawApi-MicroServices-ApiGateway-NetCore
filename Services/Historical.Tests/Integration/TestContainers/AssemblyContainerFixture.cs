@@ -18,8 +18,7 @@ namespace TiendaApi.Tests.Integration.TestContainers;
 /// todos los tests de <c>TiendaApi.Tests.Integration.TestContainers.*</c>.
 /// </summary>
 [SetUpFixture]
-public sealed class AssemblyContainerFixture
-{
+public sealed class AssemblyContainerFixture {
     // NUnit1032: SÍ se disposea en el [OneTimeTearDown] DisposeAsync de este
     // fixture; el analyzer no lo empareja porque la asignación está en el
     // método lazy (mismo motivo por el que el fixture del monolito lo omite).
@@ -34,14 +33,12 @@ public sealed class AssemblyContainerFixture
     /// </summary>
     /// <param name="keyspace">Keyspace a crear/usar (por defecto el de la tienda).</param>
     /// <returns>Sesión conectada al contenedor de tests.</returns>
-    internal static async Task<ISession> GetCassandraSessionAsync(string keyspace = "tienda")
-    {
+    internal static async Task<ISession> GetCassandraSessionAsync(string keyspace = "tienda") {
         if (_cassandraSession is not null)
             return _cassandraSession;
 
         await _cassandraLock.WaitAsync();
-        try
-        {
+        try {
             if (_cassandraSession is not null)
                 return _cassandraSession;
 
@@ -62,25 +59,20 @@ public sealed class AssemblyContainerFixture
 
             _cassandraSession = session;
             return _cassandraSession;
-        }
-        finally
-        {
+        } finally {
             _cassandraLock.Release();
         }
     }
 
     /// <summary>Detiene el contenedor compartido al finalizar los tests.</summary>
     [OneTimeTearDown]
-    public async Task DisposeAsync()
-    {
-        if (_cassandraSession is not null)
-        {
+    public async Task DisposeAsync() {
+        if (_cassandraSession is not null) {
             _cassandraSession.Dispose();
             _cassandraSession = null;
         }
 
-        if (_cassandra is not null)
-        {
+        if (_cassandra is not null) {
             await _cassandra.DisposeAsync();
             _cassandra = null;
         }
