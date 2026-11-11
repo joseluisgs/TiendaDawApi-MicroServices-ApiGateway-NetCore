@@ -54,6 +54,11 @@ try {
     // que es la única puerta pública.
     builder.Services.AddRateLimitingPolicy();
 
+    // CORS en el borde (R11): el navegador del cliente habla DIRECTAMENTE
+    // con el gateway (p.ej. el Blazor en :5234). Sin esto, el navegador
+    // bloquea las respuestas aunque la API conteste 200.
+    builder.Services.AddCorsPolicy(builder.Configuration, builder.Environment.IsDevelopment());
+
     var app = builder.Build();
     // Seguridad en el borde (ENDPOINTS §11.1): el gateway es la
     // única puerta pública, así que los headers de seguridad viven AQUÍ.
@@ -61,6 +66,9 @@ try {
     // índice) reciben una CSP relajada; sin ella se sirven en blanco.
     app.UseSecurityHeaders();
     app.UseRateLimiting();
+    // CORS: ANTES de la auth y del proxy (el preflight del navegador no
+    // lleva token; el handshake de SignalR/GraphQL-WS también pasa por aquí).
+    app.UseCorsPolicy();
 
     // 🔐 Si el cliente MANDA un token, el gateway lo valida (firma, issuer,
     // audience, caducidad). Uno inválido o caducado corta AQUÍ con 401 — no llega

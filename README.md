@@ -32,6 +32,7 @@ TiendaDaw API Microservicios es una serie de servicios backend desarrollados con
 - 🔁 **Resiliencia (Polly)**: timeout por intento, reintento por verbo y cortacircuitos **por backend** entre servicios
 - 🧪 **Testing**: 794 tests (unit + integración con Testcontainers) y **4 suites E2E** (Automation, Newman, Bruno local y Bruno Docker) contra el gateway
 - 🐳 **Docker de producción**: 10 Dockerfiles multi-stage, compose completo (10 servicios .NET + 4 BDs) y `.env` unificados
+- 🧑‍💻 **Cliente Blazor de demostración**: consume el gateway (`:5000`) con REST, GraphQL y SignalR — con sus suites bUnit y Playwright
 
 ## 📑 Tabla de Contenidos
 
@@ -335,6 +336,22 @@ cd tests/E2E/Bruno-Cli
 docker compose up --build --abort-on-container-exit --exit-code-from bruno
 # → 131 requests (131 Passed)
 ```
+
+#### Cliente Blazor (bUnit + Playwright)
+
+El cliente Blazor de demostración (`TiendaApi.Clients/ClientBlazor`) consume la
+API **a través del gateway** (REST + GraphQL + SignalR en `:5000`) y trae sus
+propias suites: **58 tests bUnit** y **18 tests Playwright** que navegan la app
+(`:5234`) — la prueba de que un cliente real no nota el reparto.
+
+```bash
+# Compilar y correr bUnit (sin entorno)
+dotnet test TiendaApi.Clients/ClientBlazor/ClientBlazor.slnx --filter "FullyQualifiedName!~UserFlowTests"
+
+# Playwright necesita la pila levantada (Start-Api.ps1) y el cliente:
+dotnet run --project TiendaApi.Clients/ClientBlazor/ClientBlazor.Cliente   # :5234
+dotnet test TiendaApi.Clients/ClientBlazor/ClientBlazor.slnx --filter "FullyQualifiedName~UserFlowTests"
+```
 ## 📚 Documentación
 
 Para una comprensión profunda de la arquitectura y las tecnologías utilizadas, consulta los documentos en la carpeta [`doc/`](doc/) (38 guías):
@@ -470,6 +487,9 @@ TiendaDawApi-MicroServices-ApiGateway-NetCore/
 │   ├── Postman-Cli/                  # Colección Postman + compose de Newman
 │   ├── Bruno-Local/                  # Colección Bruno para CLI local
 │   └── Bruno-Cli/                    # Misma colección en Docker (usebruno/cli)
+│
+├── TiendaApi.Clients/                # Cliente Blazor de demostración (contra el gateway)
+│   └── ClientBlazor/                 # Cliente + tests bUnit y E2E Playwright
 │
 ├── doc/                              # 38 guías técnicas (35-38: microservicios y gateway)
 │
