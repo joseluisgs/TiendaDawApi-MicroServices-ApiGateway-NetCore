@@ -12,24 +12,19 @@ namespace TiendaApi.Api.Features.Users.Notifications;
 /// registro no falla (mejor esfuerzo, como el monolito con SMTP caído).
 /// </summary>
 public class UsuarioRegistradoBienvenidaEmailHandler(IEmailApi email)
-    : INotificationHandler<UsuarioRegistradoNotification>
-{
+    : INotificationHandler<UsuarioRegistradoNotification> {
     /// <inheritdoc/>
-    public async Task Handle(UsuarioRegistradoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(UsuarioRegistradoNotification notification, CancellationToken cancellationToken) {
         var content = $"<p>Hola <strong>{notification.Usuario.Username}</strong>, te damos la bienvenida a Tienda DAW.</p>";
         var body = EmailTemplates.CreateBase("Bienvenido a Tienda DAW", content);
 
-        try
-        {
+        try {
             await email.EnqueueAsync(new EmailRequest(
                 notification.Usuario.Email,
                 "¡ Bienvenido a Tienda DAW",
                 body,
                 IsHtml: true));
-        }
-        catch (Exception)
-        {
+        } catch (Exception) {
             // Mejor esfuerzo: como el monolito, un email que no se puede pedir
             // no debe romper el alta del usuario.
         }

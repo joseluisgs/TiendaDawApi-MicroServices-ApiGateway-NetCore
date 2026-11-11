@@ -13,11 +13,9 @@ namespace TiendaApi.Api.Data.Seed;
 /// usuarios de <see cref="SeedCredentials"/> con UserManager (hash PBKDF2) y su
 /// rol en AspNetUserRoles. Idempotente: un usuario ya creado no se toca.
 /// </summary>
-public static class IdentitySeed
-{
+public static class IdentitySeed {
     /// <summary>Sembran roles y usuarios si faltan.</summary>
-    public static async Task InitializeAsync(IServiceProvider serviceProvider)
-    {
+    public static async Task InitializeAsync(IServiceProvider serviceProvider) {
         var logger = serviceProvider
             .GetRequiredService<ILoggerFactory>()
             .CreateLogger(typeof(IdentitySeed));
@@ -27,10 +25,8 @@ public static class IdentitySeed
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
         // Roles primero: AddToRoleAsync falla si el rol no existe.
-        foreach (var rol in new[] { UserRoles.ADMIN, UserRoles.USER })
-        {
-            if (!await roleManager.RoleExistsAsync(rol))
-            {
+        foreach (var rol in new[] { UserRoles.ADMIN, UserRoles.USER }) {
+            if (!await roleManager.RoleExistsAsync(rol)) {
                 var result = await roleManager.CreateAsync(new IdentityRole<long>(rol));
                 if (result.Succeeded)
                     logger.LogInformation("Rol {Role} creado", rol);
@@ -41,22 +37,19 @@ public static class IdentitySeed
         }
 
         // Credenciales unificadas (SeedCredentials): las mismas que en el monolito.
-        var usuarios = new List<(User Usuario, string Password)>
-        {
+        var usuarios = new List<(User Usuario, string Password)> {
             (new() { UserName = SeedCredentials.AdminUsername, Email = "admin@tienda.com", Role = UserRoles.ADMIN },
                 SeedCredentials.AdminPassword),
             (new() { UserName = SeedCredentials.UserUsername, Email = "userdaw@tienda.com", Role = UserRoles.USER },
                 SeedCredentials.UserPassword),
         };
 
-        foreach (var (usuario, password) in usuarios)
-        {
+        foreach (var (usuario, password) in usuarios) {
             if (await userManager.FindByEmailAsync(usuario.Email!) is not null)
                 continue;
 
             var result = await userManager.CreateAsync(usuario, password);
-            if (!result.Succeeded)
-            {
+            if (!result.Succeeded) {
                 logger.LogWarning("Error creando usuario {Email}: {Errors}",
                     usuario.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
                 continue;

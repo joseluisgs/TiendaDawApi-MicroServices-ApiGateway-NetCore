@@ -13,19 +13,16 @@ namespace TiendaApi.Tests.Unit.Services.Email;
 /// IEmailService del scope y NO se corta si un envío revienta (el siguiente
 /// mensaje de la cola se procesa igualmente: mejor esfuerzo, como el monolito).
 /// </summary>
-public class EmailBackgroundServiceTests
-{
+public class EmailBackgroundServiceTests {
     private Channel<EmailMessage> _emailChannel = null!;
 
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() {
         _emailChannel = Channel.CreateUnbounded<EmailMessage>();
     }
 
     [Test]
-    public void Constructor_ParametrosValidos_NoLanzaExcepcion()
-    {
+    public void Constructor_ParametrosValidos_NoLanzaExcepcion() {
         var mockServiceProvider = new Mock<IServiceProvider>();
         var mockLogger = new Mock<ILogger<EmailBackgroundService>>();
 
@@ -38,8 +35,7 @@ public class EmailBackgroundServiceTests
     }
 
     [Test]
-    public async Task ExecuteAsync_MensajeEnLaCola_LoProcesaConElEmailService()
-    {
+    public async Task ExecuteAsync_MensajeEnLaCola_LoProcesaConElEmailService() {
         var emailService = new Mock<IEmailService>();
         var recibido = new TaskCompletionSource<EmailMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
         emailService
@@ -51,8 +47,7 @@ public class EmailBackgroundServiceTests
             _emailChannel, CrearProveedor(emailService), Mock.Of<ILogger<EmailBackgroundService>>());
 
         await servicio.StartAsync(CancellationToken.None);
-        await _emailChannel.Writer.WriteAsync(new EmailMessage
-        {
+        await _emailChannel.Writer.WriteAsync(new EmailMessage {
             To = "destinatario@test.com",
             Subject = "Asunto",
             Body = "Cuerpo"
@@ -67,8 +62,7 @@ public class EmailBackgroundServiceTests
     }
 
     [Test]
-    public async Task ExecuteAsync_SiUnEnvioFalla_SigueConElSiguienteMensaje()
-    {
+    public async Task ExecuteAsync_SiUnEnvioFalla_SigueConElSiguienteMensaje() {
         var emailService = new Mock<IEmailService>();
         emailService
             .Setup(e => e.SendEmailAsync(It.Is<EmailMessage>(m => m.To == "roto@test.com")))
@@ -98,8 +92,7 @@ public class EmailBackgroundServiceTests
     /// IServiceProvider falso con el mínimo de la cadena real del servicio:
     /// CreateScope() → scope.ServiceProvider → GetRequiredService&lt;IEmailService&gt;().
     /// </summary>
-    private static IServiceProvider CrearProveedor(Mock<IEmailService> emailService)
-    {
+    private static IServiceProvider CrearProveedor(Mock<IEmailService> emailService) {
         var scopeProvider = new Mock<IServiceProvider>();
         scopeProvider.Setup(p => p.GetService(typeof(IEmailService))).Returns(emailService.Object);
 

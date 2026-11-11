@@ -11,8 +11,7 @@ namespace TiendaApi.Api.Services.Historial;
 /// consumidores de la serie (catalog) validan antes la existencia del producto
 /// contra su propia PostgreSQL.
 /// </summary>
-public interface IHistorialApi
-{
+public interface IHistorialApi {
     /// <summary>Serie histórica de precios de un producto.</summary>
     [Get("/internal/historial/productos/{productoId}")]
     Task<List<HistorialPrecioDto>> GetHistorialPreciosAsync(

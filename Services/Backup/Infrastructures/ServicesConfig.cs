@@ -14,8 +14,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// 🎓 Backup no tiene BD (R5): lee por Refit en las rutas públicas de catalog y
 /// escribe en sus endpoints internos. El upsert y la validación los hace el dueño.
 /// </summary>
-public static class ServicesConfig
-{
+public static class ServicesConfig {
     /// <summary>
     /// Registra el client Refit (R4 — REST con Refit): dirección por
     /// configuración (<c>Services:Catalog</c>) — en Docker, el nombre del
@@ -24,8 +23,7 @@ public static class ServicesConfig
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (dirección en Services:*).</param>
     /// <returns>IServiceCollection.</returns>
-    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
-    {
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) {
         Log.Information("Registrando servicios de backup...");
 
         // Contexto HTTP para propagar el JWT del llamante (los listados de

@@ -15,14 +15,12 @@ namespace TiendaApi.Api.Data;
 /// copiados del monolito compilen sin cambios de firma; la clase es distinta:
 /// su modelo termina en usuarios.
 /// </summary>
-public class TiendaDbContext : IdentityDbContext<User, IdentityRole<long>, long>
-{
+public class TiendaDbContext : IdentityDbContext<User, IdentityRole<long>, long> {
     private static readonly TimestampInterceptor _timestampInterceptor = new();
 
     /// <summary>Crea el contexto con las opciones del contenedor de dependencias.</summary>
     public TiendaDbContext(DbContextOptions<TiendaDbContext> options)
-        : base(options)
-    {
+        : base(options) {
     }
 
     /// <summary>Usuarios (sombrea el Users heredado de IdentityDbContext).</summary>
@@ -32,19 +30,16 @@ public class TiendaDbContext : IdentityDbContext<User, IdentityRole<long>, long>
     public DbSet<UserLogin> ExternalLogins { get; set; } = null!;
 
     /// <summary>Registra el interceptor que rellena CreatedAt/UpdatedAt.</summary>
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         base.OnConfiguring(optionsBuilder);
         optionsBuilder.AddInterceptors(_timestampInterceptor);
     }
 
     /// <summary>Mapeo de usuarios y logins externos (idéntico al monolito).</summary>
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<User>(entity =>
-        {
+        modelBuilder.Entity<User>(entity => {
             entity.ToTable("users");
             entity.HasKey(u => u.Id);
             entity.Property(u => u.Id).UseIdentityAlwaysColumn();
@@ -62,8 +57,7 @@ public class TiendaDbContext : IdentityDbContext<User, IdentityRole<long>, long>
             entity.HasQueryFilter(u => !u.IsDeleted);
         });
 
-        modelBuilder.Entity<UserLogin>(entity =>
-        {
+        modelBuilder.Entity<UserLogin>(entity => {
             entity.ToTable("user_logins");
             entity.HasKey(ul => ul.Id);
             entity.Property(ul => ul.Id).UseIdentityAlwaysColumn();

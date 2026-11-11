@@ -17,8 +17,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// lecturas de catálogo se hacen con <c>Task.WhenAll</c> porque son independientes
 /// entre sí (mismo criterio que el monolito, que lanzaba varias consultas en paralelo).
 /// </summary>
-public static class ServicesConfig
-{
+public static class ServicesConfig {
     /// <summary>
     /// Registra los clients Refit (R4 — REST con Refit): direcciones por
     /// configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
@@ -27,8 +26,7 @@ public static class ServicesConfig
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>
     /// <returns>IServiceCollection.</returns>
-    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
-    {
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) {
         Log.Information("Registrando servicios de statistics...");
 
         // Contexto HTTP para propagar el JWT del llamante (los endpoints de

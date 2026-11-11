@@ -24,13 +24,11 @@ namespace TiendaApi.Tests.Integration.TestContainers.Catalog.Repositories;
 [TestFixture]
 [Category("Integration")]
 [NonParallelizable]
-public class CatalogRepositoryIntegrationTests
-{
+public class CatalogRepositoryIntegrationTests {
     private const string DatabaseName = "it_catalog_repo";
     private string _connectionString = string.Empty;
 
-    private CatalogDbContext CreateContext()
-    {
+    private CatalogDbContext CreateContext() {
         var options = new DbContextOptionsBuilder<CatalogDbContext>()
             .UseNpgsql(_connectionString)
             .Options;
@@ -38,8 +36,7 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [OneTimeSetUp]
-    public async Task OneTimeSetUp()
-    {
+    public async Task OneTimeSetUp() {
         // Una sola BD por clase: el DROP/CREATE en cada test rompería el pool de
         // Npgsql (DROP ... WITH (FORCE) mata conexiones vividas → "transient failure").
         _connectionString = await AssemblyContainerFixture.CreatePostgresDatabaseAsync(DatabaseName);
@@ -49,8 +46,7 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [SetUp]
-    public async Task Setup()
-    {
+    public async Task Setup() {
         // Estado limpio y determinista por test: TRUNCATE + RESTART IDENTITY (la
         // secuencia vuelve a 1, así la semilla recupera los IDs fijos 1, 2 y 3)
         // y después la MISMA semilla que usa el servicio al arrancar.
@@ -63,16 +59,14 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [OneTimeTearDown]
-    public async Task OneTimeTearDown()
-    {
+    public async Task OneTimeTearDown() {
         await AssemblyContainerFixture.DropPostgresDatabaseAsync(DatabaseName);
     }
 
     // ------------------------------------------------------------- categorías
 
     [Test]
-    public async Task Seeded_Categorias_ExisteLaSemillaDeterminista()
-    {
+    public async Task Seeded_Categorias_ExisteLaSemillaDeterminista() {
         await using var context = CreateContext();
         var repo = new CategoriaRepository(context, NullLogger<CategoriaRepository>.Instance);
 
@@ -85,13 +79,11 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task CreateAsync_Luego_ExistePorIdYporNombre()
-    {
+    public async Task CreateAsync_Luego_ExistePorIdYporNombre() {
         await using var context = CreateContext();
         var repo = new CategoriaRepository(context, NullLogger<CategoriaRepository>.Instance);
 
-        var creada = await repo.CreateAsync(new TiendaApi.Api.Models.Categoria
-        {
+        var creada = await repo.CreateAsync(new TiendaApi.Api.Models.Categoria {
             Nombre = "Deportes",
             Descripcion = "Material deportivo",
             IsDeleted = false,
@@ -115,8 +107,7 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindAllPagedAsync_FiltraPorNombre_YDevuelveTotal()
-    {
+    public async Task FindAllPagedAsync_FiltraPorNombre_YDevuelveTotal() {
         await using var context = CreateContext();
         var repo = new CategoriaRepository(context, NullLogger<CategoriaRepository>.Instance);
 
@@ -130,8 +121,7 @@ public class CatalogRepositoryIntegrationTests
     // -------------------------------------------------------------- productos
 
     [Test]
-    public async Task Seeded_Productos_SonLosTresConSusFks()
-    {
+    public async Task Seeded_Productos_SonLosTresConSusFks() {
         await using var context = CreateContext();
         var repo = new ProductoRepository(context, NullLogger<ProductoRepository>.Instance);
 
@@ -146,8 +136,7 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindByIdsAsync_DevuelveSoloLosQueExisten_YConLaCategoriaCargada()
-    {
+    public async Task FindByIdsAsync_DevuelveSoloLosQueExisten_YConLaCategoriaCargada() {
         await using var context = CreateContext();
         var repo = new ProductoRepository(context, NullLogger<ProductoRepository>.Instance);
 
@@ -159,8 +148,7 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task UpdateAsync_CambiandoStock_PersisteElCambio()
-    {
+    public async Task UpdateAsync_CambiandoStock_PersisteElCambio() {
         await using var context = CreateContext();
         var repo = new ProductoRepository(context, NullLogger<ProductoRepository>.Instance);
 
@@ -176,8 +164,7 @@ public class CatalogRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindAllPagedAsync_PrecioMax_Y_SoftDeleteGlobal()
-    {
+    public async Task FindAllPagedAsync_PrecioMax_Y_SoftDeleteGlobal() {
         await using var context = CreateContext();
         var repo = new ProductoRepository(context, NullLogger<ProductoRepository>.Instance);
 
@@ -191,15 +178,13 @@ public class CatalogRepositoryIntegrationTests
     // ------------------------------------------------------- restore (backup)
 
     [Test]
-    public async Task CrearConIdExplicito_Y_Resincronizar_LasSecuencias_NoChocanConLaSiguienteAlta()
-    {
+    public async Task CrearConIdExplicito_Y_Resincronizar_LasSecuencias_NoChocanConLaSiguienteAlta() {
         await using var context = CreateContext();
         var categorias = new CategoriaRepository(context, NullLogger<CategoriaRepository>.Instance);
         var productos = new ProductoRepository(context, NullLogger<ProductoRepository>.Instance);
 
         // Altas con ID explícito, como hace el restore de backup.
-        await categorias.CrearConIdExplicitoAsync(new TiendaApi.Api.Models.Categoria
-        {
+        await categorias.CrearConIdExplicitoAsync(new TiendaApi.Api.Models.Categoria {
             Id = 9001,
             Nombre = "Restore",
             Descripcion = "ID explícito",
@@ -207,8 +192,7 @@ public class CatalogRepositoryIntegrationTests
         });
         await categorias.ResincronizarSecuenciaAsync();
 
-        await productos.CrearConIdExplicitoAsync(new TiendaApi.Api.Models.Producto
-        {
+        await productos.CrearConIdExplicitoAsync(new TiendaApi.Api.Models.Producto {
             Id = 9001,
             Nombre = "Producto restore",
             Descripcion = "ID explícito",
@@ -222,8 +206,7 @@ public class CatalogRepositoryIntegrationTests
         (await categorias.ExistsByIdAsync(9001)).Should().BeTrue("la alta con ID explícito debe persistir");
 
         // La siguiente alta SIN ID debe salir por encima de 9001 (si no, chocaría).
-        var nueva = await categorias.CreateAsync(new TiendaApi.Api.Models.Categoria
-        {
+        var nueva = await categorias.CreateAsync(new TiendaApi.Api.Models.Categoria {
             Nombre = "Post-restore",
             IsDeleted = false,
         });

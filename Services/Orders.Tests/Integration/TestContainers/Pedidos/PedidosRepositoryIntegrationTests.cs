@@ -17,14 +17,12 @@ namespace TiendaApi.Tests.Integration.TestContainers.Pedidos;
 [TestFixture]
 [Category("Integration")]
 [NonParallelizable]
-public class PedidosRepositoryIntegrationTests
-{
+public class PedidosRepositoryIntegrationTests {
     private const string DatabaseName = "it_orders_repo";
     private IMongoDatabase _database = null!;
     private PedidosNativeRepository _repo = null!;
 
-    private static Pedido Pedido(long userId, string nombre, decimal total, DateTime? creado = null) => new()
-    {
+    private static Pedido Pedido(long userId, string nombre, decimal total, DateTime? creado = null) => new() {
         Id = ObjectId.GenerateNewId(),
         UserId = userId,
         Items = [new PedidoItem { ProductoId = 1, NombreProducto = nombre, Cantidad = 1, Precio = total, Subtotal = total }],
@@ -35,16 +33,14 @@ public class PedidosRepositoryIntegrationTests
     };
 
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() {
         // GetMongoDatabase hace drop: cada test arranca de colección vacía.
         _database = AssemblyContainerFixture.GetMongoDatabase(DatabaseName);
         _repo = new PedidosNativeRepository(_database, NullLogger<PedidosNativeRepository>.Instance);
     }
 
     [Test]
-    public async Task Save_LuegoFindById_DevuelveElPedidoConSusItems()
-    {
+    public async Task Save_LuegoFindById_DevuelveElPedidoConSusItems() {
         var guardado = await _repo.SaveAsync(Pedido(1, "Laptop Dell XPS 15", 1299.99m));
 
         guardado.Id.Should().NotBe(ObjectId.Empty, "MongoDB asigna el ObjectId");
@@ -61,16 +57,14 @@ public class PedidosRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindById_Inexistente_DevuelveNull()
-    {
+    public async Task FindById_Inexistente_DevuelveNull() {
         var leido = await _repo.FindByIdAsync(ObjectId.GenerateNewId().ToString());
 
         leido.Should().BeNull("un miss no es un error: es un 404 en la capa superior");
     }
 
     [Test]
-    public async Task FindAll_PorFecha_Descendente()
-    {
+    public async Task FindAll_PorFecha_Descendente() {
         await _repo.SaveAsync(Pedido(1, "Viejo", 10m, DateTime.UtcNow.AddDays(-2)));
         await _repo.SaveAsync(Pedido(1, "Nuevo", 20m, DateTime.UtcNow));
 
@@ -82,8 +76,7 @@ public class PedidosRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindByUserId_SoloDevuelveLosDelUsuario()
-    {
+    public async Task FindByUserId_SoloDevuelveLosDelUsuario() {
         await _repo.SaveAsync(Pedido(1, "Del uno", 10m));
         await _repo.SaveAsync(Pedido(2, "Del dos", 20m));
 
@@ -94,8 +87,7 @@ public class PedidosRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindByUserIdPaged_DevuelvePaginaYTotal()
-    {
+    public async Task FindByUserIdPaged_DevuelvePaginaYTotal() {
         for (var i = 1; i <= 5; i++)
             await _repo.SaveAsync(Pedido(1, "P" + i, i, DateTime.UtcNow.AddMinutes(i)));
 
@@ -107,8 +99,7 @@ public class PedidosRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindByRangoFechas_IncluyeElInicio_ExcluyeElFinal()
-    {
+    public async Task FindByRangoFechas_IncluyeElInicio_ExcluyeElFinal() {
         var desde = DateTime.UtcNow.AddDays(-1);
         var hasta = DateTime.UtcNow;
 
@@ -123,8 +114,7 @@ public class PedidosRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task Update_CambiaElEstado_SinDuplicar()
-    {
+    public async Task Update_CambiaElEstado_SinDuplicar() {
         var pedido = await _repo.SaveAsync(Pedido(1, "P", 10m));
 
         pedido.Estado = PedidoEstado.ENVIADO;

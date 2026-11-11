@@ -17,16 +17,14 @@ using TiendaApi.Api.Services.Cache;
 
 namespace TiendaApi.Tests.Unit.Features.Users;
 
-public class CreateUserCommandHandlerTests
-{
+public class CreateUserCommandHandlerTests {
     [Test]
-    public async Task Handle_ComandoValido_DevuelveSuccessYPublicaNotification()
-    {
+    public async Task Handle_ComandoValido_DevuelveSuccessYPublicaNotification() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "juan", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByUsernameAsync(dto.Username)).ReturnsAsync((User?)null);
@@ -41,13 +39,12 @@ public class CreateUserCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_ValidacionFalla_DevuelveValidationError()
-    {
+    public async Task Handle_ValidacionFalla_DevuelveValidationError() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult([new ValidationFailure("Username", "obligatorio")]));
@@ -59,13 +56,12 @@ public class CreateUserCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_UsernameExistente_DevuelveError()
-    {
+    public async Task Handle_UsernameExistente_DevuelveError() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "juan", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByUsernameAsync(dto.Username)).ReturnsAsync(new User { Id = 1, UserName = "juan" });
@@ -77,13 +73,12 @@ public class CreateUserCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_EmailExistente_DevuelveError()
-    {
+    public async Task Handle_EmailExistente_DevuelveError() {
         var repository = new Mock<IUserRepository>();
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-          var userManager = MockuserManagerExito();
+        var userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "juan", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByUsernameAsync(dto.Username)).ReturnsAsync((User?)null);
@@ -96,8 +91,7 @@ public class CreateUserCommandHandlerTests
     }
 
     /// <summary>Mock de UserManager que aprueba crear, anadir rol y cambiar password.</summary>
-    private static Mock<UserManager<User>> MockuserManagerExito()
-    {
+    private static Mock<UserManager<User>> MockuserManagerExito() {
         var store = new Mock<IUserStore<User>>();
         var mock = new Mock<UserManager<User>>(store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
         mock.Setup(u => u.CreateAsync(It.IsAny<User>(), It.IsAny<string>())).ReturnsAsync(IdentityResult.Success);

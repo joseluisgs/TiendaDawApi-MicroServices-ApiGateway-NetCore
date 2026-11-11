@@ -11,16 +11,13 @@ namespace TiendaApi.Api.Infrastructures;
 /// Solo se copia si ya venía: si la llamada es interna (sin cabecera), sale sin
 /// token y el destino responde 401, que es lo correcto.
 /// </summary>
-public class AuthorizationForwardingHandler(IHttpContextAccessor accessor) : DelegatingHandler
-{
+public class AuthorizationForwardingHandler(IHttpContextAccessor accessor) : DelegatingHandler {
     /// <inheritdoc />
     protected override Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request, CancellationToken cancellationToken)
-    {
+        HttpRequestMessage request, CancellationToken cancellationToken) {
         var authorization = accessor.HttpContext?.Request.Headers.Authorization.ToString();
         if (!string.IsNullOrWhiteSpace(authorization) &&
-            !request.Headers.Contains("Authorization"))
-        {
+            !request.Headers.Contains("Authorization")) {
             request.Headers.TryAddWithoutValidation("Authorization", authorization);
         }
 

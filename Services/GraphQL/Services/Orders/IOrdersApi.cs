@@ -10,8 +10,7 @@ namespace TiendaApi.Api.Services.Orders;
 /// qué pedidos son del usuario autenticado (le llega su JWT), así GraphQL no
 /// filtra a mano y no puede filtrar mal.
 /// </summary>
-public interface IOrdersApi
-{
+public interface IOrdersApi {
     /// <summary>Todos los pedidos (solo ADMIN, el token viaja en la cabecera).</summary>
     [Get("/api/v1/pedidos")]
     Task<List<PedidoDto>> GetPedidosAsync();

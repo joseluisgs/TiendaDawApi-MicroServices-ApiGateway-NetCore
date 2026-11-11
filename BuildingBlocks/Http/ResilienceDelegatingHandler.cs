@@ -20,12 +20,10 @@ namespace BuildingBlocks.Http;
 /// <c>Contains</c>), así que no se duplica en ningún orden.
 /// </summary>
 public sealed class ResilienceDelegatingHandler(ResiliencePipelineProvider provider)
-    : DelegatingHandler
-{
+    : DelegatingHandler {
     /// <inheritdoc/>
     protected override Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request, CancellationToken cancellationToken)
-    {
+        HttpRequestMessage request, CancellationToken cancellationToken) {
         // El pipeline decide por verbo: lectura (GET/HEAD) reintenta todo lo
         // transitorio; escritura solo si la conexión nunca se estableció.
         var pipelines = provider.Obtener(request.RequestUri);

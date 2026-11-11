@@ -41,8 +41,7 @@ namespace TiendaApi.Api.Services.Backup;
 public class BackupService(
     ICatalogApi catalogApi,
     ILogger<BackupService> logger
-) : IBackupService
-{
+) : IBackupService {
     /// <summary>
     /// 🎓 Backup no tiene ni BD ni validadores propios (R5): el upsert por
     /// clave, la validación de fila y la re-sincronización de secuencias los
@@ -70,20 +69,17 @@ public class BackupService(
     /// Se comparten con los tests para que el round-trip lea lo mismo que escribe:
     /// el contexto source-gen por defecto es PascalCase y el fichero no casaría.
     /// </summary>
-    public static readonly JsonSerializerOptions OpcionesJson = new(AppJsonContext.Default.Options)
-    {
+    public static readonly JsonSerializerOptions OpcionesJson = new(AppJsonContext.Default.Options) {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
     };
 
     /// <inheritdoc/>
-    public (string ContentType, string NombreFichero) DatosSalida(string formato, IReadOnlyList<string> entidades)
-    {
+    public (string ContentType, string NombreFichero) DatosSalida(string formato, IReadOnlyList<string> entidades) {
         var fecha = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
         var sufijo = entidades.Count == 1 ? entidades[0] : "backup";
 
-        return formato switch
-        {
+        return formato switch {
             "json" => ("application/json; charset=utf-8", $"tienda-{sufijo}-{fecha}.json"),
             // El csv necesita una entidad por fichero: con más de una se empaqueta.
             "csv" => entidades.Count == 1
@@ -95,8 +91,7 @@ public class BackupService(
 
     /// <inheritdoc/>
     public async Task<UnitResult<DomainError>> ExportarAsync(
-        Stream salida, string formato, IReadOnlyList<string> entidades, bool incluirBorrados)
-    {
+        Stream salida, string formato, IReadOnlyList<string> entidades, bool incluirBorrados) {
         var validacion = ValidarPeticion(formato, entidades);
         if (validacion.IsFailure)
             return UnitResult.Failure<DomainError>(validacion.Error);
@@ -104,8 +99,7 @@ public class BackupService(
         // Se carga TODO antes de escribir: si algo falla, la respuesta aún no se ha tocado.
         var datos = await CargarAsync(entidades, incluirBorrados);
 
-        switch (formato)
-        {
+        switch (formato) {
             case "json":
                 await EscribirJsonAsync(salida, datos, entidades, incluirBorrados);
                 break;
@@ -129,8 +123,7 @@ public class BackupService(
 
     /// <inheritdoc/>
     public async Task<Result<ImportReportDto, DomainError>> ImportarAsync(
-        Stream fichero, string formato, IReadOnlyList<string> entidades, bool dryRun)
-    {
+        Stream fichero, string formato, IReadOnlyList<string> entidades, bool dryRun) {
         var formatos = string.IsNullOrWhiteSpace(formato) ? Formatos : [formato.Trim().ToLowerInvariant()];
         if (formatos.Length != 1 || !Formatos.Contains(formatos[0]))
             return Result.Failure<ImportReportDto, DomainError>(BackupError.FormatoDesconocido(formato));
@@ -142,21 +135,14 @@ public class BackupService(
         var reloj = System.Diagnostics.Stopwatch.StartNew();
 
         BackupDto? backup;
-        try
-        {
+        try {
             backup = await LeerAsync(fichero, formatos[0], entidades);
-        }
-        catch (BackupException ex)
-        {
+        } catch (BackupException ex) {
             return Result.Failure<ImportReportDto, DomainError>(ex.Error);
-        }
-        catch (JsonException ex)
-        {
+        } catch (JsonException ex) {
             return Result.Failure<ImportReportDto, DomainError>(
                 BackupError.FormatoInvalido($"JSON inválido ({ex.Message})"));
-        }
-        catch (InvalidDataException ex)
-        {
+        } catch (InvalidDataException ex) {
             return Result.Failure<ImportReportDto, DomainError>(
                 BackupError.FormatoInvalido(ex.Message));
         }
@@ -192,17 +178,14 @@ public class BackupService(
     }
 
     /// <inheritdoc/>
-    public Task<Result<CatalogoFormatosDto, DomainError>> ObtenerFormatosAsync()
-    {
+    public Task<Result<CatalogoFormatosDto, DomainError>> ObtenerFormatosAsync() {
         var catalogo = new CatalogoFormatosDto(
-            Formatos: new List<FormatoDto>
-            {
+            Formatos: new List<FormatoDto> {
                 new("zip", "application/zip", ".zip", "Manifest más un fichero por entidad (json o csv)"),
                 new("json", "application/json; charset=utf-8", ".json", "Un único documento con manifest y entidades"),
                 new("csv", "text/csv; charset=utf-8", ".csv", "Una entidad por fichero (con más de una se empaqueta en zip)"),
             },
-            Entidades: new List<EntidadCatalogoDto>
-            {
+            Entidades: new List<EntidadCatalogoDto> {
                 new("categorias", "id", ["id", "nombre", "descripcion", "isDeleted", "createdAt", "updatedAt"]),
                 new("proveedores", "codigo", ["codigo", "nombre", "descripcion", "contacto", "isDeleted", "createdAt", "updatedAt"]),
                 new("productos", "id", ["id", "nombre", "descripcion", "precio", "stock", "imagen", "categoriaId", "proveedorId", "isDeleted", "createdAt", "updatedAt"]),
@@ -221,8 +204,7 @@ public class BackupService(
     // ────────────────────────────────────────────────────────────
 
     /// <summary>Carga las entidades pedidas (activas y, si se pide, también las borradas).</summary>
-    private async Task<DatosBackup> CargarAsync(IReadOnlyList<string> entidades, bool incluirBorrados)
-    {
+    private async Task<DatosBackup> CargarAsync(IReadOnlyList<string> entidades, bool incluirBorrados) {
         var datos = new DatosBackup();
 
         if (entidades.Contains("categorias"))
@@ -237,8 +219,7 @@ public class BackupService(
         return datos;
     }
 
-    private async Task<List<BackupCategoriaDto>> CargarCategoriasAsync(bool incluirBorrados)
-    {
+    private async Task<List<BackupCategoriaDto>> CargarCategoriasAsync(bool incluirBorrados) {
         var activas = await PaginarAsync((p, s) => catalogApi.GetCategoriasAsync(p, s));
         if (!incluirBorrados) return activas.Select(Mapear).ToList();
 
@@ -246,8 +227,7 @@ public class BackupService(
         return activas.Concat(borradas).Select(Mapear).ToList();
     }
 
-    private async Task<List<BackupProveedorDto>> CargarProveedoresAsync(bool incluirBorrados)
-    {
+    private async Task<List<BackupProveedorDto>> CargarProveedoresAsync(bool incluirBorrados) {
         var activos = await PaginarAsync((p, s) => catalogApi.GetProveedoresAsync(p, s));
         if (!incluirBorrados) return activos.Select(Mapear).ToList();
 
@@ -255,8 +235,7 @@ public class BackupService(
         return activos.Concat(borrados).Select(Mapear).ToList();
     }
 
-    private async Task<List<BackupProductoDto>> CargarProductosAsync(bool incluirBorrados)
-    {
+    private async Task<List<BackupProductoDto>> CargarProductosAsync(bool incluirBorrados) {
         var activos = await PaginarAsync((p, s) => catalogApi.GetProductosAsync(p, s));
         if (!incluirBorrados) return activos.Select(Mapear).ToList();
 
@@ -265,13 +244,11 @@ public class BackupService(
     }
 
     /// <summary>Recorre un listado paginado hasta agotarlo (los endpoints son paginados).</summary>
-    private static async Task<List<T>> PaginarAsync<T>(Func<int, int, Task<PagedResult<T>>> consulta)
-    {
+    private static async Task<List<T>> PaginarAsync<T>(Func<int, int, Task<PagedResult<T>>> consulta) {
         var salida = new List<T>();
         const int size = 100; // máximo aceptado por la API
 
-        for (var page = 0; page < 500; page++)
-        {
+        for (var page = 0; page < 500; page++) {
             var pagina = await consulta(page, size);
             if (pagina?.Items is null) break;
 
@@ -282,8 +259,7 @@ public class BackupService(
         return salida;
     }
 
-    private static async Task EscribirJsonAsync(Stream salida, DatosBackup datos, IReadOnlyList<string> entidades, bool incluirBorrados)
-    {
+    private static async Task EscribirJsonAsync(Stream salida, DatosBackup datos, IReadOnlyList<string> entidades, bool incluirBorrados) {
         // Las entidades no pedidas salen en null (documentado en el DTO): así el
         // cliente distingue "no lo pedí" de "no hay nada".
         var backup = new BackupDto(CrearManifest("json", datos, incluirBorrados),
@@ -295,11 +271,9 @@ public class BackupService(
         await salida.FlushAsync();
     }
 
-    private static async Task EscribirCsvAsync(Stream salida, string entidad, DatosBackup datos)
-    {
+    private static async Task EscribirCsvAsync(Stream salida, string entidad, DatosBackup datos) {
         using var escritor = CsvCodec.CrearEscritor(salida);
-        switch (entidad)
-        {
+        switch (entidad) {
             case "categorias":
                 CsvCodec.EscribirCabecera(escritor, ["id", "nombre", "descripcion", "isDeleted", "createdAt", "updatedAt"]);
                 foreach (var c in datos.Categorias)
@@ -329,8 +303,7 @@ public class BackupService(
         await escritor.FlushAsync();
     }
 
-    private static async Task EscribirZipAsync(Stream salida, DatosBackup datos, bool incluirBorrados, bool csv)
-    {
+    private static async Task EscribirZipAsync(Stream salida, DatosBackup datos, bool incluirBorrados, bool csv) {
         using var archivo = ZipCodec.Crear(salida);
 
         // Manifest siempre como primer fichero.
@@ -338,17 +311,14 @@ public class BackupService(
         await EscribirEntradaAsync(archivo, "manifest.json",
             JsonSerializer.Serialize(manifest, OpcionesJson));
 
-        if (csv)
-        {
+        if (csv) {
             if (datos.Categorias.Count > 0)
                 await EscribirEntradaAsync(archivo, "categorias.csv", SerializarCsv("categorias", datos));
             if (datos.Proveedores.Count > 0)
                 await EscribirEntradaAsync(archivo, "proveedores.csv", SerializarCsv("proveedores", datos));
             if (datos.Productos.Count > 0)
                 await EscribirEntradaAsync(archivo, "productos.csv", SerializarCsv("productos", datos));
-        }
-        else
-        {
+        } else {
             if (datos.Categorias.Count > 0)
                 await EscribirEntradaAsync(archivo, "categorias.json",
                     JsonSerializer.Serialize(datos.Categorias, OpcionesJson));
@@ -364,8 +334,7 @@ public class BackupService(
         await salida.FlushAsync();
     }
 
-    private static async Task EscribirEntradaAsync(ZipArchive archivo, string nombre, string contenido)
-    {
+    private static async Task EscribirEntradaAsync(ZipArchive archivo, string nombre, string contenido) {
         var entrada = archivo.CreateEntry(nombre, CompressionLevel.Optimal);
         await using var flujo = entrada.Open();
         await using var escritor = new StreamWriter(flujo, new UTF8Encoding(false));
@@ -373,11 +342,9 @@ public class BackupService(
     }
 
     /// <summary>Serializa una entidad a CSV (para incluirlo dentro de un ZIP).</summary>
-    private static string SerializarCsv(string entidad, DatosBackup datos)
-    {
+    private static string SerializarCsv(string entidad, DatosBackup datos) {
         using var texto = new StringWriter();
-        switch (entidad)
-        {
+        switch (entidad) {
             case "categorias":
                 CsvCodec.EscribirCabecera(texto, ["id", "nombre", "descripcion", "isDeleted", "createdAt", "updatedAt"]);
                 foreach (var c in datos.Categorias)
@@ -411,8 +378,7 @@ public class BackupService(
         new(
             Version: "1.0",
             GeneradoEn: DateTime.UtcNow,
-            Entidades: new Dictionary<string, int>
-            {
+            Entidades: new Dictionary<string, int> {
                 ["categorias"] = datos.Categorias.Count,
                 ["proveedores"] = datos.Proveedores.Count,
                 ["productos"] = datos.Productos.Count,
@@ -425,16 +391,14 @@ public class BackupService(
     // ────────────────────────────────────────────────────────────
 
     /// <summary>Valida formato y entidades antes de tocar el fichero.</summary>
-    private static UnitResult<DomainError> ValidarPeticion(string formato, IReadOnlyList<string> entidades)
-    {
+    private static UnitResult<DomainError> ValidarPeticion(string formato, IReadOnlyList<string> entidades) {
         if (!Formatos.Contains(formato))
             return UnitResult.Failure<DomainError>(BackupError.FormatoDesconocido(formato));
 
         if (entidades.Count == 0)
             return UnitResult.Failure<DomainError>(BackupError.EntidadDesconocida("(ninguna)"));
 
-        foreach (var entidad in entidades)
-        {
+        foreach (var entidad in entidades) {
             if (!Entidades.Contains(entidad))
                 return UnitResult.Failure<DomainError>(BackupError.EntidadDesconocida(entidad));
         }
@@ -446,10 +410,8 @@ public class BackupService(
     /// Lee el fichero según el formato y devuelve solo las entidades pedidas.
     /// El ZIP pasa por stream (binario); el json y el csv se leen como texto.
     /// </summary>
-    private static async Task<BackupDto?> LeerAsync(Stream fichero, string formato, IReadOnlyList<string> entidades)
-    {
-        return formato switch
-        {
+    private static async Task<BackupDto?> LeerAsync(Stream fichero, string formato, IReadOnlyList<string> entidades) {
+        return formato switch {
             "zip" => LeerZip(fichero, entidades),
             "json" => JsonSerializer.Deserialize<BackupDto>(
                 await LeerTextoAsync(fichero), OpcionesJson),
@@ -457,8 +419,7 @@ public class BackupService(
         };
     }
 
-    private static async Task<string> LeerTextoAsync(Stream fichero)
-    {
+    private static async Task<string> LeerTextoAsync(Stream fichero) {
         using var lector = new StreamReader(fichero, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, leaveOpen: true);
         var texto = await lector.ReadToEndAsync();
         if (texto.Length > MaxBytesFichero)
@@ -470,13 +431,11 @@ public class BackupService(
     /// Construye el backup desde las entradas de un ZIP (límites aplicados por el codec).
     /// Se aceptan ficheros .json y .csv: el nombre del fichero dice qué entidad contiene.
     /// </summary>
-    private static BackupDto? LeerZip(Stream fichero, IReadOnlyList<string> entidades)
-    {
+    private static BackupDto? LeerZip(Stream fichero, IReadOnlyList<string> entidades) {
         var entradas = ZipCodec.Leer(fichero);
         var datos = new DatosBackup();
 
-        foreach (var entrada in entradas)
-        {
+        foreach (var entrada in entradas) {
             var nombre = System.IO.Path.GetFileName(entrada.Nombre).ToLowerInvariant();
 
             if (nombre == "categorias.json")
@@ -504,27 +463,23 @@ public class BackupService(
     }
 
     /// <summary>Convierte el contenido de un CSV en la lista de su entidad.</summary>
-    private static List<BackupCategoriaDto> MapearCategoriasCsv(string contenido)
-    {
+    private static List<BackupCategoriaDto> MapearCategoriasCsv(string contenido) {
         var filas = LeerFilas(contenido);
         return filas.cuerpo.Select(f => MapaCategoriaCsv(filas.cabecera, f)).ToList();
     }
 
-    private static List<BackupProveedorDto> MapearProveedoresCsv(string contenido)
-    {
+    private static List<BackupProveedorDto> MapearProveedoresCsv(string contenido) {
         var filas = LeerFilas(contenido);
         return filas.cuerpo.Select(f => MapaProveedorCsv(filas.cabecera, f)).ToList();
     }
 
-    private static List<BackupProductoDto> MapearProductosCsv(string contenido)
-    {
+    private static List<BackupProductoDto> MapearProductosCsv(string contenido) {
         var filas = LeerFilas(contenido);
         return filas.cuerpo.Select(f => MapaProductoCsv(filas.cabecera, f)).ToList();
     }
 
     /// <summary>Lee un CSV devolviendo la cabecera y las filas de datos.</summary>
-    private static (string[] cabecera, string[][] cuerpo) LeerFilas(string contenido)
-    {
+    private static (string[] cabecera, string[][] cuerpo) LeerFilas(string contenido) {
         using var lector = new StringReader(contenido);
         var todas = CsvCodec.Leer(lector);
         if (todas.Count < 2) return ([], []);
@@ -534,8 +489,7 @@ public class BackupService(
     /// <summary>
     /// Construye el backup desde un CSV de una sola entidad (la indica `entidades`).
     /// </summary>
-    private static BackupDto? LeerCsv(string contenido, IReadOnlyList<string> entidades)
-    {
+    private static BackupDto? LeerCsv(string contenido, IReadOnlyList<string> entidades) {
         using var lector = new StringReader(contenido);
         var filas = CsvCodec.Leer(lector);
         if (filas.Count < 2) return null;
@@ -545,8 +499,7 @@ public class BackupService(
         var datos = new DatosBackup();
         var cuerpo = filas.Skip(1).ToArray();
 
-        switch (entidad)
-        {
+        switch (entidad) {
             case "categorias":
                 datos.Categorias = cuerpo.Select(f => MapaCategoriaCsv(cabecera, f)).ToList();
                 break;
@@ -600,8 +553,7 @@ public class BackupService(
     private static string? NuloSiVacio(string valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : valor;
 
-    private static string Campo(string[] cabecera, string[] fila, string nombre)
-    {
+    private static string Campo(string[] cabecera, string[] fila, string nombre) {
         var indice = Array.FindIndex(cabecera, c => c.Trim().Equals(nombre, StringComparison.OrdinalIgnoreCase));
         return indice >= 0 && indice < fila.Length ? fila[indice] : string.Empty;
     }
@@ -648,20 +600,17 @@ public class BackupService(
         bool dryRun,
         Func<T, object> construir,
         Func<object, Task<HttpResponseMessage>> enviar,
-        Func<T, ErrorFilaDto> errorDe)
-    {
+        Func<T, ErrorFilaDto> errorDe) {
         var errores = new List<ErrorFilaDto>();
         var creados = 0;
         var actualizados = 0;
         var sinCambios = 0;
 
-        for (var i = 0; i < filas.Count; i++)
-        {
+        for (var i = 0; i < filas.Count; i++) {
             var fila = filas[i];
             var numeroFila = i + 1;
 
-            if (dryRun)
-            {
+            if (dryRun) {
                 // ⚠️ dryRun NO escribe NI llama al endpoint de import: eso
                 // requeriría un endpoint de validación sin efectos en catalog,
                 // que no existe. Solo se cuentan las filas leídas — la
@@ -670,13 +619,10 @@ public class BackupService(
                 continue;
             }
 
-            try
-            {
+            try {
                 var respuesta = await enviar(construir(fila));
                 Contar(respuesta.StatusCode, ref creados, ref actualizados, ref sinCambios);
-            }
-            catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.BadRequest)
-            {
+            } catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.BadRequest) {
                 // catalog valida la fila (formato, FKs): el error no aborta.
                 errores.Add(ErrorDe(ex, numeroFila, errorDe(fila)));
             }
@@ -686,10 +632,8 @@ public class BackupService(
     }
 
     /// <summary>Traduce el código de catalog al contador del informe.</summary>
-    private static void Contar(HttpStatusCode status, ref int creados, ref int actualizados, ref int sinCambios)
-    {
-        switch (status)
-        {
+    private static void Contar(HttpStatusCode status, ref int creados, ref int actualizados, ref int sinCambios) {
+        switch (status) {
             case HttpStatusCode.Created: creados++; break;
             case HttpStatusCode.OK: actualizados++; break;
             case HttpStatusCode.NoContent: sinCambios++; break;
@@ -697,19 +641,16 @@ public class BackupService(
     }
 
     /// <summary>Construye el error de fila desde la respuesta 400 de catalog.</summary>
-    private static ErrorFilaDto ErrorDe(ApiException ex, int numeroFila, ErrorFilaDto respaldo)
-    {
+    private static ErrorFilaDto ErrorDe(ApiException ex, int numeroFila, ErrorFilaDto respaldo) {
         var campo = respaldo.Campo;
         var mensaje = respaldo.Mensaje;
 
-        try
-        {
+        try {
             using var doc = System.Text.Json.JsonDocument.Parse(ex.Content ?? "{}");
             var raiz = doc.RootElement;
             if (raiz.TryGetProperty("message", out var m)) mensaje = m.GetString() ?? mensaje;
             if (raiz.TryGetProperty("field", out var f)) campo = f.GetString() ?? campo;
-        }
-        catch { /* el mensaje de respaldo ya vale */ }
+        } catch { /* el mensaje de respaldo ya vale */ }
 
         return new ErrorFilaDto(numeroFila, campo, mensaje);
     }
@@ -731,8 +672,7 @@ public class BackupService(
             p.Categoria.Id, p.Proveedor?.Codigo ?? string.Empty, false, p.CreatedAt, p.UpdatedAt);
 
     /// <summary>Datos ya cargados de las tres entidades para el export.</summary>
-    private sealed class DatosBackup
-    {
+    private sealed class DatosBackup {
         public List<BackupCategoriaDto> Categorias { get; set; } = [];
         public List<BackupProveedorDto> Proveedores { get; set; } = [];
         public List<BackupProductoDto> Productos { get; set; } = [];

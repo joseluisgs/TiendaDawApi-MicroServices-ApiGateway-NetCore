@@ -17,8 +17,7 @@ namespace TiendaApi.Api.Services.Historial;
 /// En el monolito esto hablaba directo con Cassandra; aquí es el mismo contrato
 /// pero contra el microservicio <c>historical</c> (R4 · REST con Refit).
 /// </summary>
-public interface IHistorialService
-{
+public interface IHistorialService {
     /// <summary>
     /// Serie histórica de precios de un producto (consulta Q-A).
     /// </summary>

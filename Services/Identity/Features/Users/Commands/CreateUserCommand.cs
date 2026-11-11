@@ -30,15 +30,12 @@ public class CreateUserCommandHandler(
     IValidator<RegisterDto> validator,
     IMediator mediator,
     ICacheService cacheService)
-    : IRequestHandler<CreateUserCommand, Result<UserDto, DomainError>>
-{
+    : IRequestHandler<CreateUserCommand, Result<UserDto, DomainError>> {
     /// <inheritdoc/>
     public async Task<Result<UserDto, DomainError>> Handle(
-        CreateUserCommand request, CancellationToken cancellationToken)
-    {
+        CreateUserCommand request, CancellationToken cancellationToken) {
         var validationResult = await validator.ValidateAsync(request.Dto, cancellationToken);
-        if (!validationResult.IsValid)
-        {
+        if (!validationResult.IsValid) {
             var errors = validationResult.Errors
                 .GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
@@ -55,11 +52,9 @@ public class CreateUserCommandHandler(
 
         var user = request.Dto.ToEntity();
         var result = await userManager.CreateAsync(user, request.Dto.Password);
-        if (!result.Succeeded)
-        {
+        if (!result.Succeeded) {
             // Identity rechaza la contraseña (política) o duplica algo en su tabla.
-            var errors = new Dictionary<string, string[]>
-            {
+            var errors = new Dictionary<string, string[]> {
                 ["password"] = result.Errors.Select(e => e.Description).ToArray()
             };
             return Result.Failure<UserDto, DomainError>(UsuarioError.ValidacionConCampos(errors));

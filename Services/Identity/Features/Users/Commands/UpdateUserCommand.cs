@@ -28,51 +28,42 @@ public class UpdateUserCommandHandler(
     IUserRepository repository,
     IValidator<UserUpdateDto> validator,
     ICacheService cacheService)
-    : IRequestHandler<UpdateUserCommand, Result<UserDto, DomainError>>
-{
+    : IRequestHandler<UpdateUserCommand, Result<UserDto, DomainError>> {
     /// <inheritdoc/>
     public async Task<Result<UserDto, DomainError>> Handle(
-        UpdateUserCommand request, CancellationToken cancellationToken)
-    {
+        UpdateUserCommand request, CancellationToken cancellationToken) {
         var user = await repository.FindByIdAsync(request.Id);
         if (user is null or { IsDeleted: true })
             return Result.Failure<UserDto, DomainError>(UsuarioError.NotFound(request.Id));
 
         var validationResult = await validator.ValidateAsync(request.Dto, cancellationToken);
-        if (!validationResult.IsValid)
-        {
+        if (!validationResult.IsValid) {
             var errors = validationResult.Errors
                 .GroupBy(e => e.PropertyName)
                 .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
             return Result.Failure<UserDto, DomainError>(UsuarioError.ValidacionConCampos(errors));
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Dto.Email) && request.Dto.Email != user.Email)
-        {
+        if (!string.IsNullOrWhiteSpace(request.Dto.Email) && request.Dto.Email != user.Email) {
             var existing = await repository.FindByEmailAsync(request.Dto.Email);
             if (existing is not null && existing.Id != request.Id)
                 return Result.Failure<UserDto, DomainError>(UsuarioError.EmailExistente(request.Dto.Email));
             user.Email = request.Dto.Email;
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Dto.Password))
-        {
+        if (!string.IsNullOrWhiteSpace(request.Dto.Password)) {
             // Solo Identity: el cambio de contraseña pasa por UserManager (PBKDF2).
             var reset = await userManager.RemovePasswordAsync(user);
-            if (!reset.Succeeded)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
+            if (!reset.Succeeded) {
+                var errors = new Dictionary<string, string[]> {
                     ["password"] = reset.Errors.Select(e => e.Description).ToArray()
                 };
                 return Result.Failure<UserDto, DomainError>(UsuarioError.ValidacionConCampos(errors));
             }
 
             var add = await userManager.AddPasswordAsync(user, request.Dto.Password);
-            if (!add.Succeeded)
-            {
-                var errors = new Dictionary<string, string[]>
-                {
+            if (!add.Succeeded) {
+                var errors = new Dictionary<string, string[]> {
                     ["password"] = add.Errors.Select(e => e.Description).ToArray()
                 };
                 return Result.Failure<UserDto, DomainError>(UsuarioError.ValidacionConCampos(errors));
@@ -83,7 +74,7 @@ public class UpdateUserCommandHandler(
         var dto = updated.ToDto();
 
         await cacheService.RemoveAsync($"usuarios:{request.Id}");
-            
+
 
         return Result.Success<UserDto, DomainError>(dto);
     }

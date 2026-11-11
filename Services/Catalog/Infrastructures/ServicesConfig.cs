@@ -15,16 +15,14 @@ namespace TiendaApi.Api.Infrastructures;
 /// <summary>
 /// Registra los servicios de catalog y sus conexiones con otros microservicios.
 /// </summary>
-public static class ServicesConfig
-{
+public static class ServicesConfig {
     /// <summary>
     /// Registra servicios internos y clients Refit (R4 · REST con Refit).
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>
     /// <returns>IServiceCollection.</returns>
-    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
-    {
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) {
         Log.Information("Registrando servicios de catalog...");
 
         // Fachadas internas (dominio de este servicio).

@@ -27,8 +27,7 @@ namespace TiendaApi.Tests.Unit.Features.Pedidos;
 /// clients Refit (<see cref="ICatalogApi"/> y <see cref="IUsersApi"/>) en vez
 /// de los repositorios de PostgreSQL.
 /// </summary>
-public class CreatePedidoCommandHandlerTests
-{
+public class CreatePedidoCommandHandlerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<IPedidosRepository> _pedidos = null!;
@@ -41,8 +40,7 @@ public class CreatePedidoCommandHandlerTests
     private CreatePedidoCommandHandler _handler = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _pedidos = new Mock<IPedidosRepository>();
         _catalog = new Mock<ICatalogApi>();
         _users = new Mock<IUsersApi>();
@@ -66,8 +64,7 @@ public class CreatePedidoCommandHandlerTests
             _mediator.Object, _cache.Object, Mock.Of<IOutputCacheStore>());
     }
 
-    private static PedidoRequestDto Request() => new()
-    {
+    private static PedidoRequestDto Request() => new() {
         Destinatario = new DestinatarioDto { NombreCompleto = "User DAW", Email = "u@t.com" },
         Items = [new PedidoItemRequestDto { ProductoId = 1, Cantidad = 2 }]
     };
@@ -86,8 +83,7 @@ public class CreatePedidoCommandHandlerTests
             .ReturnsAsync(new ProductoSnapshotDto(1, "Laptop Dell XPS 15", 1299.99m, 10));
 
     [Test]
-    public async Task Handle_PedidoValido_DevuelveSuccessYPublicaNotification()
-    {
+    public async Task Handle_PedidoValido_DevuelveSuccessYPublicaNotification() {
         ProductoExiste();
 
         var result = await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
@@ -102,8 +98,7 @@ public class CreatePedidoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_PedidoValido_DescuentaStockEnCatalog()
-    {
+    public async Task Handle_PedidoValido_DescuentaStockEnCatalog() {
         ProductoExiste();
 
         await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
@@ -113,8 +108,7 @@ public class CreatePedidoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_UsuarioNoEncontrado_DevuelveNotFoundError()
-    {
+    public async Task Handle_UsuarioNoEncontrado_DevuelveNotFoundError() {
         _users.Setup(u => u.GetUsuarioAsync(1)).ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound));
 
         var result = await _handler.Handle(new CreatePedidoCommand(1, Request()), CancellationToken.None);
@@ -126,12 +120,10 @@ public class CreatePedidoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_ProductoInexistente_DevuelvePedidoError404()
-    {
+    public async Task Handle_ProductoInexistente_DevuelvePedidoError404() {
         _catalog.Setup(c => c.GetProductoAsync(999)).ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound));
 
-        var dto = new PedidoRequestDto
-        {
+        var dto = new PedidoRequestDto {
             Destinatario = new DestinatarioDto { NombreCompleto = "X", Email = "x@t.com" },
             Items = [new PedidoItemRequestDto { ProductoId = 999, Cantidad = 1 }]
         };
@@ -144,8 +136,7 @@ public class CreatePedidoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_StockInsuficiente_DevuelveElMensajeDeCatalog()
-    {
+    public async Task Handle_StockInsuficiente_DevuelveElMensajeDeCatalog() {
         ProductoExiste();
         // catalog responde 422 con el MISMO texto que el monolito.
         _catalog.Setup(c => c.DecrementarStockAsync(It.IsAny<long>(), It.IsAny<DecrementoStock>()))
@@ -161,8 +152,7 @@ public class CreatePedidoCommandHandlerTests
     }
 
     [Test]
-    public async Task Handle_DatosInvalidos_DevuelveValidationError_SinTocarCatalog()
-    {
+    public async Task Handle_DatosInvalidos_DevuelveValidationError_SinTocarCatalog() {
         _pedidoValidator.Setup(v => v.ValidateAsync(It.IsAny<PedidoRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("Items", "vacío") }));
 

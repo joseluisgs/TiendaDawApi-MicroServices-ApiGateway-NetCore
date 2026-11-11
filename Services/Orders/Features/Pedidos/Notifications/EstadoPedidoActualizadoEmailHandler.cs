@@ -11,11 +11,9 @@ namespace TiendaApi.Api.Features.Pedidos.Notifications;
 /// porque los cambios de estado los provoca él desde el panel.
 /// </summary>
 public class EstadoPedidoActualizadoEmailHandler(IEmailApi emailService)
-    : INotificationHandler<EstadoPedidoActualizadoNotification>
-{
+    : INotificationHandler<EstadoPedidoActualizadoNotification> {
     /// <inheritdoc/>
-    public async Task Handle(EstadoPedidoActualizadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(EstadoPedidoActualizadoNotification notification, CancellationToken cancellationToken) {
         var destinatario = notification.Pedido.Destinatario;
         if (string.IsNullOrWhiteSpace(destinatario?.Email)) return;
 
@@ -25,14 +23,11 @@ public class EstadoPedidoActualizadoEmailHandler(IEmailApi emailService)
             notification.NuevoEstado,
             notification.Pedido.Total);
 
-        try
-        {
+        try {
             await emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"📦 Pedido #{notification.Pedido.Id} - {notification.NuevoEstado}", EmailTemplates.CreateBase("Cambio de Estado de Pedido", content), IsHtml: true));
             Log.Information("📧 [EMAIL] Cambio de estado encolado para el cliente: {PedidoId} -> {Email} ({Estado})",
                 notification.Pedido.Id, destinatario.Email, notification.NuevoEstado);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // 📧 Mejor esfuerzo: email caído NO rompe la operación del pedido.
             Log.Warning(ex, "EstadoPedidoActualizadoEmailHandler: email-service no disponible, no se encoló el aviso");
         }

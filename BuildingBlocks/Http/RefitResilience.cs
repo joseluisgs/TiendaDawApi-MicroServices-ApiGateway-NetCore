@@ -33,8 +33,7 @@ namespace BuildingBlocks.Http;
 /// consecutivos deja de llamar durante 15 s → las llamadas siguientes fallan al
 /// instante (<c>BrokenCircuitException</c>) en vez de colgarse.
 /// </summary>
-public static class RefitResilience
-{
+public static class RefitResilience {
     /// <summary>Timeout por intento en lecturas (GET/HEAD): 10 s.</summary>
     public static readonly TimeSpan TimeoutLectura = TimeSpan.FromSeconds(10);
 
@@ -74,25 +73,23 @@ public static class RefitResilience
     /// <paramref name="delay"/> a cero para tests instantáneos (patrón PollyConfig).
     /// </summary>
     public static RetryStrategyOptions<HttpResponseMessage> LecturaRetryOptions(
-        ILogger? logger = null, TimeSpan? delay = null) => new()
-    {
-        MaxRetryAttempts = 2,
-        BackoffType = DelayBackoffType.Exponential,
-        Delay = delay ?? TimeSpan.FromMilliseconds(250),
-        UseJitter = true,
-        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+        ILogger? logger = null, TimeSpan? delay = null) => new() {
+            MaxRetryAttempts = 2,
+            BackoffType = DelayBackoffType.Exponential,
+            Delay = delay ?? TimeSpan.FromMilliseconds(250),
+            UseJitter = true,
+            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
             .Handle<HttpRequestException>()
             .Handle<TimeoutRejectedException>()
             .HandleResult(r => EsFalloTransitorio(r.StatusCode)),
-        OnRetry = args =>
-        {
-            logger?.LogWarning(
-                "Polly[refit] reintento {Attempt}/2 tras fallo - próximo intento en {Delay}",
-                args.AttemptNumber,
-                args.RetryDelay);
-            return ValueTask.CompletedTask;
-        },
-    };
+            OnRetry = args => {
+                logger?.LogWarning(
+                    "Polly[refit] reintento {Attempt}/2 tras fallo - próximo intento en {Delay}",
+                    args.AttemptNumber,
+                    args.RetryDelay);
+                return ValueTask.CompletedTask;
+            },
+        };
 
     /// <summary>
     /// Opciones del reintento de ESCRITURAS: solo si la conexión nunca se
@@ -100,53 +97,48 @@ public static class RefitResilience
     /// un 5xx son ambiguos: el servidor pudo recibir el request → no se repite.
     /// </summary>
     public static RetryStrategyOptions<HttpResponseMessage> EscrituraRetryOptions(
-        ILogger? logger = null, TimeSpan? delay = null) => new()
-    {
-        MaxRetryAttempts = 2,
-        BackoffType = DelayBackoffType.Exponential,
-        Delay = delay ?? TimeSpan.FromMilliseconds(250),
-        UseJitter = true,
-        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+        ILogger? logger = null, TimeSpan? delay = null) => new() {
+            MaxRetryAttempts = 2,
+            BackoffType = DelayBackoffType.Exponential,
+            Delay = delay ?? TimeSpan.FromMilliseconds(250),
+            UseJitter = true,
+            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
             .Handle<HttpRequestException>(ex => EsConexionNuncaEstablecida(ex)),
-        OnRetry = args =>
-        {
-            logger?.LogWarning(
-                "Polly[refit] reintento {Attempt}/2 de ESCRITURA (conexión nunca establecida) - próximo en {Delay}",
-                args.AttemptNumber,
-                args.RetryDelay);
-            return ValueTask.CompletedTask;
-        },
-    };
+            OnRetry = args => {
+                logger?.LogWarning(
+                    "Polly[refit] reintento {Attempt}/2 de ESCRITURA (conexión nunca establecida) - próximo en {Delay}",
+                    args.AttemptNumber,
+                    args.RetryDelay);
+                return ValueTask.CompletedTask;
+            },
+        };
 
     /// <summary>
     /// Cortacircuitos compartido: 5 fallos consecutivos (transporte o 5xx, nunca 4xx)
     /// → abierto 15 s → half-open automático al reabrir (patrón PollyConfig de email).
     /// </summary>
     public static CircuitBreakerStrategyOptions<HttpResponseMessage> CircuitoOptions(
-        ILogger? logger = null) => new()
-    {
-        FailureRatio = 1.0,
-        MinimumThroughput = FallosCircuito,
-        SamplingDuration = TimeSpan.FromSeconds(60),
-        BreakDuration = BreakDuration,
-        ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
+        ILogger? logger = null) => new() {
+            FailureRatio = 1.0,
+            MinimumThroughput = FallosCircuito,
+            SamplingDuration = TimeSpan.FromSeconds(60),
+            BreakDuration = BreakDuration,
+            ShouldHandle = new PredicateBuilder<HttpResponseMessage>()
             .Handle<HttpRequestException>()
             .Handle<TimeoutRejectedException>()
             .HandleResult(r => EsFalloTransitorio(r.StatusCode)),
-        OnOpened = args =>
-        {
-            logger?.LogWarning(
-                "Polly[refit] circuito ABIERTO tras {Throughput} fallos: {BreakDuration}s sin llamar al backend",
-                FallosCircuito,
-                args.BreakDuration);
-            return ValueTask.CompletedTask;
-        },
-        OnClosed = _ =>
-        {
-            logger?.LogInformation("Polly[refit] circuito CERRADO: vuelve a permitir llamadas");
-            return ValueTask.CompletedTask;
-        },
-    };
+            OnOpened = args => {
+                logger?.LogWarning(
+                    "Polly[refit] circuito ABIERTO tras {Throughput} fallos: {BreakDuration}s sin llamar al backend",
+                    FallosCircuito,
+                    args.BreakDuration);
+                return ValueTask.CompletedTask;
+            },
+            OnClosed = _ => {
+                logger?.LogInformation("Polly[refit] circuito CERRADO: vuelve a permitir llamadas");
+                return ValueTask.CompletedTask;
+            },
+        };
 
     /// <summary>
     /// Pipeline de lectura: Retry(2) → Circuito → Timeout(10 s por intento).

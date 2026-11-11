@@ -22,8 +22,7 @@ Log.Logger = new LoggerConfiguration()
         theme: AnsiConsoleTheme.Code)
     .CreateLogger();
 
-try
-{
+try {
     Log.Information("arrancando historical-service...");
 
     var builder = WebApplication.CreateBuilder(args);
@@ -56,8 +55,7 @@ try
     // a crearse. Con isDevelopment: false es CREATE IF NOT EXISTS + tablas
     // IF NOT EXISTS: nunca hace DROP, así que en desarrollo el seed del E2E se
     // conserva igual que hasta ahora.
-    using (var scope = app.Services.CreateScope())
-    {
+    using (var scope = app.Services.CreateScope()) {
         await app.InitializeCassandraAsync(isDevelopment: false);
 
         // Semilla idempotente (omite si el historial ya existe).
@@ -84,12 +82,8 @@ try
     Log.Information("=================================================================");
 
     app.Run();
-}
-catch (Exception ex)
-{
+} catch (Exception ex) {
     Log.Fatal(ex, "historical-service terminó inesperadamente");
-}
-finally
-{
+} finally {
     Log.CloseAndFlush();
 }

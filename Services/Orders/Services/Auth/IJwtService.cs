@@ -14,8 +14,7 @@ namespace TiendaApi.Api.Services.Auth;
 /// Se recorta la interfaz a lo que consume <c>PedidosWebSocketHandler</c>, para
 /// no arrastrar el modelo <c>User</c> (dominio de identity) a este servicio.
 /// </summary>
-public interface IJwtService
-{
+public interface IJwtService {
     /// <summary>
     /// Valida firma, issuer, audience y lifetime del token.
     /// </summary>

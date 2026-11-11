@@ -18,14 +18,12 @@ namespace TiendaApi.Tests.Integration.TestContainers.Catalog.Repositories;
 [TestFixture]
 [Category("Integration")]
 [NonParallelizable]
-public class ProductoReadRepositoryIntegrationTests
-{
+public class ProductoReadRepositoryIntegrationTests {
     private const string DatabaseName = "it_catalog_read";
     private IMongoDatabase _database = null!;
     private ProductoReadRepository _repo = null!;
 
-    private static ProductoRead Producto(long id, string nombre = "Laptop Dell XPS 15") => new()
-    {
+    private static ProductoRead Producto(long id, string nombre = "Laptop Dell XPS 15") => new() {
         Id = id,
         Nombre = nombre,
         Descripcion = "Laptop de alto rendimiento",
@@ -41,14 +39,12 @@ public class ProductoReadRepositoryIntegrationTests
     };
 
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() {
         // GetMongoDatabase hace drop: cada test arranca de colección vacía.
         _database = AssemblyContainerFixture.GetMongoDatabase(DatabaseName);
 
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
+            .AddInMemoryCollection(new Dictionary<string, string?> {
                 { "MongoDbSettings:ProductosCollection", "productos_read" },
             })
             .Build();
@@ -60,16 +56,14 @@ public class ProductoReadRepositoryIntegrationTests
     // ------------------------------------------------------------- lecturas
 
     [Test]
-    public async Task FindById_SinDocumentos_DevuelveNull()
-    {
+    public async Task FindById_SinDocumentos_DevuelveNull() {
         var resultado = await _repo.FindByIdAsync(1);
 
         resultado.Should().BeNull("una colección vacía no es un error: es un miss");
     }
 
     [Test]
-    public async Task Upsert_LuegoFindById_DevuelveElDocumento()
-    {
+    public async Task Upsert_LuegoFindById_DevuelveElDocumento() {
         await _repo.UpsertAsync(Producto(7));
 
         var resultado = await _repo.FindByIdAsync(7);
@@ -81,8 +75,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task Upsert_MismoId_ActualizaEnLugarDeDuplicar()
-    {
+    public async Task Upsert_MismoId_ActualizaEnLugarDeDuplicar() {
         await _repo.UpsertAsync(Producto(7));
         await _repo.UpsertAsync(Producto(7, nombre: "Laptop Actualizada"));
 
@@ -93,8 +86,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task Upsert_VersionAntigua_NoSobrescribeLaMasReciente()
-    {
+    public async Task Upsert_VersionAntigua_NoSobrescribeLaMasReciente() {
         // Guardia de versión del upsert: gana el dato MÁS reciente, no el último en llegar.
         var nueva = Producto(7, nombre: "Mas reciente");
         await _repo.UpsertAsync(nueva);
@@ -110,8 +102,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task SoftDelete_DejaDeSerVisiblePorId_Y_SaleDelListadoPorDefecto()
-    {
+    public async Task SoftDelete_DejaDeSerVisiblePorId_Y_SaleDelListadoPorDefecto() {
         await _repo.UpsertAsync(Producto(7));
         await _repo.SoftDeleteAsync(7);
 
@@ -133,8 +124,7 @@ public class ProductoReadRepositoryIntegrationTests
     // ------------------------------------------------- búsquedas paginadas
 
     [Test]
-    public async Task FindAllPaged_SinFiltros_DevuelveTodo()
-    {
+    public async Task FindAllPaged_SinFiltros_DevuelveTodo() {
         await _repo.UpsertAsync(Producto(1, "Laptop Dell XPS 15"));
         await _repo.UpsertAsync(Producto(2, "Camiseta Nike"));
         await _repo.UpsertAsync(Producto(3, "Clean Code"));
@@ -147,8 +137,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindAllPaged_FiltroDeSoftDelete_PorDefecto_ExcluyeEliminados()
-    {
+    public async Task FindAllPaged_FiltroDeSoftDelete_PorDefecto_ExcluyeEliminados() {
         await _repo.UpsertAsync(Producto(1, "Vivo"));
         await _repo.UpsertAsync(Producto(2, "Borrado"));
         await _repo.SoftDeleteAsync(2);
@@ -168,8 +157,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindAllPaged_FiltrosDeContenido_Y_Paginacion()
-    {
+    public async Task FindAllPaged_FiltrosDeContenido_Y_Paginacion() {
         await _repo.UpsertAsync(Producto(1, "Laptop Dell XPS 15"));
         await _repo.UpsertAsync(Producto(2, "Laptop Lenovo ThinkPad"));
         await _repo.UpsertAsync(Producto(3, "Camiseta Nike"));
@@ -190,8 +178,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task FindAllPaged_PrecioMax_Y_StockMin()
-    {
+    public async Task FindAllPaged_PrecioMax_Y_StockMin() {
         await _repo.UpsertAsync(Producto(1, "Laptop"));
         await _repo.UpsertAsync(Producto(2, "Camiseta"));
 
@@ -210,8 +197,7 @@ public class ProductoReadRepositoryIntegrationTests
     // -------------------------------------------------- filtro por categoría
 
     [Test]
-    public async Task FindByCategoriaId_SoloDevuelveLosDeEsaCategoria()
-    {
+    public async Task FindByCategoriaId_SoloDevuelveLosDeEsaCategoria() {
         var a = Producto(1);
         a.CategoriaId = 1;
         await _repo.UpsertAsync(a);
@@ -227,8 +213,7 @@ public class ProductoReadRepositoryIntegrationTests
     }
 
     [Test]
-    public async Task GetRecentlyCreatedAsync_SoloDevuelveLosDelRango()
-    {
+    public async Task GetRecentlyCreatedAsync_SoloDevuelveLosDelRango() {
         var viejo = Producto(1, "Viejo");
         viejo.CreatedAt = DateTime.UtcNow.AddDays(-30);
         await _repo.UpsertAsync(viejo);
@@ -243,8 +228,7 @@ public class ProductoReadRepositoryIntegrationTests
     // ------------------------------------- sincronización del nombre de categoría
 
     [Test]
-    public async Task UpdateCategoriaNombreAsync_TocaSoloLosDeEsaCategoria()
-    {
+    public async Task UpdateCategoriaNombreAsync_TocaSoloLosDeEsaCategoria() {
         var a = Producto(1);
         a.CategoriaId = 1;
         await _repo.UpsertAsync(a);

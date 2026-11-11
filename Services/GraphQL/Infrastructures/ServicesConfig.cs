@@ -15,8 +15,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// endpoints de usuarios y pedidos exigen ADMIN, así que el JWT del llamante
 /// viaja en la cabecera (mismo criterio que statistics y backup).
 /// </summary>
-public static class ServicesConfig
-{
+public static class ServicesConfig {
     /// <summary>
     /// Registra los clients Refit (R4 — REST con Refit): direcciones por
     /// configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
@@ -25,8 +24,7 @@ public static class ServicesConfig
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>
     /// <returns>IServiceCollection.</returns>
-    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
-    {
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration) {
         Log.Information("Registrando servicios de GraphQL (BFF)...");
 
         // Contexto HTTP para propagar el JWT del llamante (pedidos exige ADMIN).

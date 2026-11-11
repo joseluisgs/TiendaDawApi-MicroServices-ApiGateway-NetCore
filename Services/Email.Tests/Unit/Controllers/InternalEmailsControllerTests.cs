@@ -11,21 +11,18 @@ namespace TiendaApi.Tests.Unit.Controllers;
 /// escribe en el Channel (202 Accepted) — allí espera el EmailBackgroundService.
 /// La validación es la única frontera antes de la cola.
 /// </summary>
-public class InternalEmailsControllerTests
-{
+public class InternalEmailsControllerTests {
     private Channel<EmailMessage> _emailChannel = null!;
     private InternalEmailsController _controller = null!;
 
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() {
         _emailChannel = Channel.CreateUnbounded<EmailMessage>();
         _controller = new InternalEmailsController(_emailChannel);
     }
 
     [Test]
-    public async Task Enqueue_MensajeValido_Devuelve202_YEncolaElMensaje()
-    {
+    public async Task Enqueue_MensajeValido_Devuelve202_YEncolaElMensaje() {
         var result = await _controller.Enqueue(
             new EmailRequest("destinatario@test.com", "Bienvenida", "<p>Hola</p>", IsHtml: true));
 
@@ -41,8 +38,7 @@ public class InternalEmailsControllerTests
     }
 
     [Test]
-    public async Task Enqueue_SinTo_Devuelve400_NoEncola()
-    {
+    public async Task Enqueue_SinTo_Devuelve400_NoEncola() {
         var result = await _controller.Enqueue(
             new EmailRequest("", "Asunto", "Cuerpo", IsHtml: true));
 
@@ -51,8 +47,7 @@ public class InternalEmailsControllerTests
     }
 
     [Test]
-    public async Task Enqueue_SinSubject_Devuelve400_NoEncola()
-    {
+    public async Task Enqueue_SinSubject_Devuelve400_NoEncola() {
         var result = await _controller.Enqueue(
             new EmailRequest("destinatario@test.com", " ", "Cuerpo", IsHtml: true));
 
@@ -61,8 +56,7 @@ public class InternalEmailsControllerTests
     }
 
     [Test]
-    public async Task Enqueue_SinBody_Devuelve400_NoEncola()
-    {
+    public async Task Enqueue_SinBody_Devuelve400_NoEncola() {
         var result = await _controller.Enqueue(
             new EmailRequest("destinatario@test.com", "Asunto", null!, IsHtml: false));
 
@@ -71,8 +65,7 @@ public class InternalEmailsControllerTests
     }
 
     [Test]
-    public async Task Enqueue_TextoPlano_MantieneElFlagIsHtml()
-    {
+    public async Task Enqueue_TextoPlano_MantieneElFlagIsHtml() {
         var result = await _controller.Enqueue(
             new EmailRequest("destinatario@test.com", "Asunto", "Cuerpo sin tags", IsHtml: false));
 
@@ -83,8 +76,7 @@ public class InternalEmailsControllerTests
     }
 
     [Test]
-    public async Task Enqueue_MultiplesMensajes_LosEncolaEnOrden()
-    {
+    public async Task Enqueue_MultiplesMensajes_LosEncolaEnOrden() {
         await _controller.Enqueue(new EmailRequest("a@test.com", "Uno", "1", IsHtml: true));
         await _controller.Enqueue(new EmailRequest("b@test.com", "Dos", "2", IsHtml: true));
 

@@ -17,18 +17,15 @@ namespace TiendaApi.Tests.Integration;
 /// que el endpoint responde rápido (202) y que el mensaje acaba PROCESADO por
 /// la cola — la prueba de que el ciclo endpoint → cola → envío funciona.
 /// </summary>
-public class InternalEmailsControllerIntegrationTests
-{
+public class InternalEmailsControllerIntegrationTests {
     private RegistroLog _registro = null!;
     private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
 
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() {
         _registro = new RegistroLog();
-        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
-        {
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder => {
             // Capta los logs de MemoryEmailService (su "EMAIL SENT" es la
             // señal observable de que la cola procesó el mensaje).
             builder.ConfigureServices(services =>
@@ -38,18 +35,15 @@ public class InternalEmailsControllerIntegrationTests
     }
 
     [TearDown]
-    public void TearDown()
-    {
+    public void TearDown() {
         _client.Dispose();
         _factory.Dispose();
         _registro.Dispose();
     }
 
     [Test]
-    public async Task Post_MensajeValido_Devuelve202Accepted()
-    {
-        var response = await _client.PostAsJsonAsync("/internal/emails", new
-        {
+    public async Task Post_MensajeValido_Devuelve202Accepted() {
+        var response = await _client.PostAsJsonAsync("/internal/emails", new {
             to = "destinatario@test.com",
             subject = "Bienvenida",
             body = "<p>Hola</p>",
@@ -60,10 +54,8 @@ public class InternalEmailsControllerIntegrationTests
     }
 
     [Test]
-    public async Task Post_SinTo_Devuelve400BadRequest()
-    {
-        var response = await _client.PostAsJsonAsync("/internal/emails", new
-        {
+    public async Task Post_SinTo_Devuelve400BadRequest() {
+        var response = await _client.PostAsJsonAsync("/internal/emails", new {
             to = "",
             subject = "Asunto",
             body = "Cuerpo",
@@ -74,13 +66,11 @@ public class InternalEmailsControllerIntegrationTests
     }
 
     [Test]
-    public async Task Post_MensajeValido_LoProcesaLaCola_LoLlegaMemoryEmailService()
-    {
+    public async Task Post_MensajeValido_LoProcesaLaCola_LoLlegaMemoryEmailService() {
         // Destinatario EXCLUSIVO de este test para no cruzar logs entre tests.
         var destinatario = $"cola_{Guid.NewGuid():N}@test.com";
 
-        var response = await _client.PostAsJsonAsync("/internal/emails", new
-        {
+        var response = await _client.PostAsJsonAsync("/internal/emails", new {
             to = destinatario,
             subject = "Prueba de cola",
             body = "<p>Procesado por BackgroundService</p>",
@@ -92,8 +82,7 @@ public class InternalEmailsControllerIntegrationTests
         // BackgroundService consuma el mensaje y MemoryEmailService lo loguee.
         var limite = DateTime.UtcNow.AddSeconds(5);
         while (DateTime.UtcNow < limite &&
-               !_registro.Lineas.Any(l => l.Contains(destinatario) && l.Contains("Para:")))
-        {
+               !_registro.Lineas.Any(l => l.Contains(destinatario) && l.Contains("Para:"))) {
             await Task.Delay(50);
         }
 
@@ -104,20 +93,17 @@ public class InternalEmailsControllerIntegrationTests
     }
 
     /// <summary>ILoggerProvider que retiene las líneas ya formateadas (test-friendly).</summary>
-    private sealed class RegistroLog : ILoggerProvider
-    {
+    private sealed class RegistroLog : ILoggerProvider {
         private readonly ConcurrentQueue<string> _lineas = new();
 
         public IReadOnlyCollection<string> Lineas => _lineas.ToArray();
 
         public ILogger CreateLogger(string categoryName) => new LoggerRegistro(_lineas);
 
-        public void Dispose()
-        {
+        public void Dispose() {
         }
 
-        private sealed class LoggerRegistro(ConcurrentQueue<string> lineas) : ILogger
-        {
+        private sealed class LoggerRegistro(ConcurrentQueue<string> lineas) : ILogger {
             public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
 
             public bool IsEnabled(LogLevel logLevel) => true;

@@ -10,8 +10,7 @@ namespace TiendaApi.Api.Mappers;
 /// contraseña (PBKDF2) lo genera <c>UserManager</c> al crear o cambiar el
 /// password — el mapper solo mueve datos.
 /// </summary>
-public static class UserMapper
-{
+public static class UserMapper {
     /// <summary>Convierte User a UserDto.</summary>
     public static UserDto ToDto(this User user) =>
         new(user.Id, user.UserName ?? string.Empty, user.Email ?? string.Empty, user.GetAvatarUrl(), user.Role, user.CreatedAt);
@@ -24,8 +23,7 @@ public static class UserMapper
     /// Convierte RegisterDto a User sin contraseña: <c>UserManager.CreateAsync</c>
     /// recibe la contraseña en claro y guarda su hash PBKDF2.
     /// </summary>
-    public static User ToEntity(this RegisterDto dto) => new()
-    {
+    public static User ToEntity(this RegisterDto dto) => new() {
         UserName = dto.Username,
         Email = dto.Email,
         Role = UserRoles.USER,
@@ -38,8 +36,7 @@ public static class UserMapper
     /// Actualiza User desde UserUpdateDto. La contraseña NO se toca aquí:
     /// la gestiona el comando con <c>UserManager</c>.
     /// </summary>
-    public static void UpdateEntity(this UserUpdateDto dto, User user)
-    {
+    public static void UpdateEntity(this UserUpdateDto dto, User user) {
         if (!string.IsNullOrEmpty(dto.Email))
             user.Email = dto.Email;
     }
@@ -48,8 +45,7 @@ public static class UserMapper
     /// Actualiza User desde UserPatchDto (actualización parcial). La contraseña
     /// NO se toca aquí: la gestiona el comando con <c>UserManager</c>.
     /// </summary>
-    public static void UpdateEntity(this UserPatchDto dto, User user)
-    {
+    public static void UpdateEntity(this UserPatchDto dto, User user) {
         if (!string.IsNullOrEmpty(dto.Email))
             user.Email = dto.Email;
         if (dto.Avatar != null)

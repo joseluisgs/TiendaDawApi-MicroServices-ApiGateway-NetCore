@@ -25,21 +25,18 @@ namespace TiendaApi.Api.Features.Productos.Notifications;
 /// </summary>
 public class PrecioHistoricoHandler(IHistorialService historialService)
     : INotificationHandler<ProductoCreadoNotification>
-    , INotificationHandler<ProductoActualizadoNotification>
-{
+    , INotificationHandler<ProductoActualizadoNotification> {
     /// <summary>
     /// Registra el precio de nacimiento del producto en las tablas de serie.
     /// </summary>
-    public async Task Handle(ProductoCreadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(ProductoCreadoNotification notification, CancellationToken cancellationToken) {
         await RegistrarPrecioAsync(notification.Producto.Id, (double)notification.Producto.Precio);
     }
 
     /// <summary>
     /// Registra el precio resultante de la actualización, SOLO si cambió.
     /// </summary>
-    public async Task Handle(ProductoActualizadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(ProductoActualizadoNotification notification, CancellationToken cancellationToken) {
         if (notification.PrecioAnterior == notification.Producto.Precio)
             return;   // no es un cambio de precio: nada que registrar
 
@@ -50,14 +47,10 @@ public class PrecioHistoricoHandler(IHistorialService historialService)
     /// Escritura compartida por ambos eventos: crea el punto de precio en las
     /// dos tablas de serie (Q-A histórico + Q-C informe del día).
     /// </summary>
-    private async Task RegistrarPrecioAsync(long productoId, double precio)
-    {
-        try
-        {
+    private async Task RegistrarPrecioAsync(long productoId, double precio) {
+        try {
             await historialService.RegistrarPrecioAsync(productoId, precio);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Log.Warning(ex, "historical: no se pudo registrar el precio del producto {ProductoId} (modo degradado)",
                 productoId);
         }

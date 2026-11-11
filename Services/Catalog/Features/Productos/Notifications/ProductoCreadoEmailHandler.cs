@@ -15,16 +15,13 @@ namespace TiendaApi.Api.Features.Productos.Notifications;
 public class ProductoCreadoEmailHandler(
     IEmailApi emailApi,
     IConfiguration configuration)
-    : INotificationHandler<ProductoCreadoNotification>
-{
+    : INotificationHandler<ProductoCreadoNotification> {
     /// <summary>
     /// Procesa el evento ProductoCreado y envía el email de notificación al administrador.
     /// </summary>
-    public async Task Handle(ProductoCreadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(ProductoCreadoNotification notification, CancellationToken cancellationToken) {
         var adminEmail = configuration["Smtp:AdminEmail"];
-        if (string.IsNullOrEmpty(adminEmail))
-        {
+        if (string.IsNullOrEmpty(adminEmail)) {
             Log.Warning("Email de admin no configurado, saltando notificación");
             return;
         }
@@ -33,17 +30,14 @@ public class ProductoCreadoEmailHandler(
         var content = EmailTemplates.ProductoCreado(producto.Nombre, producto.Precio, producto.Stock, producto.Id);
         var body = EmailTemplates.CreateBase("Nuevo Producto Creado", content);
 
-        try
-        {
+        try {
             await emailApi.EnqueueAsync(new EmailRequest(
                 adminEmail,
                 "📧 Nuevo Producto en Tienda DAW",
                 body,
                 IsHtml: true));
             Log.Information("📧 [EMAIL] Notificación enviada: Producto creado ID={ProductoId}", producto.Id);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // Mejor esfuerzo: email-service no disponible → se registra y sigue.
             Log.Warning(ex, "email-service no disponible: no se pudo encolar el aviso del producto {ProductoId}",
                 producto.Id);

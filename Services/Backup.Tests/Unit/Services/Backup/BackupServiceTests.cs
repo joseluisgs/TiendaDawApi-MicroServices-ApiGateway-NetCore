@@ -24,16 +24,14 @@ namespace TiendaApi.Tests.Unit.Services.Backup;
 /// escribe en los endpoints internos de catalog, traduciendo su código de
 /// respuesta al informe (201 creado · 200 actualizado · 204 sin cambios · 400 error).
 /// </summary>
-public class BackupServiceTests
-{
+public class BackupServiceTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<ICatalogApi> _catalog = null!;
     private BackupService _service = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _catalog = new Mock<ICatalogApi>();
         _service = new BackupService(_catalog.Object, NullLogger<BackupService>.Instance);
 
@@ -47,8 +45,7 @@ public class BackupServiceTests
     }
 
     /// <summary>Página con todo en la 0 y vacía en las demás (corta el bucle).</summary>
-    private static PagedResult<T> Pagina<T>(List<T> items, int pagina) => new()
-    {
+    private static PagedResult<T> Pagina<T>(List<T> items, int pagina) => new() {
         Items = pagina == 0 ? items : Enumerable.Empty<T>(),
         TotalCount = items.Count,
         Page = pagina + 1,
@@ -85,8 +82,7 @@ public class BackupServiceTests
     // ────────────────────────────────────────────────────────────────
 
     [Test]
-    public async Task Exportar_Json_EscribeManifestYEntidades()
-    {
+    public async Task Exportar_Json_EscribeManifestYEntidades() {
         using var salida = new MemoryStream();
 
         var result = await _service.ExportarAsync(salida, "json",
@@ -105,8 +101,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Exportar_FormatoDesconocido_Devuelve400_SinEscribir()
-    {
+    public async Task Exportar_FormatoDesconocido_Devuelve400_SinEscribir() {
         using var salida = new MemoryStream();
 
         var result = await _service.ExportarAsync(salida, "xml",
@@ -118,8 +113,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Exportar_EntidadDesconocida_Devuelve400()
-    {
+    public async Task Exportar_EntidadDesconocida_Devuelve400() {
         using var salida = new MemoryStream();
 
         var result = await _service.ExportarAsync(salida, "json",
@@ -130,8 +124,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Exportar_Csv_SoloUnaEntidad_EscribeLaCabecera()
-    {
+    public async Task Exportar_Csv_SoloUnaEntidad_EscribeLaCabecera() {
         using var salida = new MemoryStream();
 
         var result = await _service.ExportarAsync(salida, "csv",
@@ -150,8 +143,7 @@ public class BackupServiceTests
     // ── import: la traducción de códigos de catalog ──────────────────
 
     [Test]
-    public async Task Importar_Creado_Contado_ComoCreado()
-    {
+    public async Task Importar_Creado_Contado_ComoCreado() {
         _catalog.Setup(c => c.ImportCategoriaAsync(It.IsAny<ImportCategoriaDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.Created));
         _catalog.Setup(c => c.ImportProveedorAsync(It.IsAny<ImportProveedorDto>()))
@@ -168,8 +160,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Importar_SinCambios_Contado_ComoSinCambios()
-    {
+    public async Task Importar_SinCambios_Contado_ComoSinCambios() {
         // El round-trip del E2E: mismas claves → catalog responde 204.
         _catalog.Setup(c => c.ImportCategoriaAsync(It.IsAny<ImportCategoriaDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.NoContent));
@@ -188,8 +179,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Importar_Actualizado_Contado_ComoActualizado()
-    {
+    public async Task Importar_Actualizado_Contado_ComoActualizado() {
         _catalog.Setup(c => c.ImportCategoriaAsync(It.IsAny<ImportCategoriaDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.OK));
 
@@ -199,14 +189,12 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Importar_ErrorDeFila_NoAbortaLaOperacion()
-    {
+    public async Task Importar_ErrorDeFila_NoAbortaLaOperacion() {
         // La primera fila falla (400), las demás siguen: mismo criterio del monolito.
         // ⚠️ Refit LANZA ApiException ante un 400: el mock debe hacer lo mismo.
         var llamadas = 0;
         _catalog.Setup(c => c.ImportCategoriaAsync(It.IsAny<ImportCategoriaDto>()))
-            .Returns<ImportCategoriaDto>(async _ =>
-            {
+            .Returns<ImportCategoriaDto>(async _ => {
                 llamadas++;
                 if (llamadas == 1)
                     throw await ApiExceptionCon(HttpStatusCode.BadRequest,
@@ -230,8 +218,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task Importar_DryRun_NoEscribeNada()
-    {
+    public async Task Importar_DryRun_NoEscribeNada() {
         var informe = await ImportarAsync(BackupService.Entidades, dryRun: true);
 
         informe.IsSuccess.Should().BeTrue();
@@ -246,8 +233,7 @@ public class BackupServiceTests
     }
 
     [Test]
-    public async Task ObtenerFormatos_DevuelveLosTresFormatos()
-    {
+    public async Task ObtenerFormatos_DevuelveLosTresFormatos() {
         var result = await _service.ObtenerFormatosAsync();
 
         result.IsSuccess.Should().BeTrue();
@@ -258,8 +244,7 @@ public class BackupServiceTests
 
     /// <summary>Importa un backup mínimo con las entidades indicadas.</summary>
     private async Task<Result<ImportReportDto, DomainError>> ImportarAsync(
-        IReadOnlyList<string> entidades, bool dryRun)
-    {
+        IReadOnlyList<string> entidades, bool dryRun) {
         var contenido = """
             {"manifest":{"version":"1.0","generadoEn":"2026-01-01T00:00:00Z"},
              "categorias":[{"id":1,"nombre":"Electrónica","descripcion":"x","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}],

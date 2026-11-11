@@ -14,14 +14,12 @@ namespace TiendaApi.Tests.Unit.Controllers;
 /// (GET feed, GET serie, POST vistas): delegación pura en la fachada y
 /// mapeo de los Result de dominio a códigos HTTP (200/204/400).
 /// </summary>
-public class HistoricalInternalControllerTests
-{
+public class HistoricalInternalControllerTests {
     private Mock<IHistorialService> _service = null!;
     private HistoricalInternalController _controller = null!;
 
     [SetUp]
-    public void Setup()
-    {
+    public void Setup() {
         _service = new Mock<IHistorialService>();
         _controller = new HistoricalInternalController(_service.Object);
     }
@@ -29,8 +27,7 @@ public class HistoricalInternalControllerTests
     #region GET feed
 
     [Test]
-    public async Task GetFeed_ConActividad_Devuelve200ConLaLista()
-    {
+    public async Task GetFeed_ConActividad_Devuelve200ConLaLista() {
         var feed = new List<VistaFeedDto> { new(DateTime.UtcNow, 1, "Laptop Dell XPS 15") };
         _service.Setup(s => s.GetFeedVistasAsync(2, 20)).ReturnsAsync(feed);
 
@@ -41,8 +38,7 @@ public class HistoricalInternalControllerTests
     }
 
     [Test]
-    public async Task GetFeed_SinActividad_Devuelve200Vacia()
-    {
+    public async Task GetFeed_SinActividad_Devuelve200Vacia() {
         _service.Setup(s => s.GetFeedVistasAsync(2, 20))
             .ReturnsAsync(new List<VistaFeedDto>());
 
@@ -57,8 +53,7 @@ public class HistoricalInternalControllerTests
     #region GET serie de precios
 
     [Test]
-    public async Task GetHistorial_SerieDisponible_Devuelve200ConLaSerie()
-    {
+    public async Task GetHistorial_SerieDisponible_Devuelve200ConLaSerie() {
         var serie = new List<HistorialPrecioDto> { new(DateTime.UtcNow, 1299.99) };
         _service.Setup(s => s.GetHistorialPreciosAsync(1, null, null, 50))
             .ReturnsAsync(Result.Success<IReadOnlyList<HistorialPrecioDto>, DomainError>(serie));
@@ -70,8 +65,7 @@ public class HistoricalInternalControllerTests
     }
 
     [Test]
-    public async Task GetHistorial_RangoInvertido_Devuelve400()
-    {
+    public async Task GetHistorial_RangoInvertido_Devuelve400() {
         _service.Setup(s => s.GetHistorialPreciosAsync(
                 It.IsAny<long>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>()))
             .ReturnsAsync(Result.Failure<IReadOnlyList<HistorialPrecioDto>, DomainError>(
@@ -88,8 +82,7 @@ public class HistoricalInternalControllerTests
     #region POST vistas
 
     [Test]
-    public async Task RegistrarVista_Ok_Devuelve204()
-    {
+    public async Task RegistrarVista_Ok_Devuelve204() {
         _service.Setup(s => s.RegistrarVistaAsync(2, 1, "Laptop"))
             .ReturnsAsync(UnitResult.Success<DomainError>());
 
@@ -100,8 +93,7 @@ public class HistoricalInternalControllerTests
     }
 
     [Test]
-    public async Task RegistrarVista_SinNombre_Devuelve400()
-    {
+    public async Task RegistrarVista_SinNombre_Devuelve400() {
         _service.Setup(s => s.RegistrarVistaAsync(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>()))
             .ReturnsAsync(UnitResult.Failure<DomainError>(
                 ValidationError.Create("El nombre del producto es obligatorio")));
@@ -116,8 +108,7 @@ public class HistoricalInternalControllerTests
     #region POST precios
 
     [Test]
-    public async Task RegistrarPrecio_Ok_Devuelve204()
-    {
+    public async Task RegistrarPrecio_Ok_Devuelve204() {
         _service.Setup(s => s.RegistrarPrecioAsync(1, 1299.99))
             .ReturnsAsync(UnitResult.Success<DomainError>());
 
@@ -128,8 +119,7 @@ public class HistoricalInternalControllerTests
     }
 
     [Test]
-    public async Task RegistrarPrecio_PrecioNegativo_Devuelve400()
-    {
+    public async Task RegistrarPrecio_PrecioNegativo_Devuelve400() {
         _service.Setup(s => s.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()))
             .ReturnsAsync(UnitResult.Failure<DomainError>(
                 ValidationError.Create("El precio no puede ser negativo")));

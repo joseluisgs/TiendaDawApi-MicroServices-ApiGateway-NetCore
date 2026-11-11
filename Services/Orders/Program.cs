@@ -22,8 +22,7 @@ Log.Logger = new LoggerConfiguration()
         theme: AnsiConsoleTheme.Code)
     .CreateLogger();
 
-try
-{
+try {
     Log.Information("arrancando orders-service...");
 
     var builder = WebApplication.CreateBuilder(args);
@@ -75,8 +74,7 @@ try
     var app = builder.Build();
 
     // Swagger solo en desarrollo (el servicio es privado: solo detrás del gateway).
-    if (app.Environment.IsDevelopment())
-    {
+    if (app.Environment.IsDevelopment()) {
         app.UseSwagger();
         app.UseSwaggerUI();
     }
@@ -113,12 +111,8 @@ try
     Log.Information("=================================================================");
 
     app.Run();
-}
-catch (Exception ex)
-{
+} catch (Exception ex) {
     Log.Fatal(ex, "orders-service terminó inesperadamente");
-}
-finally
-{
+} finally {
     Log.CloseAndFlush();
 }

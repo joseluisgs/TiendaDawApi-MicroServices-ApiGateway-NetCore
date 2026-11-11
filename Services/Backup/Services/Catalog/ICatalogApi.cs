@@ -19,8 +19,7 @@ namespace TiendaApi.Api.Services.Catalog;
 /// leer el código: 201 (creado) · 200 (actualizado) · 204 (sin cambios) son la
 /// información que necesita el informe.
 /// </summary>
-public interface ICatalogApi
-{
+public interface ICatalogApi {
     // ── Export (rutas públicas, paginadas) ──────────────────────────────
 
     /// <summary>Página de categorías.</summary>

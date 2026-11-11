@@ -15,14 +15,12 @@ namespace TiendaApi.Api.Infrastructures;
 /// es idempotente (omite si ya hay datos). El read model de MongoDB se
 /// sincroniza SIEMPRE, en desarrollo y en producción.
 /// </summary>
-public static class DatabaseInitializationExtensions
-{
+public static class DatabaseInitializationExtensions {
     /// <summary>
     /// Inicializa la base de datos PostgreSQL (<c>catalog_db</c>) y el read model
     /// de MongoDB.
     /// </summary>
-    public static async Task InitializeDatabaseAsync(this WebApplication app, bool isDevelopment)
-    {
+    public static async Task InitializeDatabaseAsync(this WebApplication app, bool isDevelopment) {
         Log.Information("🔍 Inicializando base de datos de catalog...");
 
         using var scope = app.Services.CreateScope();
@@ -30,8 +28,7 @@ public static class DatabaseInitializationExtensions
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
         var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
 
-        if (isDevelopment)
-        {
+        if (isDevelopment) {
             logger.LogWarning("⚠️ [DESARROLLO] Eliminando y recreando base de datos...");
             context.Database.EnsureDeleted();
 
@@ -39,15 +36,12 @@ public static class DatabaseInitializationExtensions
             // elimina la BD y el seeder de abajo (read-model de productos) la
             // vuelve a poblar desde cero. Sin esta inicialización, el seeder solo siembra
             // si está vacío y la BD acumularía productos entre corridas.
-            try
-            {
+            try {
                 var mongoDbName = configuration["MongoDbSettings:DatabaseName"] ?? "catalog_db";
                 var mongoClient = scope.ServiceProvider.GetRequiredService<IMongoClient>();
                 await mongoClient.DropDatabaseAsync(mongoDbName);
                 logger.LogInformation("🗑️ [DESARROLLO] MongoDB '{Database}' eliminado (se siembra a continuación)", mongoDbName);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 // Mongo puede no estar disponible aún: mismo criterio que el resto
                 // de siembras Mongo, no bloquea el arranque (se reintenta en cada reinicio).
                 logger.LogWarning(ex, "No se pudo reiniciar MongoDB en desarrollo");
@@ -66,13 +60,10 @@ public static class DatabaseInitializationExtensions
         // Sincronizar el read model de productos PostgreSQL → MongoDB (dev y prod).
         // Sin esto, las queries de productos (REST/reporte) no encontrarían datos:
         // la creación por seeder no dispara los Domain Events de sincronización.
-        try
-        {
+        try {
             var productoReadSeeder = scope.ServiceProvider.GetRequiredService<ProductoReadSeeder>();
             await productoReadSeeder.SeedAsync(isDevelopment);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // La siembra del read model no bloquea el arranque (mismo criterio
             // que el resto de siembras): es una proyección con log propio.
             Log.Error(ex, "Fallo al sembrar el read model de productos en MongoDB");

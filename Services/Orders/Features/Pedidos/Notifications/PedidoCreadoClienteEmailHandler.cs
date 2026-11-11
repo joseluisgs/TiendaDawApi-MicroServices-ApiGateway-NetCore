@@ -13,11 +13,9 @@ namespace TiendaApi.Api.Features.Pedidos.Notifications;
 /// emails. OPEN/CLOSED: el comando no cambia, se añade un handler.
 /// </summary>
 public class PedidoCreadoClienteEmailHandler(IEmailApi emailService)
-    : INotificationHandler<PedidoCreadoNotification>
-{
+    : INotificationHandler<PedidoCreadoNotification> {
     /// <inheritdoc/>
-    public async Task Handle(PedidoCreadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(PedidoCreadoNotification notification, CancellationToken cancellationToken) {
         var destinatario = notification.Pedido.Destinatario;
         if (string.IsNullOrWhiteSpace(destinatario?.Email)) return;
 
@@ -27,14 +25,11 @@ public class PedidoCreadoClienteEmailHandler(IEmailApi emailService)
             notification.Pedido.Items?.Count ?? 0,
             destinatario.NombreCompleto);
 
-        try
-        {
+        try {
             await emailService.EnqueueAsync(new EmailRequest(destinatario.Email, $"✅ Pedido #{notification.Pedido.Id} confirmado", EmailTemplates.CreateBase($"Pedido #{notification.Pedido.Id} confirmado", content), IsHtml: true));
             Log.Information("📧 [EMAIL] Confirmación de pedido encolada para el cliente: {PedidoId} -> {Email}",
                 notification.Pedido.Id, destinatario.Email);
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // 📧 Mejor esfuerzo: email caído NO rompe la operación del pedido.
             Log.Warning(ex, "PedidoCreadoClienteEmailHandler: email-service no disponible, no se encoló el aviso");
         }

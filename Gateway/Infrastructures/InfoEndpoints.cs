@@ -9,28 +9,24 @@ namespace TiendaApi.Api.Infrastructures;
 /// El gateway sirve LO SUYO (info, version, health) con el MISMO shape que
 /// daba el monolito, para que el cliente y las suites no noten cambio.
 /// </summary>
-public static class InfoEndpoints
-{
+public static class InfoEndpoints {
     /// <summary>
     /// Mapea <c>/version</c> (información del assembly) y <c>/</c> (índice).
     /// </summary>
     /// <param name="app">Aplicación en marcha.</param>
     /// <returns>Application builder.</returns>
-    public static WebApplication MapInfoEndpoints(this WebApplication app)
-    {
+    public static WebApplication MapInfoEndpoints(this WebApplication app) {
         // ── /version ──
         // Mismo shape que el monolito: version (con el hash de SourceLink), fileVersion,
         // runtime y framework. El E2E solo exige `version` no vacío, pero se
         // conserva el resto por si hay consumidores.
-        app.MapGet("/version", () =>
-        {
+        app.MapGet("/version", () => {
             var ensamblado = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
             var version = ensamblado.GetCustomInformationalVersion()
                 ?? ensamblado.GetName().Version?.ToString()
                 ?? "0.0.0";
 
-            return Results.Ok(new
-            {
+            return Results.Ok(new {
                 version,
                 fileVersion = ensamblado.GetCustomFileVersion() ?? "0.0.0.0",
                 runtime = Environment.Version.ToString(),
@@ -93,8 +89,7 @@ public static class InfoEndpoints
 }
 
 /// <summary>Lectores de atributos de assembly ausentes en el SDK minimal.</summary>
-file static class AssemblyExtensions
-{
+file static class AssemblyExtensions {
     /// <summary>InformationalVersion (incluye el hash de SourceLink).</summary>
     public static string? GetCustomInformationalVersion(this Assembly assembly) =>
         assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;

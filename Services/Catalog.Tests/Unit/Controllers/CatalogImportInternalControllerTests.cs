@@ -24,8 +24,7 @@ namespace TiendaApi.Tests.Unit.Controllers;
 /// secuencia) y distinción entre 201 (creado) / 200 (actualizado) / 204 (sin
 /// cambios) — el 204 es el que hace que el round-trip del E2E reporte "sin altas".
 /// </summary>
-public class CatalogImportInternalControllerTests
-{
+public class CatalogImportInternalControllerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<ICategoriaRepository> _categorias = null!;
@@ -34,8 +33,7 @@ public class CatalogImportInternalControllerTests
     private CatalogImportInternalController _controller = null!;
 
     /// <summary>Validador mockeado cuya validación pasa siempre (las reglas se prueban aparte).</summary>
-    private static IValidator<T> ValidadorQuePasa<T>()
-    {
+    private static IValidator<T> ValidadorQuePasa<T>() {
         var validador = new Mock<IValidator<T>>();
         validador.Setup(v => v.ValidateAsync(It.IsAny<T>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult());
@@ -43,8 +41,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _categorias = new Mock<ICategoriaRepository>();
         _proveedores = new Mock<IProveedorRepository>();
         _productos = new Mock<IProductoRepository>();
@@ -58,8 +55,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [Test]
-    public async Task ImportCategoria_NoExistia_Devuelve201YResincronizaLaSecuencia()
-    {
+    public async Task ImportCategoria_NoExistia_Devuelve201YResincronizaLaSecuencia() {
         _categorias.Setup(r => r.FindByIdAsync(42)).ReturnsAsync((Categoria?)null);
 
         var result = await _controller.ImportCategoria(new ImportCategoriaDto(
@@ -73,8 +69,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [Test]
-    public async Task ImportCategoria_YaExistia_SinCambios_Devuelve204()
-    {
+    public async Task ImportCategoria_YaExistia_SinCambios_Devuelve204() {
         _categorias.Setup(r => r.FindByIdAsync(42))
             .ReturnsAsync(new Categoria { Id = 42, Nombre = "Igual", Descripcion = "igual", IsDeleted = false });
 
@@ -87,8 +82,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [Test]
-    public async Task ImportCategoria_CambioReal_Devuelve200YActualiza()
-    {
+    public async Task ImportCategoria_CambioReal_Devuelve200YActualiza() {
         _categorias.Setup(r => r.FindByIdAsync(42))
             .ReturnsAsync(new Categoria { Id = 42, Nombre = "Viejo", IsDeleted = false });
 
@@ -100,8 +94,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [Test]
-    public async Task ImportCategoria_NombreInvalido_Devuelve400_SinEscribir()
-    {
+    public async Task ImportCategoria_NombreInvalido_Devuelve400_SinEscribir() {
         var validador = new Mock<IValidator<CategoriaRequestDto>>();
         validador.Setup(v => v.ValidateAsync(It.IsAny<CategoriaRequestDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult(new[] { new ValidationFailure("Nombre", "El nombre es obligatorio") }));
@@ -120,8 +113,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [Test]
-    public async Task ImportProducto_CategoriaInexistente_Devuelve400()
-    {
+    public async Task ImportProducto_CategoriaInexistente_Devuelve400() {
         // El controlador valida la FK contra ICategoriaRepository (no contra productos).
         _categorias.Setup(r => r.ExistsByIdAsync(999)).ReturnsAsync(false);
 
@@ -134,8 +126,7 @@ public class CatalogImportInternalControllerTests
     }
 
     [Test]
-    public async Task ImportProducto_ProveedorInexistente_Devuelve400()
-    {
+    public async Task ImportProducto_ProveedorInexistente_Devuelve400() {
         _categorias.Setup(r => r.ExistsByIdAsync(1)).ReturnsAsync(true);
         _proveedores.Setup(r => r.ExistsByIdAsync("NoExiste")).ReturnsAsync(false);
 

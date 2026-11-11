@@ -15,19 +15,16 @@ namespace TiendaApi.Tests.Unit.Features.Users;
 /// CreatePedidoCommand). Lectura fresca SIN caché — un usuario borrado no
 /// debe "seguir existiendo" durante el TTL de la ruta pública.
 /// </summary>
-public class GetUsuarioInternoQueryHandlerTests
-{
+public class GetUsuarioInternoQueryHandlerTests {
     private readonly Mock<IUserRepository> _repository = new();
     private readonly GetUsuarioInternoQueryHandler _handler;
 
-    public GetUsuarioInternoQueryHandlerTests()
-    {
+    public GetUsuarioInternoQueryHandlerTests() {
         _handler = new GetUsuarioInternoQueryHandler(_repository.Object);
     }
 
     [Test]
-    public async Task Handle_UsuarioExistente_DevuelveSuccessConElDto()
-    {
+    public async Task Handle_UsuarioExistente_DevuelveSuccessConElDto() {
         _repository.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new User { Id = 1, UserName = "juan", Email = "juan@test.com", IsDeleted = false });
 
@@ -39,8 +36,7 @@ public class GetUsuarioInternoQueryHandlerTests
     }
 
     [Test]
-    public async Task Handle_UsuarioNoExiste_DevuelveNotFound()
-    {
+    public async Task Handle_UsuarioNoExiste_DevuelveNotFound() {
         _repository.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((User?)null);
 
         var result = await _handler.Handle(new GetUsuarioInternoQuery(999), CancellationToken.None);
@@ -50,8 +46,7 @@ public class GetUsuarioInternoQueryHandlerTests
     }
 
     [Test]
-    public async Task Handle_UsuarioBorrado_DevuelveNotFound()
-    {
+    public async Task Handle_UsuarioBorrado_DevuelveNotFound() {
         // Semántica idéntica a `user is null || user.IsDeleted` del monolito.
         _repository.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new User { Id = 1, IsDeleted = true });
@@ -63,8 +58,7 @@ public class GetUsuarioInternoQueryHandlerTests
     }
 
     [Test]
-    public async Task Handle_LeeDelRepositorio_CadaInvocacion()
-    {
+    public async Task Handle_LeeDelRepositorio_CadaInvocacion() {
         // Sin caché: dos consultas seguidas leen dos veces (estado real).
         _repository.Setup(r => r.FindByIdAsync(1))
             .ReturnsAsync(new User { Id = 1, IsDeleted = false });
