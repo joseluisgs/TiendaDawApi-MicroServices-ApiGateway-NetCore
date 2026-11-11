@@ -71,8 +71,3 @@ tests/E2E/**/reports/
 
 # Documentos internos de trabajo (no se suben al remoto)
 AGENTS.md
-TAREAS.md
-ESTRUCTURA-Y-PASOS.md
-ENDPOINTS.md
-DEPENDENCIAS.md
-GATEWAY.md
