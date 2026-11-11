@@ -1143,7 +1143,7 @@ var app = builder.Build();
 ### Estructura de archivos recomendada
 
 ```
-Features/
+MediatR/
 ├── Productos/
 │   ├── Commands/
 │   │   ├── CreateProductoCommand.cs

@@ -3,7 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using TiendaApi.Api.Dtos.Usuarios;
 using TiendaApi.Api.Errors;
-using TiendaApi.Api.Features.Users.Queries;
+using TiendaApi.Api.MediatR.Users.Queries;
 
 namespace TiendaApi.Api.Controllers;
 
