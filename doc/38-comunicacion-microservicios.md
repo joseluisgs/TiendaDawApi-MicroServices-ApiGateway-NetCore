@@ -1,10 +1,5 @@
 # 38. Comunicación entre microservicios
 
-> **Documento nuevo en la variante de microservicios.** En el monolito todo
-> hablaba en memoria (llamadas a métodos, eventos de dominio con `MediatR`).
-> Repartido en procesos, esa comunicación pasa a ser **red** — y eso cambia las
-> reglas del juego.
-
 ## Índice
 
 - [38.1. Dos canales, cada uno para lo suyo](#381-dos-canales-cada-uno-para-lo-suyo)
@@ -14,6 +9,11 @@
 - [38.5. El JWT viaja en cada llamada](#385-el-jwt-viaja-en-cada-llamada)
 - [38.6. Mejor esfuerzo: cuando el destinatario no responde](#386-mejor-esfuerzo-cuando-el-destinatario-no-responde)
 - [38.7. Qué NO se usa (y por qué)](#387-qué-no-se-usa-y-por-qué)
+
+> En el monolito todo
+> hablaba en memoria (llamadas a métodos, eventos de dominio con `MediatR`).
+> Repartido en procesos, esa comunicación pasa a ser **red** — y eso cambia las
+> reglas del juego.
 
 ## 38.1. Dos canales, cada uno para lo suyo
 

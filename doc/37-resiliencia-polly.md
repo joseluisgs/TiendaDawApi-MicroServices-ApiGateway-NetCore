@@ -1,10 +1,5 @@
 # 37. Resiliencia entre servicios (Polly)
 
-> **Documento nuevo en la variante de microservicios.** En el monolito, un fallo
-> interno era una excepción en el mismo proceso; entre microservicios, un backend
-> caído o colgado **no debe** bloquear al que lo llama. Este es el motivo de
-> existir de `BuildingBlocks/Http/`.
-
 ## Índice
 
 - [37.1. El problema: el timeout por defecto de HttpClient](#371-el-problema-el-timeout-por-defecto-de-httpclient)
@@ -16,6 +11,11 @@
 - [37.7. Por qué un POST no se reintenta](#377-por-qué-un-post-no-se-reintenta)
 - [37.8. Medición real](#378-medición-real)
 - [37.9. Los tests](#379-los-tests)
+
+> En el monolito, un fallo
+> interno era una excepción en el mismo proceso; entre microservicios, un backend
+> caído o colgado **no debe** bloquear al que lo llama. Este es el motivo de
+> existir de `BuildingBlocks/Http/`.
 
 ## 37.1. El problema: el timeout por defecto de HttpClient
 
