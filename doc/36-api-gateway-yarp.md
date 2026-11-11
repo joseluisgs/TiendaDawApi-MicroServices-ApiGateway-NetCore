@@ -1,9 +1,5 @@
 # 36. API Gateway (YARP)
 
-**El API Gateway de la arquitectura de microservicios.** YARP es la pieza que
-**no existía en el monolito**: sin él, el cliente tendría que conocer los
-puertos de los diez servicios.
-
 ## Índice
 
 - [36.1. Qué es el gateway y por qué](#361-qué-es-el-gateway-y-por-qué)
@@ -16,6 +12,10 @@ puertos de los diez servicios.
 - [36.8. Health y version](#368-health-y-version)
 - [36.9. Receta: cambiar el destino de una ruta](#369-receta-cambiar-el-destino-de-una-ruta)
 - [36.10. Nota: HS256 vs RS256 en producción](#3610-nota-hs256-vs-rs256-en-producción)
+
+> **El API Gateway de la arquitectura de microservicios.** YARP es la pieza que
+> **no existía en el monolito**: sin él, el cliente tendría que conocer los
+> puertos de los diez servicios.
 
 ## 36.1. Qué es el gateway y por qué
 

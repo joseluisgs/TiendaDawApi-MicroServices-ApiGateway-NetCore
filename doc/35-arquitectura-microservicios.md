@@ -1,9 +1,5 @@
 # 35. Arquitectura de Microservicios
 
-**Guía de la arquitectura de microservicios.** Los conceptos generales de
-dominio, CQRS y tecnologías siguen siendo los de los documentos
-[31](31-clean-architecture.md) y [12](12-cqrs-commands-queries.md).
-
 ## Índice
 
 - [35.1. Del monolito a los microservicios](#351-del-monolito-a-los-microservicios)
@@ -15,6 +11,10 @@ dominio, CQRS y tecnologías siguen siendo los de los documentos
 - [35.7. Secuencia completa: crear un pedido](#357-secuencia-completa-crear-un-pedido)
 - [35.8. Estructura del repositorio](#358-estructura-del-repositorio)
 - [35.9. Qué queda fuera (y por qué)](#359-qué-queda-fuera-y-por-qué)
+
+> **Guía de la arquitectura de microservicios.** Los conceptos generales de
+> dominio, CQRS y tecnologías siguen siendo los de los documentos
+> [31](31-clean-architecture.md) y [12](12-cqrs-commands-queries.md).
 
 ## 35.1. Del monolito a los microservicios
 

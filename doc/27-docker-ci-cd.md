@@ -1,11 +1,5 @@
 # 27. Docker y CI/CD
 
-> **Ampliado en la variante de microservicios.** El original documentaba un único
-> Dockerfile de API; aquí hay **10 Dockerfiles** (uno por servicio) y un compose
-> de producción con **10 procesos .NET + 4 bases de datos**. El pipeline de
-> GitHub Actions mantiene la misma estructura, pero sobre la solución completa
-> (22 proyectos).
-
 ## Índice
 
 - [27.1. El Dockerfile multi-stage (uno por servicio)](#271-el-dockerfile-multi-stage-uno-por-servicio)
@@ -14,6 +8,12 @@
 - [27.4. Configuración por entornos](#274-configuración-por-entornos)
 - [27.5. Pipeline de CI](#275-pipeline-de-ci)
 - [27.6. Comandos rápidos](#276-comandos-rápidos)
+
+>
+> Hay **10 Dockerfiles** (uno por servicio) y un compose
+> de producción con **10 procesos .NET + 4 bases de datos**. El pipeline de
+> GitHub Actions mantiene la misma estructura, pero sobre la solución completa
+> (22 proyectos).
 
 ## 27.1. El Dockerfile multi-stage (uno por servicio)
 

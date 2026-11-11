@@ -1,10 +1,5 @@
 # 14. MediatR Eventos
 
-> **En la arquitectura de microservicios:** las notifications siguen existiendo,
-> pero **solo dentro de un servicio** (p.ej. en catalog: domain events → read
-> model). **Entre servicios no hay eventos**: hay llamadas REST explícitas
-> (Refit) — ver [38](38-comunicacion-microservicios.md).
-
 ## Índice
 
 [14. MediatR + CQRS + Eventos de Dominio](#14-mediatr--cqrs--eventos-de-dominio)
@@ -22,6 +17,11 @@
   - [14.12. Resumen y Tema siguiente](#1412-resumen-y-tema-siguiente)
 
 ---
+
+> **En la arquitectura de microservicios:** las notifications siguen existiendo,
+> pero **solo dentro de un servicio** (p.ej. en catalog: domain events → read
+> model). **Entre servicios no hay eventos**: hay llamadas REST explícitas
+> (Refit) — ver [38](38-comunicacion-microservicios.md).
 
 ## 14.1. El Problema: Acoplamiento entre Efectos Secundarios
 
