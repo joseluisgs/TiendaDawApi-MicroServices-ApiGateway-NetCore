@@ -17,20 +17,19 @@ using TiendaApi.Api.Repositories.Proveedores;
 namespace TiendaApi.Tests.Unit.Controllers;
 
 /// <summary>
-/// Tests de los endpoints internos de <b>import de backups</b> (los consume backup).
-///
-/// Replican la semántica del <c>BackupService</c> del monolito: upsert por clave,
-/// altas con ID explícito (<c>OVERRIDING SYSTEM VALUE</c> + re-sincronización de
-/// secuencia) y distinción entre 201 (creado) / 200 (actualizado) / 204 (sin
-/// cambios) — el 204 es el que hace que el round-trip del E2E reporte "sin altas".
+///     Tests de los endpoints internos de <b>import de backups</b> (los consume backup).
+///     Replican la semántica del <c>BackupService</c> del monolito: upsert por clave,
+///     altas con ID explícito (<c>OVERRIDING SYSTEM VALUE</c> + re-sincronización de
+///     secuencia) y distinción entre 201 (creado) / 200 (actualizado) / 204 (sin
+///     cambios) — el 204 es el que hace que el round-trip del E2E reporte "sin altas".
 /// </summary>
 public class CatalogImportInternalControllerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<ICategoriaRepository> _categorias = null!;
-    private Mock<IProveedorRepository> _proveedores = null!;
-    private Mock<IProductoRepository> _productos = null!;
     private CatalogImportInternalController _controller = null!;
+    private Mock<IProductoRepository> _productos = null!;
+    private Mock<IProveedorRepository> _proveedores = null!;
 
     /// <summary>Validador mockeado cuya validación pasa siempre (las reglas se prueban aparte).</summary>
     private static IValidator<T> ValidadorQuePasa<T>() {
@@ -58,10 +57,10 @@ public class CatalogImportInternalControllerTests {
     public async Task ImportCategoria_NoExistia_Devuelve201YResincronizaLaSecuencia() {
         _categorias.Setup(r => r.FindByIdAsync(42)).ReturnsAsync((Categoria?)null);
 
-        var result = await _controller.ImportCategoria(new ImportCategoriaDto(
+        IActionResult result = await _controller.ImportCategoria(new ImportCategoriaDto(
             42, "Nueva", "desc", false, DateTime.UtcNow, DateTime.UtcNow));
 
-        var creado = result.Should().BeOfType<CreatedAtActionResult>().Subject;
+        CreatedAtActionResult creado = result.Should().BeOfType<CreatedAtActionResult>().Subject;
         creado.StatusCode.Should().Be(201);
         _categorias.Verify(r => r.CrearConIdExplicitoAsync(It.Is<Categoria>(c => c.Id == 42)), Times.Once);
         _categorias.Verify(r => r.ResincronizarSecuenciaAsync(), Times.Once,
@@ -73,7 +72,7 @@ public class CatalogImportInternalControllerTests {
         _categorias.Setup(r => r.FindByIdAsync(42))
             .ReturnsAsync(new Categoria { Id = 42, Nombre = "Igual", Descripcion = "igual", IsDeleted = false });
 
-        var result = await _controller.ImportCategoria(new ImportCategoriaDto(
+        IActionResult result = await _controller.ImportCategoria(new ImportCategoriaDto(
             42, "Igual", "igual", false, DateTime.UtcNow, DateTime.UtcNow));
 
         result.Should().BeOfType<NoContentResult>(
@@ -86,7 +85,7 @@ public class CatalogImportInternalControllerTests {
         _categorias.Setup(r => r.FindByIdAsync(42))
             .ReturnsAsync(new Categoria { Id = 42, Nombre = "Viejo", IsDeleted = false });
 
-        var result = await _controller.ImportCategoria(new ImportCategoriaDto(
+        IActionResult result = await _controller.ImportCategoria(new ImportCategoriaDto(
             42, "Nuevo", "nueva", false, DateTime.UtcNow, DateTime.UtcNow));
 
         result.Should().BeOfType<OkResult>();
@@ -105,7 +104,7 @@ public class CatalogImportInternalControllerTests {
             ValidadorQuePasa<ProductoRequestDto>(),
             Mock.Of<ILogger<CatalogImportInternalController>>());
 
-        var result = await controller.ImportCategoria(new ImportCategoriaDto(
+        IActionResult result = await controller.ImportCategoria(new ImportCategoriaDto(
             42, "", null, false, DateTime.UtcNow, DateTime.UtcNow));
 
         result.Should().BeOfType<BadRequestObjectResult>();
@@ -117,7 +116,7 @@ public class CatalogImportInternalControllerTests {
         // El controlador valida la FK contra ICategoriaRepository (no contra productos).
         _categorias.Setup(r => r.ExistsByIdAsync(999)).ReturnsAsync(false);
 
-        var result = await _controller.ImportProducto(new ImportProductoDto(
+        IActionResult result = await _controller.ImportProducto(new ImportProductoDto(
             1, "Prod", "d", 10m, 1, null, 999, null, false, DateTime.UtcNow, DateTime.UtcNow));
 
         result.Should().BeOfType<BadRequestObjectResult>()
@@ -130,7 +129,7 @@ public class CatalogImportInternalControllerTests {
         _categorias.Setup(r => r.ExistsByIdAsync(1)).ReturnsAsync(true);
         _proveedores.Setup(r => r.ExistsByIdAsync("NoExiste")).ReturnsAsync(false);
 
-        var result = await _controller.ImportProducto(new ImportProductoDto(
+        IActionResult result = await _controller.ImportProducto(new ImportProductoDto(
             1, "Prod", "d", 10m, 1, null, 1, "NoExiste", false, DateTime.UtcNow, DateTime.UtcNow));
 
         result.Should().BeOfType<BadRequestObjectResult>()

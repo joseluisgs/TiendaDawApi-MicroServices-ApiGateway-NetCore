@@ -1,13 +1,13 @@
+using System.Net;
 using System.Security.Claims;
-using HotChocolate;
-using HotChocolate.Types;
+using HotChocolate.Authorization;
+using Refit;
 using TiendaApi.Api.Dtos.Categorias;
 using TiendaApi.Api.Dtos.Common;
 using TiendaApi.Api.Dtos.Pedidos;
 using TiendaApi.Api.Dtos.Productos;
 using TiendaApi.Api.Services.Catalog;
 using TiendaApi.Api.Services.Orders;
-
 // ⚠️ Refit y HotChocolate traen atributos homónimos (Authorize, Query): aquí
 // solo se usan los de HotChocolate, así que se desambigüan con alias.
 using Authorize = HotChocolate.Authorization.AuthorizeAttribute;
@@ -15,17 +15,15 @@ using Authorize = HotChocolate.Authorization.AuthorizeAttribute;
 namespace TiendaApi.Api.GraphQL.Queries;
 
 /// <summary>
-/// Consultas GraphQL de la tienda.
-///
-/// 🎓 BFF (R4): GraphQL no tiene BD ni dominio propio — cada query es la
-/// llamada REST equivalente hecha por Refit al dueño del dato (catalog u
-/// orders). El contrato de salida es el MISMO DTO que el monolito, así que el
-/// esquema no cambia.
-///
-/// 🎓 Seguridad: GraphQL solo expone DTOs, nunca entidades de escritura. Los
-/// endpoints a los que llama exigen ADMIN y aquí viaja el JWT del llamante
-/// (<c>AuthorizationForwardingHandler</c>), de modo que la autorización se
-/// resuelve en el dueño — no se confía en el filtro local.
+///     Consultas GraphQL de la tienda.
+///     🎓 BFF (R4): GraphQL no tiene BD ni dominio propio — cada query es la
+///     llamada REST equivalente hecha por Refit al dueño del dato (catalog u
+///     orders). El contrato de salida es el MISMO DTO que el monolito, así que el
+///     esquema no cambia.
+///     🎓 Seguridad: GraphQL solo expone DTOs, nunca entidades de escritura. Los
+///     endpoints a los que llama exigen ADMIN y aquí viaja el JWT del llamante
+///     (<c>AuthorizationForwardingHandler</c>), de modo que la autorización se
+///     resuelve en el dueño — no se confía en el filtro local.
 /// </summary>
 public class TiendaQuery {
     // ── productos ──────────────────────────────────────────────────────
@@ -37,7 +35,7 @@ public class TiendaQuery {
     public async Task<IReadOnlyList<ProductoDto>> GetProductos(
         [Service] ICatalogApi catalogApi,
         CancellationToken ct = default) {
-        var pagina = await catalogApi.GetProductosAsync(page: 0, size: 100);
+        PagedResult<ProductoDto> pagina = await catalogApi.GetProductosAsync(0, 100);
         return (pagina.Items ?? []).ToList();
     }
 
@@ -52,7 +50,7 @@ public class TiendaQuery {
         CancellationToken ct = default) {
         try {
             return await catalogApi.GetProductoAsync(id);
-        } catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound) {
+        } catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.NotFound) {
             // GraphQL devuelve null (no error) cuando el recurso no existe.
             return null;
         }
@@ -70,7 +68,7 @@ public class TiendaQuery {
         int size = 10,
         CancellationToken ct = default) {
         // GraphQL expone paginación base 1; la API REST trabaja con base 0.
-        var pagina = await catalogApi.GetProductosAsync(Math.Max(page - 1, 0), size);
+        PagedResult<ProductoDto> pagina = await catalogApi.GetProductosAsync(Math.Max(page - 1, 0), size);
         return pagina with { Page = page };
     }
 
@@ -83,7 +81,7 @@ public class TiendaQuery {
     public async Task<IReadOnlyList<CategoriaDto>> GetCategorias(
         [Service] ICatalogApi catalogApi,
         CancellationToken ct = default) {
-        var pagina = await catalogApi.GetCategoriasAsync(page: 0, size: 100);
+        PagedResult<CategoriaDto> pagina = await catalogApi.GetCategoriasAsync(0, 100);
         return (pagina.Items ?? []).ToList();
     }
 
@@ -98,7 +96,7 @@ public class TiendaQuery {
         CancellationToken ct = default) {
         try {
             return await catalogApi.GetCategoriaAsync(id);
-        } catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound) {
+        } catch (ApiException ex) when (ex.StatusCode == HttpStatusCode.NotFound) {
             return null;
         }
     }
@@ -114,19 +112,19 @@ public class TiendaQuery {
         int page = 1,
         int size = 10,
         CancellationToken ct = default) {
-        var pagina = await catalogApi.GetCategoriasAsync(Math.Max(page - 1, 0), size);
+        PagedResult<CategoriaDto> pagina = await catalogApi.GetCategoriasAsync(Math.Max(page - 1, 0), size);
         return pagina with { Page = page };
     }
 
     // ── pedidos ────────────────────────────────────────────────────────
 
     /// <summary>
-    /// Obtiene TODOS los pedidos. Solo administradores.
+    ///     Obtiene TODOS los pedidos. Solo administradores.
     /// </summary>
     /// <param name="ordersApi">Cliente Refit de orders.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>Lista de pedidos (DTOs, no entidades).</returns>
-    [Authorize(policy: "AdminOnly")]
+    [Authorize("AdminOnly")]
     public async Task<IReadOnlyList<PedidoDto>> GetPedidos(
         [Service] IOrdersApi ordersApi,
         CancellationToken ct = default) {
@@ -134,11 +132,10 @@ public class TiendaQuery {
     }
 
     /// <summary>
-    /// Obtiene MIS pedidos: los del usuario autenticado.
-    ///
-    /// 🎓 El filtro lo aplica <b>orders</b> en <c>/me</c> con el JWT que llega
-    /// en la cabecera: aquí no se decide nada, así que es imposible devolver
-    /// pedidos de otro usuario.
+    ///     Obtiene MIS pedidos: los del usuario autenticado.
+    ///     🎓 El filtro lo aplica <b>orders</b> en <c>/me</c> con el JWT que llega
+    ///     en la cabecera: aquí no se decide nada, así que es imposible devolver
+    ///     pedidos de otro usuario.
     /// </summary>
     /// <param name="user">Usuario autenticado (claims del JWT).</param>
     /// <param name="ordersApi">Cliente Refit de orders.</param>
@@ -151,9 +148,11 @@ public class TiendaQuery {
         CancellationToken ct = default) {
         // Comprobación local mínima: si no hay identidad, no se llama (evita
         // que un token sin claims pida /me y reciba un 401 opaco).
-        var claim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (claim is null || !long.TryParse(claim, out _))
-            throw new GraphQLException("No se pudo identificar al usuario autenticado (falta el claim NameIdentifier).");
+        string? claim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (claim is null || !long.TryParse(claim, out _)) {
+            throw new GraphQLException(
+                "No se pudo identificar al usuario autenticado (falta el claim NameIdentifier).");
+        }
 
         return await ordersApi.GetMisPedidosAsync();
     }

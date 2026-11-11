@@ -1,10 +1,10 @@
+using System.Net;
+using System.Text;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Refit;
-using System.Net;
-using System.Text;
 using TiendaApi.Api.Dtos.Backup;
 using TiendaApi.Api.Dtos.Categorias;
 using TiendaApi.Api.Dtos.Common;
@@ -17,12 +17,11 @@ using TiendaApi.Api.Services.Catalog;
 namespace TiendaApi.Tests.Unit.Services.Backup;
 
 /// <summary>
-/// Tests del servicio de backup con el client Refit de catalog mockeado.
-///
-/// 🎓 en el monolito el servicio escribía en sus
-/// propios repositorios; aquí solo orquesta — lee por las rutas públicas y
-/// escribe en los endpoints internos de catalog, traduciendo su código de
-/// respuesta al informe (201 creado · 200 actualizado · 204 sin cambios · 400 error).
+///     Tests del servicio de backup con el client Refit de catalog mockeado.
+///     🎓 en el monolito el servicio escribía en sus
+///     propios repositorios; aquí solo orquesta — lee por las rutas públicas y
+///     escribe en los endpoints internos de catalog, traduciendo su código de
+///     respuesta al informe (201 creado · 200 actualizado · 204 sin cambios · 400 error).
 /// </summary>
 public class BackupServiceTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
@@ -45,39 +44,50 @@ public class BackupServiceTests {
     }
 
     /// <summary>Página con todo en la 0 y vacía en las demás (corta el bucle).</summary>
-    private static PagedResult<T> Pagina<T>(List<T> items, int pagina) => new() {
-        Items = pagina == 0 ? items : Enumerable.Empty<T>(),
-        TotalCount = items.Count,
-        Page = pagina + 1,
-        PageSize = 100,
-    };
+    private static PagedResult<T> Pagina<T>(List<T> items, int pagina) {
+        return new PagedResult<T> {
+            Items = pagina == 0 ? items : Enumerable.Empty<T>(),
+            TotalCount = items.Count,
+            Page = pagina + 1,
+            PageSize = 100
+        };
+    }
 
-    private static List<CategoriaDto> Categorias() =>
-        [new(1, "Electrónica", "Dispositivos", DateTime.UtcNow, DateTime.UtcNow)];
+    private static List<CategoriaDto> Categorias() {
+        return [new(1, "Electrónica", "Dispositivos", DateTime.UtcNow, DateTime.UtcNow)];
+    }
 
-    private static List<ProveedorDto> Proveedores() =>
-        [new("Distribuc01", "Distribuciones DAW", "General", "pedidos@t.example", DateTime.UtcNow, DateTime.UtcNow)];
+    private static List<ProveedorDto> Proveedores() {
+        return [
+            new("Distribuc01", "Distribuciones DAW", "General", "pedidos@t.example", DateTime.UtcNow, DateTime.UtcNow)
+        ];
+    }
 
-    private static List<ProductoDto> Productos() =>
-        [new(1, "Laptop", "Alto rendimiento", 1299.99m, 10, null,
-            new CategoriaResumenDto(1, "Electrónica", "Dispositivos"),
-            new ProveedorResumenDto("Distribuc01", "Distribuciones DAW", "General"),
-            DateTime.UtcNow, DateTime.UtcNow)];
+    private static List<ProductoDto> Productos() {
+        return [
+            new(1, "Laptop", "Alto rendimiento", 1299.99m, 10, null,
+                new CategoriaResumenDto(1, "Electrónica", "Dispositivos"),
+                new ProveedorResumenDto("Distribuc01", "Distribuciones DAW", "General"),
+                DateTime.UtcNow, DateTime.UtcNow)
+        ];
+    }
 
     /// <summary>Respuesta de catalog con el código indicado (201/200/204).</summary>
-    private static HttpResponseMessage Respuesta(HttpStatusCode code, string body = "{}") =>
-        new(code) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+    private static HttpResponseMessage Respuesta(HttpStatusCode code, string body = "{}") {
+        return new HttpResponseMessage(code) { Content = new StringContent(body, Encoding.UTF8, "application/json") };
+    }
 
     /// <summary>
-    /// Excepción Refit con el status indicado — así se comporta el client REAL
-    /// ante un 400, y el servicio debe traducirla a un error de fila.
+    ///     Excepción Refit con el status indicado — así se comporta el client REAL
+    ///     ante un 400, y el servicio debe traducirla a un error de fila.
     /// </summary>
-    private static async Task<ApiException> ApiExceptionCon(HttpStatusCode code, string body) =>
-        await ApiException.Create(
+    private static async Task<ApiException> ApiExceptionCon(HttpStatusCode code, string body) {
+        return await ApiException.Create(
             new HttpRequestMessage(HttpMethod.Post, "http://catalog"),
             HttpMethod.Post,
             new HttpResponseMessage(code) { Content = new StringContent(body, Encoding.UTF8, "application/json") },
             new RefitSettings());
+    }
 
     // ────────────────────────────────────────────────────────────────
 
@@ -85,13 +95,13 @@ public class BackupServiceTests {
     public async Task Exportar_Json_EscribeManifestYEntidades() {
         using var salida = new MemoryStream();
 
-        var result = await _service.ExportarAsync(salida, "json",
-            ["categorias", "proveedores", "productos"], incluirBorrados: false);
+        UnitResult<DomainError> result = await _service.ExportarAsync(salida, "json",
+            ["categorias", "proveedores", "productos"], false);
 
         result.IsSuccess.Should().BeTrue();
         salida.Position = 0;
         using var lector = new StreamReader(salida, Encoding.UTF8);
-        var json = lector.ReadToEnd();
+        string json = lector.ReadToEnd();
 
         json.Should().Contain("\"manifest\"", "el backup siempre lleva manifest");
         json.Should().Contain("Laptop");
@@ -104,8 +114,8 @@ public class BackupServiceTests {
     public async Task Exportar_FormatoDesconocido_Devuelve400_SinEscribir() {
         using var salida = new MemoryStream();
 
-        var result = await _service.ExportarAsync(salida, "xml",
-            ["productos"], incluirBorrados: false);
+        UnitResult<DomainError> result = await _service.ExportarAsync(salida, "xml",
+            ["productos"], false);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();
@@ -116,8 +126,8 @@ public class BackupServiceTests {
     public async Task Exportar_EntidadDesconocida_Devuelve400() {
         using var salida = new MemoryStream();
 
-        var result = await _service.ExportarAsync(salida, "json",
-            ["usuarios"], incluirBorrados: false);
+        UnitResult<DomainError> result = await _service.ExportarAsync(salida, "json",
+            ["usuarios"], false);
 
         result.IsFailure.Should().BeTrue();
         salida.Length.Should().Be(0);
@@ -127,13 +137,13 @@ public class BackupServiceTests {
     public async Task Exportar_Csv_SoloUnaEntidad_EscribeLaCabecera() {
         using var salida = new MemoryStream();
 
-        var result = await _service.ExportarAsync(salida, "csv",
-            ["productos"], incluirBorrados: false);
+        UnitResult<DomainError> result = await _service.ExportarAsync(salida, "csv",
+            ["productos"], false);
 
         result.IsSuccess.Should().BeTrue();
         salida.Position = 0;
         using var lector = new StreamReader(salida, Encoding.UTF8);
-        var csv = lector.ReadToEnd();
+        string csv = lector.ReadToEnd();
 
         csv.Should().StartWith("id,nombre,descripcion,precio,stock,imagen,categoriaId",
             "el CSV lleva la cabecera con las claves foráneas planas");
@@ -151,10 +161,10 @@ public class BackupServiceTests {
         _catalog.Setup(c => c.ImportProductoAsync(It.IsAny<ImportProductoDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.Created));
 
-        var informe = await ImportarAsync(BackupService.Entidades, dryRun: false);
+        Result<ImportReportDto, DomainError> informe = await ImportarAsync(BackupService.Entidades, false);
 
         informe.IsSuccess.Should().BeTrue();
-        var cats = informe.Value.Entidades.Single(e => e.Entidad == "categorias");
+        EntidadImportReportDto cats = informe.Value.Entidades.Single(e => e.Entidad == "categorias");
         cats.Creados.Should().Be(1, "201 de catalog = fila creada");
         cats.SinCambios.Should().Be(0);
     }
@@ -169,12 +179,12 @@ public class BackupServiceTests {
         _catalog.Setup(c => c.ImportProductoAsync(It.IsAny<ImportProductoDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.NoContent));
 
-        var informe = await ImportarAsync(BackupService.Entidades, dryRun: false);
+        Result<ImportReportDto, DomainError> informe = await ImportarAsync(BackupService.Entidades, false);
 
         informe.IsSuccess.Should().BeTrue();
         informe.Value.Completo.Should().BeTrue("sin errores = import completo");
         informe.Value.Entidades.Should().OnlyContain(e =>
-            e.Creados == 0 && e.Actualizados == 0 && e.SinCambios == e.Leidos,
+                e.Creados == 0 && e.Actualizados == 0 && e.SinCambios == e.Leidos,
             "el round-trip no debe crear ni actualizar nada");
     }
 
@@ -183,7 +193,7 @@ public class BackupServiceTests {
         _catalog.Setup(c => c.ImportCategoriaAsync(It.IsAny<ImportCategoriaDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.OK));
 
-        var informe = await ImportarAsync(["categorias"], dryRun: false);
+        Result<ImportReportDto, DomainError> informe = await ImportarAsync(["categorias"], false);
 
         informe.Value.Entidades.Single().Actualizados.Should().Be(1, "200 de catalog = fila actualizada");
     }
@@ -192,13 +202,15 @@ public class BackupServiceTests {
     public async Task Importar_ErrorDeFila_NoAbortaLaOperacion() {
         // La primera fila falla (400), las demás siguen: mismo criterio del monolito.
         // ⚠️ Refit LANZA ApiException ante un 400: el mock debe hacer lo mismo.
-        var llamadas = 0;
+        int llamadas = 0;
         _catalog.Setup(c => c.ImportCategoriaAsync(It.IsAny<ImportCategoriaDto>()))
             .Returns<ImportCategoriaDto>(async _ => {
                 llamadas++;
-                if (llamadas == 1)
+                if (llamadas == 1) {
                     throw await ApiExceptionCon(HttpStatusCode.BadRequest,
                         """{"message":"El nombre es obligatorio","field":"nombre"}""");
+                }
+
                 return Respuesta(HttpStatusCode.Created);
             });
         _catalog.Setup(c => c.ImportProveedorAsync(It.IsAny<ImportProveedorDto>()))
@@ -206,10 +218,10 @@ public class BackupServiceTests {
         _catalog.Setup(c => c.ImportProductoAsync(It.IsAny<ImportProductoDto>()))
             .ReturnsAsync(Respuesta(HttpStatusCode.Created));
 
-        var informe = await ImportarAsync(BackupService.Entidades, dryRun: false);
+        Result<ImportReportDto, DomainError> informe = await ImportarAsync(BackupService.Entidades, false);
 
         informe.IsSuccess.Should().BeTrue("los errores de fila no abortan");
-        var cats = informe.Value.Entidades.Single(e => e.Entidad == "categorias");
+        EntidadImportReportDto cats = informe.Value.Entidades.Single(e => e.Entidad == "categorias");
         cats.Leidos.Should().Be(Categorias().Count);
         cats.Errores.Should().ContainSingle()
             .Which.Mensaje.Should().Contain("El nombre es obligatorio", "el mensaje viene de catalog");
@@ -219,7 +231,7 @@ public class BackupServiceTests {
 
     [Test]
     public async Task Importar_DryRun_NoEscribeNada() {
-        var informe = await ImportarAsync(BackupService.Entidades, dryRun: true);
+        Result<ImportReportDto, DomainError> informe = await ImportarAsync(BackupService.Entidades, true);
 
         informe.IsSuccess.Should().BeTrue();
         informe.Value.DryRun.Should().BeTrue();
@@ -234,10 +246,10 @@ public class BackupServiceTests {
 
     [Test]
     public async Task ObtenerFormatos_DevuelveLosTresFormatos() {
-        var result = await _service.ObtenerFormatosAsync();
+        Result<CatalogoFormatosDto, DomainError> result = await _service.ObtenerFormatosAsync();
 
         result.IsSuccess.Should().BeTrue();
-        result.Value.Formatos.Select(f => f.Nombre).Should().BeEquivalentTo(new[] { "zip", "json", "csv" });
+        result.Value.Formatos.Select(f => f.Nombre).Should().BeEquivalentTo("zip", "json", "csv");
         result.Value.Entidades.Should().HaveCount(3);
         result.Value.Limites.MaxBytes.Should().BeGreaterThan(0);
     }
@@ -245,12 +257,12 @@ public class BackupServiceTests {
     /// <summary>Importa un backup mínimo con las entidades indicadas.</summary>
     private async Task<Result<ImportReportDto, DomainError>> ImportarAsync(
         IReadOnlyList<string> entidades, bool dryRun) {
-        var contenido = """
-            {"manifest":{"version":"1.0","generadoEn":"2026-01-01T00:00:00Z"},
-             "categorias":[{"id":1,"nombre":"Electrónica","descripcion":"x","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}],
-             "proveedores":[{"codigo":"Distribuc01","nombre":"Dist","descripcion":"x","contacto":"c@t.x","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}],
-             "productos":[{"id":1,"nombre":"Laptop","descripcion":"x","precio":1299.99,"stock":10,"imagen":null,"categoriaId":1,"proveedorId":"Distribuc01","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}]}
-            """;
+        string contenido = """
+                           {"manifest":{"version":"1.0","generadoEn":"2026-01-01T00:00:00Z"},
+                            "categorias":[{"id":1,"nombre":"Electrónica","descripcion":"x","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}],
+                            "proveedores":[{"codigo":"Distribuc01","nombre":"Dist","descripcion":"x","contacto":"c@t.x","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}],
+                            "productos":[{"id":1,"nombre":"Laptop","descripcion":"x","precio":1299.99,"stock":10,"imagen":null,"categoriaId":1,"proveedorId":"Distribuc01","isDeleted":false,"createdAt":"2026-01-01T00:00:00Z","updatedAt":"2026-01-01T00:00:00Z"}]}
+                           """;
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes(contenido));
         return await _service.ImportarAsync(stream, "json", entidades, dryRun);

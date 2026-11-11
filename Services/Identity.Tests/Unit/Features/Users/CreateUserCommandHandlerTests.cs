@@ -1,16 +1,14 @@
-using Microsoft.AspNetCore.Identity;
+using CSharpFunctionalExtensions;
 using FluentAssertions;
 using FluentValidation;
 using FluentValidation.Results;
 using MediatR;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Identity;
 using Moq;
 using TiendaApi.Api.Dtos.Usuarios;
 using TiendaApi.Api.Errors;
-using TiendaApi.Api.Errors.Usuarios;
 using TiendaApi.Api.Features.Users.Commands;
 using TiendaApi.Api.Features.Users.Notifications;
-using TiendaApi.Api.Mappers;
 using TiendaApi.Api.Models;
 using TiendaApi.Api.Repositories.Usuarios;
 using TiendaApi.Api.Services.Cache;
@@ -24,18 +22,20 @@ public class CreateUserCommandHandlerTests {
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-        var userManager = MockuserManagerExito();
+        Mock<UserManager<User>> userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "juan", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByUsernameAsync(dto.Username)).ReturnsAsync((User?)null);
         repository.Setup(r => r.FindByEmailAsync(dto.Email)).ReturnsAsync((User?)null);
         repository.Setup(r => r.SaveAsync(It.IsAny<User>())).ReturnsAsync(new User { Id = 1, UserName = "juan" });
-        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object, mediator.Object, cacheService.Object);
+        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object,
+            mediator.Object, cacheService.Object);
 
-        var result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
+        Result<UserDto, DomainError> result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        mediator.Verify(m => m.Publish(It.IsAny<UsuarioRegistradoNotification>(), It.IsAny<CancellationToken>()), Times.Once);
+        mediator.Verify(m => m.Publish(It.IsAny<UsuarioRegistradoNotification>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Test]
@@ -44,13 +44,14 @@ public class CreateUserCommandHandlerTests {
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-        var userManager = MockuserManagerExito();
+        Mock<UserManager<User>> userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ValidationResult([new ValidationFailure("Username", "obligatorio")]));
-        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object, mediator.Object, cacheService.Object);
+        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object,
+            mediator.Object, cacheService.Object);
 
-        var result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
+        Result<UserDto, DomainError> result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -61,13 +62,14 @@ public class CreateUserCommandHandlerTests {
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-        var userManager = MockuserManagerExito();
+        Mock<UserManager<User>> userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "juan", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByUsernameAsync(dto.Username)).ReturnsAsync(new User { Id = 1, UserName = "juan" });
-        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object, mediator.Object, cacheService.Object);
+        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object,
+            mediator.Object, cacheService.Object);
 
-        var result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
+        Result<UserDto, DomainError> result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
     }
@@ -78,14 +80,15 @@ public class CreateUserCommandHandlerTests {
         var validator = new Mock<IValidator<RegisterDto>>();
         var mediator = new Mock<IMediator>();
         var cacheService = new Mock<ICacheService>();
-        var userManager = MockuserManagerExito();
+        Mock<UserManager<User>> userManager = MockuserManagerExito();
         var dto = new RegisterDto { Username = "juan", Email = "juan@test.com", Password = "password123" };
         validator.Setup(v => v.ValidateAsync(dto, It.IsAny<CancellationToken>())).ReturnsAsync(new ValidationResult());
         repository.Setup(r => r.FindByUsernameAsync(dto.Username)).ReturnsAsync((User?)null);
         repository.Setup(r => r.FindByEmailAsync(dto.Email)).ReturnsAsync(new User { Id = 1, Email = "juan@test.com" });
-        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object, mediator.Object, cacheService.Object);
+        var handler = new CreateUserCommandHandler(userManager.Object, repository.Object, validator.Object,
+            mediator.Object, cacheService.Object);
 
-        var result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
+        Result<UserDto, DomainError> result = await handler.Handle(new CreateUserCommand(dto), CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
     }

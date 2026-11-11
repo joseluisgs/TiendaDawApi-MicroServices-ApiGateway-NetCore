@@ -7,20 +7,20 @@ using TiendaApi.Api.Services.Historial;
 namespace TiendaApi.Tests.Unit.Features.Productos;
 
 /// <summary>
-/// Tests de <see cref="PrecioHistoricoHandler"/>: la semántica del dual-write de
-/// precios que el monolito hacía contra Cassandra y que ahora se delega a
-/// historical por Refit (fachada <see cref="IHistorialService"/>).
-///
-/// Reglas del monolito a preservar:
-/// - Alta → punto de NACIMIENTO siempre.
-/// - Actualización → punto SOLO si el precio cambió de verdad.
-/// - Si el servicio remoto falla → no se propaga (modo degradado).
+///     Tests de <see cref="PrecioHistoricoHandler" />: la semántica del dual-write de
+///     precios que el monolito hacía contra Cassandra y que ahora se delega a
+///     historical por Refit (fachada <see cref="IHistorialService" />).
+///     Reglas del monolito a preservar:
+///     - Alta → punto de NACIMIENTO siempre.
+///     - Actualización → punto SOLO si el precio cambió de verdad.
+///     - Si el servicio remoto falla → no se propaga (modo degradado).
 /// </summary>
 public class PrecioHistoricoHandlerTests {
+    private PrecioHistoricoHandler _handler = null!;
+
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IHistorialService> _historial = null!;
-    private PrecioHistoricoHandler _handler = null!;
 
     [SetUp]
     public void SetUp() {
@@ -28,10 +28,12 @@ public class PrecioHistoricoHandlerTests {
         _handler = new PrecioHistoricoHandler(_historial.Object);
     }
 
-    private static ProductoDto Producto(decimal precio) => new(
-        7, "Laptop", "desc", precio, 10, null,
-        new CategoriaResumenDto(1, "Electrónica"),
-        null, DateTime.UtcNow, DateTime.UtcNow);
+    private static ProductoDto Producto(decimal precio) {
+        return new ProductoDto(
+            7, "Laptop", "desc", precio, 10, null,
+            new CategoriaResumenDto(1, "Electrónica"),
+            null, DateTime.UtcNow, DateTime.UtcNow);
+    }
 
     [Test]
     public async Task Handle_ProductoCreado_RegistraElPrecioDeNacimiento() {
@@ -43,7 +45,7 @@ public class PrecioHistoricoHandlerTests {
     [Test]
     public async Task Handle_Actualizado_PrecioCambiado_RegistraElNuevoPrecio() {
         await _handler.Handle(new ProductoActualizadoNotification(
-            Producto(999.99m), PrecioAnterior: 1299.99m), CancellationToken.None);
+            Producto(999.99m), 1299.99m), CancellationToken.None);
 
         _historial.Verify(h => h.RegistrarPrecioAsync(7, 999.99d), Times.Once);
     }
@@ -52,7 +54,7 @@ public class PrecioHistoricoHandlerTests {
     public async Task Handle_Actualizado_PrecioIgual_NoRegistraNada() {
         // Solo cambió el stock: el historial registra cambios de precio, no ediciones.
         await _handler.Handle(new ProductoActualizadoNotification(
-            Producto(1299.99m), PrecioAnterior: 1299.99m), CancellationToken.None);
+            Producto(1299.99m), 1299.99m), CancellationToken.None);
 
         _historial.Verify(h => h.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()), Times.Never);
     }
@@ -62,7 +64,7 @@ public class PrecioHistoricoHandlerTests {
         _historial.Setup(h => h.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()))
             .ThrowsAsync(new InvalidOperationException("historical caído"));
 
-        var act = async () => await _handler.Handle(
+        Func<Task> act = async () => await _handler.Handle(
             new ProductoCreadoNotification(Producto(10m)), CancellationToken.None);
 
         await act.Should().NotThrowAsync("el dual-write es degradado: nunca rompe la escritura del producto");

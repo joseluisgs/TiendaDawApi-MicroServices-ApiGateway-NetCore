@@ -1,9 +1,11 @@
+using System.Net;
 using CSharpFunctionalExtensions;
 using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Refit;
 using TiendaApi.Api.Dtos.Common;
+using TiendaApi.Api.Dtos.Estadisticas;
 using TiendaApi.Api.Errors;
 using TiendaApi.Api.Services.Catalog;
 using TiendaApi.Api.Services.Estadisticas;
@@ -14,21 +16,22 @@ using TiendaApi.Api.Services.Orders;
 namespace TiendaApi.Tests.Unit.Services.Estadisticas;
 
 /// <summary>
-/// Tests del servicio de estadísticas con los clients Refit mockeados.
-///
-/// 🎓 en el monolito el servicio leía repositorios con
-/// los modelos de dominio ya construidos; aquí llegan <i>snapshots</i> por JSON
-/// y hay que convertirlos. Los errores de mapeo son SILENCIOSOS (el cálculo
-/// devuelve ceros en vez de fallar), así que se cubren explícitamente.
+///     Tests del servicio de estadísticas con los clients Refit mockeados.
+///     🎓 en el monolito el servicio leía repositorios con
+///     los modelos de dominio ya construidos; aquí llegan <i>snapshots</i> por JSON
+///     y hay que convertirlos. Los errores de mapeo son SILENCIOSOS (el cálculo
+///     devuelve ceros en vez de fallar), así que se cubren explícitamente.
 /// </summary>
 public class EstadisticasServiceTests {
+    private Mock<ICatalogApi> _catalog = null!;
+
+    private Mock<IHistorialApi> _historial = null!;
+
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<IOrdersApi> _orders = null!;
-    private Mock<ICatalogApi> _catalog = null!;
-    private Mock<IUsersApi> _users = null!;
-    private Mock<IHistorialApi> _historial = null!;
     private EstadisticasService _service = null!;
+    private Mock<IUsersApi> _users = null!;
 
     [SetUp]
     public void SetUp() {
@@ -43,10 +46,10 @@ public class EstadisticasServiceTests {
 
         // Catálogos por defecto: página 0 con TODO y página 1 vacía — así el
         // bucle de paginación corta bien y además se comprueba.
-        var productos = Productos();
-        var categorias = Categorias();
-        var proveedores = Proveedores();
-        var usuarios = Usuarios();
+        List<ProductoSnapshot> productos = Productos();
+        List<CategoriaSnapshot> categorias = Categorias();
+        List<ProveedorSnapshot> proveedores = Proveedores();
+        List<UsuarioSnapshot> usuarios = Usuarios();
 
         _catalog.Setup(c => c.GetProductosAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ReturnsAsync((int p, int s) => Pagina(productos, p));
@@ -62,51 +65,62 @@ public class EstadisticasServiceTests {
     }
 
     /// <summary>Página con todo en la 0 y vacía en las demás (corta el bucle).</summary>
-    private static PagedResult<T> Pagina<T>(List<T> items, int page) => new() {
-        Items = page == 0 ? items : Enumerable.Empty<T>(),
-        TotalCount = items.Count,
-        Page = page + 1,
-        PageSize = 100,
-    };
+    private static PagedResult<T> Pagina<T>(List<T> items, int page) {
+        return new PagedResult<T> {
+            Items = page == 0 ? items : Enumerable.Empty<T>(),
+            TotalCount = items.Count,
+            Page = page + 1,
+            PageSize = 100
+        };
+    }
 
-    private static List<ProductoSnapshot> Productos() =>
-    [
-        new(1, "Laptop Dell XPS 15", 1299.99m, 10, new CategoriaRef(1), new ProveedorRef("Distribuc01"), DateTime.UtcNow),
-        new(2, "Camiseta Nike", 29.99m, 50, new CategoriaRef(2), new ProveedorRef("Distribuc01"), DateTime.UtcNow),
-        new(3, "Clean Code", 42.99m, 25, new CategoriaRef(3), new ProveedorRef("Editorial01"), DateTime.UtcNow),
-    ];
+    private static List<ProductoSnapshot> Productos() {
+        return [
+            new ProductoSnapshot(1, "Laptop Dell XPS 15", 1299.99m, 10, new CategoriaRef(1),
+                new ProveedorRef("Distribuc01"),
+                DateTime.UtcNow),
+            new ProductoSnapshot(2, "Camiseta Nike", 29.99m, 50, new CategoriaRef(2), new ProveedorRef("Distribuc01"),
+                DateTime.UtcNow),
+            new ProductoSnapshot(3, "Clean Code", 42.99m, 25, new CategoriaRef(3), new ProveedorRef("Editorial01"),
+                DateTime.UtcNow)
+        ];
+    }
 
-    private static List<CategoriaSnapshot> Categorias() =>
-    [
-        new(1, "Electrónica"),
-        new(2, "Ropa"),
-        new(3, "Libros"),
-    ];
+    private static List<CategoriaSnapshot> Categorias() {
+        return [
+            new CategoriaSnapshot(1, "Electrónica"),
+            new CategoriaSnapshot(2, "Ropa"),
+            new CategoriaSnapshot(3, "Libros")
+        ];
+    }
 
-    private static List<ProveedorSnapshot> Proveedores() =>
-    [
-        new("Distribuc01", "Distribuciones DAW"),
-        new("Editorial01", "Editorial Código Limpio"),
-    ];
+    private static List<ProveedorSnapshot> Proveedores() {
+        return [
+            new ProveedorSnapshot("Distribuc01", "Distribuciones DAW"),
+            new ProveedorSnapshot("Editorial01", "Editorial Código Limpio")
+        ];
+    }
 
-    private static List<UsuarioSnapshot> Usuarios() =>
-    [
-        new(1, "admin", DateTime.UtcNow.AddDays(-30)),
-        new(2, "userdaw", DateTime.UtcNow.AddDays(-10)),
-    ];
+    private static List<UsuarioSnapshot> Usuarios() {
+        return [
+            new UsuarioSnapshot(1, "admin", DateTime.UtcNow.AddDays(-30)),
+            new UsuarioSnapshot(2, "userdaw", DateTime.UtcNow.AddDays(-10))
+        ];
+    }
 
-    private static List<PedidoSnapshot> Pedidos() =>
-    [
-        new("6af0b4ed01265a8f9a0bebe8", 2,
-            [new PedidoItemSnapshot(1, "Laptop Dell XPS 15", 2, 1299.99m)],
-            2599.98m, "PENDIENTE", false, DateTime.UtcNow.AddDays(-1)),
-    ];
+    private static List<PedidoSnapshot> Pedidos() {
+        return [
+            new PedidoSnapshot("6af0b4ed01265a8f9a0bebe8", 2,
+                [new PedidoItemSnapshot(1, "Laptop Dell XPS 15", 2, 1299.99m)],
+                2599.98m, "PENDIENTE", false, DateTime.UtcNow.AddDays(-1))
+        ];
+    }
 
     // ────────────────────────────────────────────────────────────────
 
     [Test]
     public async Task Inventario_CruzaProductoConCategoria_YProveedor() {
-        var result = await _service.InventarioAsync(stockMax: 5);
+        Result<InventarioDto, DomainError> result = await _service.InventarioAsync(5);
 
         result.IsSuccess.Should().BeTrue();
         // Si CategoriaId llegara a 0 (mapeo roto), porCategoria saldría vacío.
@@ -116,7 +130,7 @@ public class EstadisticasServiceTests {
 
     [Test]
     public async Task Inventario_AgotaLosQueTienenStockCero() {
-        var result = await _service.InventarioAsync(stockMax: 5);
+        Result<InventarioDto, DomainError> result = await _service.InventarioAsync(5);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Productos.Total.Should().Be(3);
@@ -127,7 +141,7 @@ public class EstadisticasServiceTests {
     public async Task Resumen_CuentaPedidos_YRecaudacion() {
         _orders.Setup(o => o.GetPedidosAsync()).ReturnsAsync(Pedidos());
 
-        var result = await _service.ResumenAsync(null, null);
+        Result<ResumenEstadisticasDto, DomainError> result = await _service.ResumenAsync(null, null);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Ventas.Pedidos.Should().Be(1);
@@ -138,7 +152,7 @@ public class EstadisticasServiceTests {
     [Test]
     public async Task Resumen_LasCategoriasSinProducto_SaleConCero() {
         // Con los 3 productos mapeados bien, ninguna categoría queda "sin producto".
-        var result = await _service.ResumenAsync(null, null);
+        Result<ResumenEstadisticasDto, DomainError> result = await _service.ResumenAsync(null, null);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Categorias.SinProductos.Should().Be(0,
@@ -150,7 +164,7 @@ public class EstadisticasServiceTests {
     public async Task Clientes_ProductoFavorito_VieneDelItemDesnormalizado() {
         _orders.Setup(o => o.GetPedidosAsync()).ReturnsAsync(Pedidos());
 
-        var result = await _service.ClientesAsync(null, null, top: 5);
+        Result<ClientesEstadisticasDto, DomainError> result = await _service.ClientesAsync(null, null, 5);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Clientes.Should().ContainSingle();
@@ -164,26 +178,25 @@ public class EstadisticasServiceTests {
         // Pedidos que cubren los DOS proveedores, para comprobar el cruce.
         _orders.Setup(o => o.GetPedidosAsync()).ReturnsAsync(
         [
-            new("6af0b4ed01265a8f9a0bebe8", 2,
+            new PedidoSnapshot("6af0b4ed01265a8f9a0bebe8", 2,
                 [new PedidoItemSnapshot(1, "Laptop Dell XPS 15", 1, 1299.99m)],
                 1299.99m, "PENDIENTE", false, DateTime.UtcNow.AddDays(-1)),
-            new("6af0b4ed01265a8f9a0bebe9", 2,
+            new PedidoSnapshot("6af0b4ed01265a8f9a0bebe9", 2,
                 [new PedidoItemSnapshot(3, "Clean Code", 2, 42.99m)],
-                85.98m, "PENDIENTE", false, DateTime.UtcNow.AddDays(-1)),
+                85.98m, "PENDIENTE", false, DateTime.UtcNow.AddDays(-1))
         ]);
 
-        var result = await _service.ProveedoresAsync(null, null);
+        Result<ProveedoresEstadisticasDto, DomainError> result = await _service.ProveedoresAsync(null, null);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Proveedores.Should().HaveCount(2,
             "el cruce producto→proveedor usa ProveedorId, que viene anidado en el JSON");
-        result.Value.Proveedores.Select(p => p.Codigo).Should().BeEquivalentTo(
-            new[] { "Distribuc01", "Editorial01" });
+        result.Value.Proveedores.Select(p => p.Codigo).Should().BeEquivalentTo("Distribuc01", "Editorial01");
     }
 
     [Test]
     public async Task Ventas_AgrupacionInvalida_Devuelve400() {
-        var result = await _service.VentasAsync(null, null, "trimestre");
+        Result<VentasSerieDto, DomainError> result = await _service.VentasAsync(null, null, "trimestre");
 
         result.IsFailure.Should().BeTrue();
         result.Error.Message.Should().Contain("trimestre");
@@ -193,9 +206,9 @@ public class EstadisticasServiceTests {
     public async Task Precios_ProductoInexistente_Devuelve404() {
         // catalog responde 404 al pedir el producto → el dueño manda.
         _catalog.Setup(c => c.GetProductosAsync(It.IsAny<int>(), It.IsAny<int>()))
-            .ThrowsAsync(await ApiExceptionCon(System.Net.HttpStatusCode.NotFound));
+            .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound));
 
-        var result = await _service.PreciosAsync(999999, null, null);
+        Result<PreciosEstadisticasDto, DomainError> result = await _service.PreciosAsync(999999, null, null);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<NotFoundError>(
@@ -203,10 +216,11 @@ public class EstadisticasServiceTests {
     }
 
     /// <summary>Excepción Refit con el status indicado.</summary>
-    private static async Task<ApiException> ApiExceptionCon(System.Net.HttpStatusCode status) =>
-        await ApiException.Create(
+    private static async Task<ApiException> ApiExceptionCon(HttpStatusCode status) {
+        return await ApiException.Create(
             new HttpRequestMessage(HttpMethod.Get, "http://test"),
             HttpMethod.Get,
             new HttpResponseMessage(status),
             new RefitSettings());
+    }
 }

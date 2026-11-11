@@ -1,17 +1,14 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Extensions.Logging;
 
 namespace TiendaApi.Api.Services.Auth;
 
 /// <summary>
-/// Validación de JWT para orders: MISMA configuración que la API HTTP
-/// (sección <c>Jwt</c> idéntica a la de identity y a <c>BuildingBlocks/Jwt</c>),
-/// así un token aceptado por el gateway también lo es por el WebSocket.
-///
-/// 🎓 Sin <c>GenerateToken</c>: la emisión vive en identity (R6 — firma única).
+///     Validación de JWT para orders: MISMA configuración que la API HTTP
+///     (sección <c>Jwt</c> idéntica a la de identity y a <c>BuildingBlocks/Jwt</c>),
+///     así un token aceptado por el gateway también lo es por el WebSocket.
+///     🎓 Sin <c>GenerateToken</c>: la emisión vive en identity (R6 — firma única).
 /// </summary>
 public class JwtService(IConfiguration configuration, ILogger<JwtService> logger) : IJwtService {
     private readonly IConfiguration _configuration = configuration;
@@ -20,10 +17,10 @@ public class JwtService(IConfiguration configuration, ILogger<JwtService> logger
     /// <inheritdoc />
     public string? ValidateToken(string token) {
         try {
-            var key = _configuration["Jwt:Key"]
-                ?? throw new InvalidOperationException("JWT Key no configurada");
-            var issuer = _configuration["Jwt:Issuer"] ?? "TiendaApi";
-            var audience = _configuration["Jwt:Audience"] ?? "TiendaApi";
+            string key = _configuration["Jwt:Key"]
+                         ?? throw new InvalidOperationException("JWT Key no configurada");
+            string issuer = _configuration["Jwt:Issuer"] ?? "TiendaApi";
+            string audience = _configuration["Jwt:Audience"] ?? "TiendaApi";
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -40,7 +37,7 @@ public class JwtService(IConfiguration configuration, ILogger<JwtService> logger
             }, out SecurityToken validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
-            var username = jwtToken.Claims.First(x => x.Type == "username").Value;
+            string username = jwtToken.Claims.First(x => x.Type == "username").Value;
 
             return username;
         } catch (Exception ex) {

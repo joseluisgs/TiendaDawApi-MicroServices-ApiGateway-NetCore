@@ -1,6 +1,4 @@
 using BuildingBlocks.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Refit;
 using Serilog;
 using TiendaApi.Api.Services.Catalog;
@@ -10,13 +8,13 @@ using TiendaApi.Api.Services.Identity;
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Registra los servicios de <b>orders</b> y sus conexiones con otros microservicios.
+///     Registra los servicios de <b>orders</b> y sus conexiones con otros microservicios.
 /// </summary>
 public static class ServicesConfig {
     /// <summary>
-    /// Registra los clients Refit (R4 — REST con Refit): direcciones por
-    /// configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
-    /// en desarrollo, localhost.
+    ///     Registra los clients Refit (R4 — REST con Refit): direcciones por
+    ///     configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
+    ///     en desarrollo, localhost.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>

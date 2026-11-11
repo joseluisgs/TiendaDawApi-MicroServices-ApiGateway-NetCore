@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using FluentAssertions;
+using FluentAssertions.Specialized;
 using Microsoft.Extensions.Logging;
 using Moq;
 using TiendaApi.Api.Dtos.Historial;
@@ -10,12 +11,11 @@ using TiendaApi.Api.Services.Historial;
 namespace TiendaApi.Tests.Unit.Services.Historial;
 
 /// <summary>
-/// Tests de HistorialService, la fachada del microservicio historical.
-///
-/// 🎓 Reparto de responsabilidades: este servicio NO valida la existencia del
-/// producto (la certifica catalog, el dueño, antes de llamar) — aquí solo se
-/// validan los parámetros (rango de fechas, límite, nombre) y se sirven las
-/// series. "Cassandra caído" nunca lanza: responde vacío (modo degradado).
+///     Tests de HistorialService, la fachada del microservicio historical.
+///     🎓 Reparto de responsabilidades: este servicio NO valida la existencia del
+///     producto (la certifica catalog, el dueño, antes de llamar) — aquí solo se
+///     validan los parámetros (rango de fechas, límite, nombre) y se sirven las
+///     series. "Cassandra caído" nunca lanza: responde vacío (modo degradado).
 /// </summary>
 public class HistorialServiceTests {
     private Mock<IHistorialRepository> _repository = null!;
@@ -35,7 +35,8 @@ public class HistorialServiceTests {
         _repository.Setup(r => r.GetHistorialPreciosAsync(1, null, null, 50))
             .ReturnsAsync(serie);
 
-        var result = await _service.GetHistorialPreciosAsync(1, null, null, 50);
+        Result<IReadOnlyList<HistorialPrecioDto>, DomainError> result =
+            await _service.GetHistorialPreciosAsync(1, null, null, 50);
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEquivalentTo(serie);
@@ -43,7 +44,7 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task GetHistorialPrecios_RangoInvertido_DevuelveValidationError_NoConsultaCassandra() {
-        var result = await _service.GetHistorialPreciosAsync(
+        Result<IReadOnlyList<HistorialPrecioDto>, DomainError> result = await _service.GetHistorialPreciosAsync(
             1, DateTime.UtcNow, DateTime.UtcNow.AddDays(-7), 50);
 
         result.IsFailure.Should().BeTrue();
@@ -55,11 +56,15 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task GetHistorialPrecios_CassandraCaida_NoLanza_DevuelveSerieVacia() {
-        _repository.Setup(r => r.GetHistorialPreciosAsync(It.IsAny<long>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>()))
+        _repository.Setup(r =>
+                r.GetHistorialPreciosAsync(It.IsAny<long>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(),
+                    It.IsAny<int>()))
             .ThrowsAsync(new InvalidOperationException("Nodo caído"));
 
-        var act = async () => await _service.GetHistorialPreciosAsync(1, null, null, 50);
-        var result = await act.Should().NotThrowAsync();
+        Func<Task<Result<IReadOnlyList<HistorialPrecioDto>, DomainError>>> act = async () =>
+            await _service.GetHistorialPreciosAsync(1, null, null, 50);
+        AndWhichConstraint<GenericAsyncFunctionAssertions<Result<IReadOnlyList<HistorialPrecioDto>, DomainError>>,
+            Result<IReadOnlyList<HistorialPrecioDto>, DomainError>> result = await act.Should().NotThrowAsync();
 
         result.Which.IsSuccess.Should().BeTrue();
         result.Which.Value.Should().BeEmpty("sin puntos = lista vacía, una respuesta válida como otra");
@@ -67,7 +72,9 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task GetHistorialPrecios_LimitFueraDeRango_SeClampaEntre1Y200() {
-        _repository.Setup(r => r.GetHistorialPreciosAsync(It.IsAny<long>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(), It.IsAny<int>()))
+        _repository.Setup(r =>
+                r.GetHistorialPreciosAsync(It.IsAny<long>(), It.IsAny<DateTime?>(), It.IsAny<DateTime?>(),
+                    It.IsAny<int>()))
             .ReturnsAsync(new List<HistorialPrecioDto>());
 
         await _service.GetHistorialPreciosAsync(1, null, null, 0);
@@ -86,7 +93,7 @@ public class HistorialServiceTests {
         var feed = new List<VistaFeedDto> { new(DateTime.UtcNow, 1, "Laptop Dell XPS 15") };
         _repository.Setup(r => r.GetFeedVistasAsync(2, 20)).ReturnsAsync(feed);
 
-        var result = await _service.GetFeedVistasAsync(2, 20);
+        IReadOnlyList<VistaFeedDto> result = await _service.GetFeedVistasAsync(2, 20);
 
         result.Should().BeEquivalentTo(feed);
     }
@@ -96,7 +103,7 @@ public class HistorialServiceTests {
         _repository.Setup(r => r.GetFeedVistasAsync(2, 20))
             .ReturnsAsync(new List<VistaFeedDto>());
 
-        var result = await _service.GetFeedVistasAsync(2, 20);
+        IReadOnlyList<VistaFeedDto> result = await _service.GetFeedVistasAsync(2, 20);
 
         result.Should().BeEmpty();
     }
@@ -106,8 +113,9 @@ public class HistorialServiceTests {
         _repository.Setup(r => r.GetFeedVistasAsync(It.IsAny<long>(), It.IsAny<int>()))
             .ThrowsAsync(new InvalidOperationException("Nodo caído"));
 
-        var act = async () => await _service.GetFeedVistasAsync(2, 20);
-        var result = await act.Should().NotThrowAsync();
+        Func<Task<IReadOnlyList<VistaFeedDto>>> act = async () => await _service.GetFeedVistasAsync(2, 20);
+        AndWhichConstraint<GenericAsyncFunctionAssertions<IReadOnlyList<VistaFeedDto>>, IReadOnlyList<VistaFeedDto>>
+            result = await act.Should().NotThrowAsync();
 
         result.Which.Should().BeEmpty();
     }
@@ -130,7 +138,7 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task RegistrarVista_Ok_DevuelveSuccess_YDenormalizaElNombre() {
-        var result = await _service.RegistrarVistaAsync(2, 1, "Laptop Dell XPS 15");
+        UnitResult<DomainError> result = await _service.RegistrarVistaAsync(2, 1, "Laptop Dell XPS 15");
 
         result.IsSuccess.Should().BeTrue();
         // El nombre viaja a la fila: el feed se pinta después sin cruces.
@@ -139,7 +147,7 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task RegistrarVista_SinNombre_DevuelveValidationError_NoEscribe() {
-        var result = await _service.RegistrarVistaAsync(2, 1, "  ");
+        UnitResult<DomainError> result = await _service.RegistrarVistaAsync(2, 1, "  ");
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();
@@ -153,8 +161,9 @@ public class HistorialServiceTests {
         _repository.Setup(r => r.RegistrarVistaAsync(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<string>()))
             .ThrowsAsync(new InvalidOperationException("Nodo caído"));
 
-        var act = async () => await _service.RegistrarVistaAsync(2, 1, "Laptop");
-        var result = await act.Should().NotThrowAsync();
+        Func<Task<UnitResult<DomainError>>> act = async () => await _service.RegistrarVistaAsync(2, 1, "Laptop");
+        AndWhichConstraint<GenericAsyncFunctionAssertions<UnitResult<DomainError>>, UnitResult<DomainError>> result =
+            await act.Should().NotThrowAsync();
 
         result.Which.IsSuccess.Should().BeTrue();
     }
@@ -165,7 +174,7 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task RegistrarPrecio_Ok_DevuelveSuccess_YEscribeElPunto() {
-        var result = await _service.RegistrarPrecioAsync(1, 1299.99);
+        UnitResult<DomainError> result = await _service.RegistrarPrecioAsync(1, 1299.99);
 
         result.IsSuccess.Should().BeTrue();
         // Dual-write: la escritura pasa por el repositorio (Q-A + Q-C).
@@ -174,7 +183,7 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task RegistrarPrecio_ProductoIdInvalido_DevuelveValidationError_NoEscribe() {
-        var result = await _service.RegistrarPrecioAsync(0, 1299.99);
+        UnitResult<DomainError> result = await _service.RegistrarPrecioAsync(0, 1299.99);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();
@@ -183,7 +192,7 @@ public class HistorialServiceTests {
 
     [Test]
     public async Task RegistrarPrecio_PrecioNegativo_DevuelveValidationError_NoEscribe() {
-        var result = await _service.RegistrarPrecioAsync(1, -5);
+        UnitResult<DomainError> result = await _service.RegistrarPrecioAsync(1, -5);
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().BeOfType<ValidationError>();
@@ -197,8 +206,9 @@ public class HistorialServiceTests {
         _repository.Setup(r => r.RegistrarPrecioAsync(It.IsAny<long>(), It.IsAny<double>()))
             .ThrowsAsync(new InvalidOperationException("Nodo caído"));
 
-        var act = async () => await _service.RegistrarPrecioAsync(1, 1299.99);
-        var result = await act.Should().NotThrowAsync();
+        Func<Task<UnitResult<DomainError>>> act = async () => await _service.RegistrarPrecioAsync(1, 1299.99);
+        AndWhichConstraint<GenericAsyncFunctionAssertions<UnitResult<DomainError>>, UnitResult<DomainError>> result =
+            await act.Should().NotThrowAsync();
 
         result.Which.IsSuccess.Should().BeTrue();
     }

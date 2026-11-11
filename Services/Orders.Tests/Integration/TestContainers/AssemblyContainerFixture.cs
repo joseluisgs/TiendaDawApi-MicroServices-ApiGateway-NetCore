@@ -1,15 +1,13 @@
 using MongoDB.Driver;
-using NUnit.Framework;
 using Testcontainers.MongoDb;
 
 namespace TiendaApi.Tests.Integration.TestContainers;
 
 /// <summary>
-/// Contenedor MongoDB compartido por assembly para los tests de integración del
-/// microservicio <b>orders</b> (una base propia por clase).
-///
-/// 🎓 orders es solo MongoDB (R5): <c>orders_db</c> con la colección
-/// <c>pedidos</c>. No hay PostgreSQL aquí — el stock es de <b>catalog</b>.
+///     Contenedor MongoDB compartido por assembly para los tests de integración del
+///     microservicio <b>orders</b> (una base propia por clase).
+///     🎓 orders es solo MongoDB (R5): <c>orders_db</c> con la colección
+///     <c>pedidos</c>. No hay PostgreSQL aquí — el stock es de <b>catalog</b>.
 /// </summary>
 [SetUpFixture]
 public sealed class AssemblyContainerFixture {
@@ -20,8 +18,8 @@ public sealed class AssemblyContainerFixture {
         _mongo ?? throw new InvalidOperationException("El contenedor MongoDB no está arrancado.");
 
     /// <summary>
-    /// Devuelve una base de MongoDB propia para la clase indicada (se limpia al
-    /// entrar: los tests no deben heredar datos entre sí).
+    ///     Devuelve una base de MongoDB propia para la clase indicada (se limpia al
+    ///     entrar: los tests no deben heredar datos entre sí).
     /// </summary>
     internal static IMongoDatabase GetMongoDatabase(string databaseName) {
         var client = new MongoClient(Mongo.GetConnectionString());
@@ -42,7 +40,8 @@ public sealed class AssemblyContainerFixture {
     /// <summary>Para el contenedor al terminar el assembly.</summary>
     [OneTimeTearDown]
     public async Task OneTimeTearDown() {
-        if (_mongo is not null)
+        if (_mongo is not null) {
             await _mongo.DisposeAsync();
+        }
     }
 }

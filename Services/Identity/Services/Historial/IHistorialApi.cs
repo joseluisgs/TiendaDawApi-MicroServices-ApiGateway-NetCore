@@ -4,11 +4,10 @@ using TiendaApi.Api.Dtos.Historial;
 namespace TiendaApi.Api.Services.Historial;
 
 /// <summary>
-/// Contrato Refit del microservicio <c>historical</c> (rutas internas, R7).
-///
-/// 🎓 En el monolito, el feed vivía en el mismo proceso con Cassandra; aquí
-/// identity solo <b>pide</b> el feed al dueño de los datos. Los consumidores
-/// de la serie (catalog) validan antes la existencia del producto.
+///     Contrato Refit del microservicio <c>historical</c> (rutas internas, R7).
+///     🎓 En el monolito, el feed vivía en el mismo proceso con Cassandra; aquí
+///     identity solo <b>pide</b> el feed al dueño de los datos. Los consumidores
+///     de la serie (catalog) validan antes la existencia del producto.
 /// </summary>
 public interface IHistorialApi {
     /// <summary>Serie histórica de precios de un producto.</summary>

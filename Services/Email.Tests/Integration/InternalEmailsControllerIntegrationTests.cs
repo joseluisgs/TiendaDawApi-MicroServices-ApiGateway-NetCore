@@ -2,25 +2,23 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TiendaApi.Api.Controllers;
 
 namespace TiendaApi.Tests.Integration;
 
 /// <summary>
-/// Integración del contrato POST /internal/emails con la cola REAL:
-/// WebApplicationFactory arranca el servicio completo (Development →
-/// MemoryEmailService + EmailBackgroundService sobre el Channel). Se verifica
-/// que el endpoint responde rápido (202) y que el mensaje acaba PROCESADO por
-/// la cola — la prueba de que el ciclo endpoint → cola → envío funciona.
+///     Integración del contrato POST /internal/emails con la cola REAL:
+///     WebApplicationFactory arranca el servicio completo (Development →
+///     MemoryEmailService + EmailBackgroundService sobre el Channel). Se verifica
+///     que el endpoint responde rápido (202) y que el mensaje acaba PROCESADO por
+///     la cola — la prueba de que el ciclo endpoint → cola → envío funciona.
 /// </summary>
 public class InternalEmailsControllerIntegrationTests {
-    private RegistroLog _registro = null!;
-    private WebApplicationFactory<Program> _factory = null!;
     private HttpClient _client = null!;
+    private WebApplicationFactory<Program> _factory = null!;
+    private RegistroLog _registro = null!;
 
     [SetUp]
     public void Setup() {
@@ -43,7 +41,7 @@ public class InternalEmailsControllerIntegrationTests {
 
     [Test]
     public async Task Post_MensajeValido_Devuelve202Accepted() {
-        var response = await _client.PostAsJsonAsync("/internal/emails", new {
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/internal/emails", new {
             to = "destinatario@test.com",
             subject = "Bienvenida",
             body = "<p>Hola</p>",
@@ -55,7 +53,7 @@ public class InternalEmailsControllerIntegrationTests {
 
     [Test]
     public async Task Post_SinTo_Devuelve400BadRequest() {
-        var response = await _client.PostAsJsonAsync("/internal/emails", new {
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/internal/emails", new {
             to = "",
             subject = "Asunto",
             body = "Cuerpo",
@@ -68,9 +66,9 @@ public class InternalEmailsControllerIntegrationTests {
     [Test]
     public async Task Post_MensajeValido_LoProcesaLaCola_LoLlegaMemoryEmailService() {
         // Destinatario EXCLUSIVO de este test para no cruzar logs entre tests.
-        var destinatario = $"cola_{Guid.NewGuid():N}@test.com";
+        string destinatario = $"cola_{Guid.NewGuid():N}@test.com";
 
-        var response = await _client.PostAsJsonAsync("/internal/emails", new {
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/internal/emails", new {
             to = destinatario,
             subject = "Prueba de cola",
             body = "<p>Procesado por BackgroundService</p>",
@@ -80,7 +78,7 @@ public class InternalEmailsControllerIntegrationTests {
 
         // La cola es en segundo plano: se espera (máx 5s) a que el
         // BackgroundService consuma el mensaje y MemoryEmailService lo loguee.
-        var limite = DateTime.UtcNow.AddSeconds(5);
+        DateTime limite = DateTime.UtcNow.AddSeconds(5);
         while (DateTime.UtcNow < limite &&
                !_registro.Lineas.Any(l => l.Contains(destinatario) && l.Contains("Para:"))) {
             await Task.Delay(50);
@@ -98,19 +96,25 @@ public class InternalEmailsControllerIntegrationTests {
 
         public IReadOnlyCollection<string> Lineas => _lineas.ToArray();
 
-        public ILogger CreateLogger(string categoryName) => new LoggerRegistro(_lineas);
-
-        public void Dispose() {
+        public ILogger CreateLogger(string categoryName) {
+            return new LoggerRegistro(_lineas);
         }
 
-        private sealed class LoggerRegistro(ConcurrentQueue<string> lineas) : ILogger {
-            public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
+        public void Dispose() { }
 
-            public bool IsEnabled(LogLevel logLevel) => true;
+        private sealed class LoggerRegistro(ConcurrentQueue<string> lineas) : ILogger {
+            public IDisposable? BeginScope<TState>(TState state) where TState : notnull {
+                return null;
+            }
+
+            public bool IsEnabled(LogLevel logLevel) {
+                return true;
+            }
 
             public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
-                Func<TState, Exception?, string> formatter)
-                => lineas.Enqueue(formatter(state, exception));
+                Func<TState, Exception?, string> formatter) {
+                lineas.Enqueue(formatter(state, exception));
+            }
         }
     }
 }

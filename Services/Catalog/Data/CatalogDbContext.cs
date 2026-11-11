@@ -1,28 +1,26 @@
 using Microsoft.EntityFrameworkCore;
 using TiendaApi.Api.Data.Interceptors;
+using TiendaApi.Api.IdGenerators;
 using TiendaApi.Api.Models;
 
 namespace TiendaApi.Api.Data;
 
 /// <summary>
-/// DbContext de Entity Framework Core para PostgreSQL (<c>catalog_db</c>).
-///
-/// 🎓 R5 · una BD por microservicio: este contexto gestiona SOLO las entidades
-/// del catálogo (categorías, productos, proveedores) y la marca de agua de la
-/// réplica. Los usuarios viven en <c>identity_db</c> (otro servicio, otra BD):
-/// aquí NO hay Identity, ni logins externos, ni pedidos — la relación con
-/// usuarios se resuelve por Refit a <c>GET /internal/users/{id}</c>.
-///
-/// Copiado del <c>TiendaDbContext</c> del monolito y podado de lo ajeno.
+///     DbContext de Entity Framework Core para PostgreSQL (<c>catalog_db</c>).
+///     🎓 R5 · una BD por microservicio: este contexto gestiona SOLO las entidades
+///     del catálogo (categorías, productos, proveedores) y la marca de agua de la
+///     réplica. Los usuarios viven en <c>identity_db</c> (otro servicio, otra BD):
+///     aquí NO hay Identity, ni logins externos, ni pedidos — la relación con
+///     usuarios se resuelve por Refit a <c>GET /internal/users/{id}</c>.
+///     Copiado del <c>TiendaDbContext</c> del monolito y podado de lo ajeno.
 /// </summary>
 public class CatalogDbContext : DbContext {
     private static readonly TimestampInterceptor _timestampInterceptor = new();
 
     /// <summary>
-    /// Constructor con opciones de configuración.
+    ///     Constructor con opciones de configuración.
     /// </summary>
-    public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options) {
-    }
+    public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options) { }
 
     /// <summary>DbSet de Categorías.</summary>
     public DbSet<Categoria> Categorias { get; set; } = null!;
@@ -37,7 +35,7 @@ public class CatalogDbContext : DbContext {
     public DbSet<ReplicaMarca> ReplicaMarcas { get; set; } = null!;
 
     /// <summary>
-    /// Configura el contexto y registra el interceptor de marcas de tiempo.
+    ///     Configura el contexto y registra el interceptor de marcas de tiempo.
     /// </summary>
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         base.OnConfiguring(optionsBuilder);
@@ -45,9 +43,9 @@ public class CatalogDbContext : DbContext {
     }
 
     /// <summary>
-    /// Define el modelo de entidades, tablas, índices y filtros de consulta.
-    /// Idéntico al del monolito para las entidades de catálogo (mismas tablas,
-    /// mismos índices, mismos filtros de soft-delete): el cliente no nota el reparto.
+    ///     Define el modelo de entidades, tablas, índices y filtros de consulta.
+    ///     Idéntico al del monolito para las entidades de catálogo (mismas tablas,
+    ///     mismos índices, mismos filtros de soft-delete): el cliente no nota el reparto.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
@@ -102,9 +100,9 @@ public class CatalogDbContext : DbContext {
             // entidad. ValueGeneratedOnAdd es obligatorio para claves string: sin él EF Core
             // no invoca al generador y rechaza la entidad por clave nula.
             entity.Property(p => p.Codigo)
-                .HasMaxLength(IdGenerators.IdYouTube.Longitud)
+                .HasMaxLength(IdYouTube.Longitud)
                 .ValueGeneratedOnAdd()
-                .HasValueGenerator<IdGenerators.YouTubeIdValueGenerator>();
+                .HasValueGenerator<YouTubeIdValueGenerator>();
 
             entity.Property(p => p.Nombre).IsRequired().HasMaxLength(100);
             entity.Property(p => p.Descripcion).HasMaxLength(500);

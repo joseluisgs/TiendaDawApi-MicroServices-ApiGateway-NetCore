@@ -7,10 +7,10 @@ namespace TiendaApi.Api.Services.Historial;
 
 /// <inheritdoc />
 /// <remarks>
-/// 🎓 Consistencia eventual en un almacén de series: la existencia del producto
-/// la certifica el dueño (catalog) ANTES de llamar — aquí solo se sirve
-/// Cassandra como dato derivado. Se validan los parámetros (rango de fechas,
-/// límite) y "sin puntos" = lista vacía.
+///     🎓 Consistencia eventual en un almacén de series: la existencia del producto
+///     la certifica el dueño (catalog) ANTES de llamar — aquí solo se sirve
+///     Cassandra como dato derivado. Se validan los parámetros (rango de fechas,
+///     límite) y "sin puntos" = lista vacía.
 /// </remarks>
 public class HistorialService(
     IHistorialRepository historialRepository,
@@ -18,16 +18,17 @@ public class HistorialService(
     /// <inheritdoc />
     public async Task<Result<IReadOnlyList<HistorialPrecioDto>, DomainError>> GetHistorialPreciosAsync(
         long productoId, DateTime? desde, DateTime? hasta, int limit) {
-        if (desde.HasValue && hasta.HasValue && desde.Value > hasta.Value)
+        if (desde.HasValue && hasta.HasValue && desde.Value > hasta.Value) {
             return Result.Failure<IReadOnlyList<HistorialPrecioDto>, DomainError>(
                 new ValidationError(
                     "El rango de fechas no puede estar invertido",
                     new Dictionary<string, string[]> { ["desde"] = ["No puede ser posterior a 'hasta'"] }));
+        }
 
-        var limitEfectivo = Math.Clamp(limit, 1, 200);
+        int limitEfectivo = Math.Clamp(limit, 1, 200);
 
         try {
-            var serie = await historialRepository.GetHistorialPreciosAsync(
+            IReadOnlyList<HistorialPrecioDto> serie = await historialRepository.GetHistorialPreciosAsync(
                 productoId, desde, hasta, limitEfectivo);
             return Result.Success<IReadOnlyList<HistorialPrecioDto>, DomainError>(serie);
         } catch (Exception ex) {
@@ -38,10 +39,12 @@ public class HistorialService(
     }
 
     /// <inheritdoc />
-    public async Task<UnitResult<DomainError>> RegistrarVistaAsync(long usuarioId, long productoId, string nombreProducto) {
-        if (string.IsNullOrWhiteSpace(nombreProducto))
+    public async Task<UnitResult<DomainError>> RegistrarVistaAsync(long usuarioId, long productoId,
+        string nombreProducto) {
+        if (string.IsNullOrWhiteSpace(nombreProducto)) {
             return UnitResult.Failure<DomainError>(
                 ValidationError.Create("El nombre del producto es obligatorio para denormalizar el feed"));
+        }
 
         try {
             // El nombre se copia a la fila (denormalización): el feed no hará cruces.
@@ -57,13 +60,15 @@ public class HistorialService(
 
     /// <inheritdoc />
     public async Task<UnitResult<DomainError>> RegistrarPrecioAsync(long productoId, double precio) {
-        if (productoId <= 0)
+        if (productoId <= 0) {
             return UnitResult.Failure<DomainError>(
                 ValidationError.Create("El identificador del producto no es válido"));
+        }
 
-        if (precio < 0)
+        if (precio < 0) {
             return UnitResult.Failure<DomainError>(
                 ValidationError.Create("El precio no puede ser negativo"));
+        }
 
         try {
             // Dual-write (Q-A serie del producto + Q-C bucket del día), el MISMO
@@ -82,7 +87,7 @@ public class HistorialService(
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<VistaFeedDto>> GetFeedVistasAsync(long usuarioId, int limit) {
-        var limitEfectivo = Math.Clamp(limit, 1, 100);
+        int limitEfectivo = Math.Clamp(limit, 1, 100);
 
         try {
             return await historialRepository.GetFeedVistasAsync(usuarioId, limitEfectivo);

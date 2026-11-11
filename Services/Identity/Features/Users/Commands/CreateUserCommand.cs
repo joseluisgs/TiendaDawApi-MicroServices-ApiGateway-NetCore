@@ -1,8 +1,8 @@
-using Microsoft.AspNetCore.Identity;
 using CSharpFunctionalExtensions;
 using FluentValidation;
+using FluentValidation.Results;
 using MediatR;
-using Serilog;
+using Microsoft.AspNetCore.Identity;
 using TiendaApi.Api.Dtos.Usuarios;
 using TiendaApi.Api.Errors;
 using TiendaApi.Api.Errors.Usuarios;
@@ -15,14 +15,14 @@ using TiendaApi.Api.Services.Cache;
 namespace TiendaApi.Api.Features.Users.Commands;
 
 /// <summary>
-/// Comando para registrar un nuevo usuario.
+///     Comando para registrar un nuevo usuario.
 /// </summary>
 public record CreateUserCommand(RegisterDto Dto)
     : IRequest<Result<UserDto, DomainError>>;
 
 /// <summary>
-/// Handler del comando CreateUserCommand.
-/// Crea el usuario con <c>UserManager</c> (solo Identity: hash PBKDF2 — no BCrypt).
+///     Handler del comando CreateUserCommand.
+///     Crea el usuario con <c>UserManager</c> (solo Identity: hash PBKDF2 — no BCrypt).
 /// </summary>
 public class CreateUserCommandHandler(
     UserManager<User> userManager,
@@ -31,10 +31,10 @@ public class CreateUserCommandHandler(
     IMediator mediator,
     ICacheService cacheService)
     : IRequestHandler<CreateUserCommand, Result<UserDto, DomainError>> {
-    /// <inheritdoc/>
+    /// <inheritdoc />
     public async Task<Result<UserDto, DomainError>> Handle(
         CreateUserCommand request, CancellationToken cancellationToken) {
-        var validationResult = await validator.ValidateAsync(request.Dto, cancellationToken);
+        ValidationResult validationResult = await validator.ValidateAsync(request.Dto, cancellationToken);
         if (!validationResult.IsValid) {
             var errors = validationResult.Errors
                 .GroupBy(e => e.PropertyName)
@@ -42,16 +42,18 @@ public class CreateUserCommandHandler(
             return Result.Failure<UserDto, DomainError>(UsuarioError.ValidacionConCampos(errors));
         }
 
-        var existingUser = await repository.FindByUsernameAsync(request.Dto.Username);
-        if (existingUser is not null)
+        User? existingUser = await repository.FindByUsernameAsync(request.Dto.Username);
+        if (existingUser is not null) {
             return Result.Failure<UserDto, DomainError>(UsuarioError.UsernameExistente(request.Dto.Username));
+        }
 
-        var existingEmail = await repository.FindByEmailAsync(request.Dto.Email);
-        if (existingEmail is not null)
+        User? existingEmail = await repository.FindByEmailAsync(request.Dto.Email);
+        if (existingEmail is not null) {
             return Result.Failure<UserDto, DomainError>(UsuarioError.EmailExistente(request.Dto.Email));
+        }
 
-        var user = request.Dto.ToEntity();
-        var result = await userManager.CreateAsync(user, request.Dto.Password);
+        User user = request.Dto.ToEntity();
+        IdentityResult result = await userManager.CreateAsync(user, request.Dto.Password);
         if (!result.Succeeded) {
             // Identity rechaza la contraseña (política) o duplica algo en su tabla.
             var errors = new Dictionary<string, string[]> {
@@ -61,7 +63,7 @@ public class CreateUserCommandHandler(
         }
 
         await userManager.AddToRoleAsync(user, UserRoles.USER);
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         await cacheService.RemoveAsync($"usuarios:{user.Id}");
 

@@ -1,20 +1,17 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using TiendaApi.Api.Repositories.Pedidos;
 
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Configuración de repositorios de <b>orders</b>.
-///
-/// 🎓 R5 — cada servicio consulta SU base de datos: aquí solo está el repositorio
-/// de <c>orders_db</c> (MongoDB). Los datos de usuarios y de productos NO se
-/// consultan: se piden por Refit a los servicios que los dueñan (identity, catalog).
+///     Configuración de repositorios de <b>orders</b>.
+///     🎓 R5 — cada servicio consulta SU base de datos: aquí solo está el repositorio
+///     de <c>orders_db</c> (MongoDB). Los datos de usuarios y de productos NO se
+///     consultan: se piden por Refit a los servicios que los dueñan (identity, catalog).
 /// </summary>
 public static class RepositoriesConfig {
     /// <summary>
-    /// Registra los repositorios de pedidos.
+    ///     Registra los repositorios de pedidos.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración.</param>

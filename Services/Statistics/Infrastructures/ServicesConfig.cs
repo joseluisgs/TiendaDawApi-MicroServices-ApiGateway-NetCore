@@ -1,9 +1,8 @@
 using BuildingBlocks.Http;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Refit;
 using Serilog;
 using TiendaApi.Api.Services.Catalog;
+using TiendaApi.Api.Services.Estadisticas;
 using TiendaApi.Api.Services.Historial;
 using TiendaApi.Api.Services.Identity;
 using TiendaApi.Api.Services.Orders;
@@ -11,17 +10,16 @@ using TiendaApi.Api.Services.Orders;
 namespace TiendaApi.Api.Infrastructures;
 
 /// <summary>
-/// Registra los servicios de <b>statistics</b> y sus conexiones con otros microservicios.
-///
-/// 🎓 Statistics no tiene BD (R5): TODOS los datos se piden por Refit. Las
-/// lecturas de catálogo se hacen con <c>Task.WhenAll</c> porque son independientes
-/// entre sí (mismo criterio que el monolito, que lanzaba varias consultas en paralelo).
+///     Registra los servicios de <b>statistics</b> y sus conexiones con otros microservicios.
+///     🎓 Statistics no tiene BD (R5): TODOS los datos se piden por Refit. Las
+///     lecturas de catálogo se hacen con <c>Task.WhenAll</c> porque son independientes
+///     entre sí (mismo criterio que el monolito, que lanzaba varias consultas en paralelo).
 /// </summary>
 public static class ServicesConfig {
     /// <summary>
-    /// Registra los clients Refit (R4 — REST con Refit): direcciones por
-    /// configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
-    /// en desarrollo, localhost.
+    ///     Registra los clients Refit (R4 — REST con Refit): direcciones por
+    ///     configuración (<c>Services:*</c>) — en Docker, el nombre del contenedor;
+    ///     en desarrollo, localhost.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración (direcciones en Services:*).</param>
@@ -60,8 +58,8 @@ public static class ServicesConfig {
             .AddTiendaResilience();
 
         // Fachada interna (dominio de este servicio).
-        services.AddScoped<TiendaApi.Api.Services.Estadisticas.IEstadisticasService,
-            TiendaApi.Api.Services.Estadisticas.EstadisticasService>();
+        services.AddScoped<IEstadisticasService,
+            EstadisticasService>();
 
         return services;
     }

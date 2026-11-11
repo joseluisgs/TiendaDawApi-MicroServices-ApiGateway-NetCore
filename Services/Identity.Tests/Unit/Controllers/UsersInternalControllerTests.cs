@@ -7,18 +7,19 @@ using Moq;
 using TiendaApi.Api.Controllers;
 using TiendaApi.Api.Dtos.Usuarios;
 using TiendaApi.Api.Errors;
+using TiendaApi.Api.Errors.Usuarios;
 using TiendaApi.Api.Features.Users.Queries;
 
 namespace TiendaApi.Tests.Unit.Controllers;
 
 /// <summary>
-/// Tests del contrato interno de identity (GET /internal/users/{id} y
-/// /internal/users/activos): delegación pura en MediatR y mapeo de los
-/// Result a códigos HTTP (200/404).
+///     Tests del contrato interno de identity (GET /internal/users/{id} y
+///     /internal/users/activos): delegación pura en MediatR y mapeo de los
+///     Result a códigos HTTP (200/404).
 /// </summary>
 public class UsersInternalControllerTests {
-    private Mock<IMediator> _mediator = null!;
     private UsersInternalController _controller = null!;
+    private Mock<IMediator> _mediator = null!;
 
     [SetUp]
     public void SetUp() {
@@ -33,9 +34,9 @@ public class UsersInternalControllerTests {
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuarioInternoQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<UserDto, DomainError>(dto));
 
-        var result = await _controller.GetUsuario(1);
+        ActionResult<UserDto> result = await _controller.GetUsuario(1);
 
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        OkObjectResult ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().Be(dto);
     }
 
@@ -43,9 +44,9 @@ public class UsersInternalControllerTests {
     public async Task GetUsuario_NoExiste_Devuelve404() {
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuarioInternoQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<UserDto, DomainError>(
-                TiendaApi.Api.Errors.Usuarios.UsuarioError.NotFound(999)));
+                UsuarioError.NotFound(999)));
 
-        var result = await _controller.GetUsuario(999);
+        ActionResult<UserDto> result = await _controller.GetUsuario(999);
 
         result.Result.Should().BeOfType<NotFoundObjectResult>();
     }
@@ -54,14 +55,14 @@ public class UsersInternalControllerTests {
     public async Task GetActivos_ConLista_Devuelve200() {
         var lista = new List<UserDto> {
             new(1, "ana", "ana@test.com", "", "USER", DateTime.UtcNow),
-            new(2, "luis", "luis@test.com", "", "USER", DateTime.UtcNow),
+            new(2, "luis", "luis@test.com", "", "USER", DateTime.UtcNow)
         };
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuariosActivosQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(lista);
 
-        var result = await _controller.GetActivos();
+        ActionResult<IReadOnlyList<UserDto>> result = await _controller.GetActivos();
 
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        OkObjectResult ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeEquivalentTo(lista);
     }
 
@@ -70,9 +71,9 @@ public class UsersInternalControllerTests {
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuariosActivosQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<UserDto>());
 
-        var result = await _controller.GetActivos();
+        ActionResult<IReadOnlyList<UserDto>> result = await _controller.GetActivos();
 
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        OkObjectResult ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeEquivalentTo(new List<UserDto>());
     }
 }

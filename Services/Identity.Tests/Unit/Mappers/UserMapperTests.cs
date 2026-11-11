@@ -1,3 +1,4 @@
+using System.Reflection;
 using FluentAssertions;
 using TiendaApi.Api.Dtos.Usuarios;
 using TiendaApi.Api.Mappers;
@@ -6,10 +7,61 @@ using TiendaApi.Api.Models;
 namespace TiendaApi.Tests.Unit.Mappers;
 
 /// <summary>
-/// Tests unitarios para el mapeador de usuarios.
-/// Prueba todas las conversiones entidad-DTO para el dominio de Usuario.
+///     Tests unitarios para el mapeador de usuarios.
+///     Prueba todas las conversiones entidad-DTO para el dominio de Usuario.
 /// </summary>
 public class UserMapperTests {
+    #region Roundtrip Tests
+
+    [Test]
+    public void ToDto_LuegoToEntity_DebePreservarDatosBasicos() {
+        // Arrange
+        var user = new User {
+            Id = 1,
+            UserName = "roundtrip_test",
+            Email = "roundtrip@test.com",
+            Role = UserRoles.USER
+        };
+
+        // Act
+        UserDto dto = user.ToDto();
+        // Note: There's no direct ToEntity from Dto, but we can verify the data is preserved
+        string preservedUsername = dto.Username;
+        string preservedEmail = dto.Email;
+        string preservedRole = dto.Role;
+
+        // Assert
+        preservedUsername.Should().Be("roundtrip_test");
+        preservedEmail.Should().Be("roundtrip@test.com");
+        preservedRole.Should().Be(UserRoles.USER);
+    }
+
+    #endregion
+
+    #region Security Tests
+
+    [Test]
+    public void ToDto_NuncaDebeExponerPasswordHash() {
+        // Arrange
+        var user = new User {
+            Id = 1,
+            UserName = "secure_user",
+            Email = "secure@test.com",
+            PasswordHash = "$2a$11$verysecretbcrypthash"
+        };
+
+        // Act
+        UserDto dto = user.ToDto();
+        Type dtoType = dto.GetType();
+        PropertyInfo[] properties = dtoType.GetProperties();
+
+        // Assert - Verify PasswordHash is not a property of DTO
+        bool hasPasswordHash = properties.Any(p => p.Name.Contains("Password", StringComparison.OrdinalIgnoreCase));
+        hasPasswordHash.Should().BeFalse("DTO no debe exponer password hash por seguridad");
+    }
+
+    #endregion
+
     #region ToDto Tests
 
     [Test]
@@ -27,7 +79,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Id.Should().Be(100);
@@ -48,7 +100,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Should().NotBeNull();
@@ -67,7 +119,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Role.Should().Be(UserRoles.ADMIN);
@@ -84,7 +136,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Id.Should().Be(1);
@@ -103,7 +155,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.CreatedAt.Should().Be(createdAt);
@@ -124,7 +176,7 @@ public class UserMapperTests {
         // El hash lo genera UserManager (PBKDF2): el mapper no toca la contraseña.
 
         // Act
-        var entity = dto.ToEntity();
+        User entity = dto.ToEntity();
 
         // Assert
         entity.UserName.Should().Be("newuser");
@@ -144,7 +196,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var entity = dto.ToEntity();
+        User entity = dto.ToEntity();
 
         // Assert
         entity.Role.Should().Be(UserRoles.USER);
@@ -156,7 +208,7 @@ public class UserMapperTests {
         var dto = new RegisterDto { Username = "test", Password = "pass" };
 
         // Act
-        var entity = dto.ToEntity();
+        User entity = dto.ToEntity();
 
         // Assert
         entity.IsDeleted.Should().BeFalse();
@@ -166,11 +218,11 @@ public class UserMapperTests {
     public void ToEntity_DebeEstablecerMarcasDeTiempo() {
         // Arrange
         var dto = new RegisterDto { Username = "test", Password = "pass" };
-        var before = DateTime.UtcNow;
+        DateTime before = DateTime.UtcNow;
 
         // Act
-        var entity = dto.ToEntity();
-        var after = DateTime.UtcNow;
+        User entity = dto.ToEntity();
+        DateTime after = DateTime.UtcNow;
 
         // Assert
         entity.CreatedAt.Should().BeOnOrAfter(before);
@@ -189,7 +241,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var entity = dto.ToEntity();
+        User entity = dto.ToEntity();
 
         // Assert
         entity.PasswordHash.Should().BeNull("sin hash en el mapper: lo genera Identity");
@@ -258,7 +310,7 @@ public class UserMapperTests {
     [Test]
     public void UpdateEntity_ConPasswordVacio_NoActualizaPassword() {
         // Arrange
-        var originalHash = "original_bcrypt_hash";
+        string originalHash = "original_bcrypt_hash";
         var user = new User {
             Id = 1,
             UserName = "test",
@@ -402,8 +454,8 @@ public class UserMapperTests {
     [Test]
     public void UpdateEntity_UserPatchDto_SoloAvatar_ActualizaSoloAvatar() {
         // Arrange
-        var originalEmail = "original@test.com";
-        var originalHash = "original_bcrypt_hash";
+        string originalEmail = "original@test.com";
+        string originalHash = "original_bcrypt_hash";
         var user = new User {
             Id = 1,
             UserName = "test",
@@ -425,7 +477,7 @@ public class UserMapperTests {
     [Test]
     public void UpdateEntity_UserPatchDto_NullAvatar_NoActualizaAvatar() {
         // Arrange
-        var originalAvatar = "https://example.com/original.png";
+        string originalAvatar = "https://example.com/original.png";
         var user = new User {
             Id = 1,
             UserName = "test",
@@ -538,33 +590,6 @@ public class UserMapperTests {
 
     #endregion
 
-    #region Roundtrip Tests
-
-    [Test]
-    public void ToDto_LuegoToEntity_DebePreservarDatosBasicos() {
-        // Arrange
-        var user = new User {
-            Id = 1,
-            UserName = "roundtrip_test",
-            Email = "roundtrip@test.com",
-            Role = UserRoles.USER
-        };
-
-        // Act
-        var dto = user.ToDto();
-        // Note: There's no direct ToEntity from Dto, but we can verify the data is preserved
-        var preservedUsername = dto.Username;
-        var preservedEmail = dto.Email;
-        var preservedRole = dto.Role;
-
-        // Assert
-        preservedUsername.Should().Be("roundtrip_test");
-        preservedEmail.Should().Be("roundtrip@test.com");
-        preservedRole.Should().Be(UserRoles.USER);
-    }
-
-    #endregion
-
     #region Edge Cases Tests
 
     [Test]
@@ -576,7 +601,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Id.Should().Be(long.MaxValue);
@@ -585,14 +610,14 @@ public class UserMapperTests {
     [Test]
     public void ToDto_ConUsernameMuyLargo_MapeaCorrectamente() {
         // Arrange
-        var longUsername = new string('U', 100);
+        string longUsername = new('U', 100);
         var user = new User {
             Id = 1,
             UserName = longUsername
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Username.Should().Be(longUsername);
@@ -609,7 +634,7 @@ public class UserMapperTests {
         };
 
         // Act
-        var dto = user.ToDto();
+        UserDto dto = user.ToDto();
 
         // Assert
         dto.Email.Should().Be("user@exämple.com");
@@ -625,34 +650,10 @@ public class UserMapperTests {
         };
 
         // Act
-        var entity = dto.ToEntity();
+        User entity = dto.ToEntity();
 
         // Assert
         entity.UserName.Should().Be("üser_nombre");
-    }
-
-    #endregion
-
-    #region Security Tests
-
-    [Test]
-    public void ToDto_NuncaDebeExponerPasswordHash() {
-        // Arrange
-        var user = new User {
-            Id = 1,
-            UserName = "secure_user",
-            Email = "secure@test.com",
-            PasswordHash = "$2a$11$verysecretbcrypthash"
-        };
-
-        // Act
-        var dto = user.ToDto();
-        var dtoType = dto.GetType();
-        var properties = dtoType.GetProperties();
-
-        // Assert - Verify PasswordHash is not a property of DTO
-        var hasPasswordHash = properties.Any(p => p.Name.Contains("Password", StringComparison.OrdinalIgnoreCase));
-        hasPasswordHash.Should().BeFalse("DTO no debe exponer password hash por seguridad");
     }
 
     #endregion

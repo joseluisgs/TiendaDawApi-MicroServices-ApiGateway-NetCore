@@ -5,10 +5,9 @@ using TiendaApi.Api.Dtos.Estadisticas;
 namespace TiendaApi.Api;
 
 /// <summary>
-/// Contexto source-gen de JSON del microservicio <b>statistics</b>.
-///
-/// 🎓 Es el equivalente reducido al del monolito: solo los tipos que este
-/// servicio devuelve (todas las vistas agregadas y su paginación).
+///     Contexto source-gen de JSON del microservicio <b>statistics</b>.
+///     🎓 Es el equivalente reducido al del monolito: solo los tipos que este
+///     servicio devuelve (todas las vistas agregadas y su paginación).
 /// </summary>
 [JsonSerializable(typeof(ResumenEstadisticasDto))]
 [JsonSerializable(typeof(ResumenVentasDto))]

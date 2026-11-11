@@ -22,7 +22,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando email-service...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -44,7 +44,7 @@ try {
     builder.Services.AddEmail(builder.Environment);
     builder.Services.AddControllers();
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
 
     app.UseAuthorization();
 
@@ -70,7 +70,7 @@ try {
 }
 
 /// <summary>
-/// Exposición del tipo <c>Program</c> para que WebApplicationFactory&lt;Program&gt;
-/// pueda arrancar el servicio en los tests de integración.
+///     Exposición del tipo <c>Program</c> para que WebApplicationFactory&lt;Program&gt;
+///     pueda arrancar el servicio en los tests de integración.
 /// </summary>
 public partial class Program { }

@@ -24,7 +24,7 @@ Log.Logger = new LoggerConfiguration()
 try {
     Log.Information("arrancando gateway...");
 
-    var builder = WebApplication.CreateBuilder(args);
+    WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
     // Salida por Serilog (patrón del monolito: builder.Logging.AddSerilog) SIN
     // UseSerilog(): esa vía reemplaza la fábrica MEL y los ILoggerProvider del
@@ -59,7 +59,7 @@ try {
     // bloquea las respuestas aunque la API conteste 200.
     builder.Services.AddCorsPolicy(builder.Configuration, builder.Environment.IsDevelopment());
 
-    var app = builder.Build();
+    WebApplication app = builder.Build();
     // Seguridad en el borde (ENDPOINTS §11.1): el gateway es la
     // única puerta pública, así que los headers de seguridad viven AQUÍ.
     // Ojo: las páginas UI (Swagger, GraphQL,
@@ -78,7 +78,7 @@ try {
     // listados— siguen sin token).
     app.UseAuthentication();
     app.Use(async (context, next) => {
-        var authorization = context.Request.Headers.Authorization.ToString();
+        string authorization = context.Request.Headers.Authorization.ToString();
         if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
             && context.User.Identity?.IsAuthenticated != true) {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
