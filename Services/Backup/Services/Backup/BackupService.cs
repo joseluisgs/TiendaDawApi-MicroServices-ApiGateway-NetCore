@@ -780,8 +780,7 @@ public class BackupService(
     }
 
     private static BackupProveedorDto Mapear(ProveedorDto p) {
-        return new BackupProveedorDto(p.Codigo, p.Nombre, p.Descripcion ?? string.Empty, p.Contacto ?? string.Empty,
-            false, p.CreatedAt,
+        return new BackupProveedorDto(p.Codigo, p.Nombre, p.Descripcion, p.Contacto, false, p.CreatedAt,
             p.UpdatedAt);
     }
 

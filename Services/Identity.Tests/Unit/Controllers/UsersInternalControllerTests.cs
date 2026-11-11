@@ -8,7 +8,7 @@ using TiendaApi.Api.Controllers;
 using TiendaApi.Api.Dtos.Usuarios;
 using TiendaApi.Api.Errors;
 using TiendaApi.Api.Errors.Usuarios;
-using TiendaApi.Api.Features.Users.Queries;
+using TiendaApi.Api.MediatR.Users.Queries;
 
 namespace TiendaApi.Tests.Unit.Controllers;
 

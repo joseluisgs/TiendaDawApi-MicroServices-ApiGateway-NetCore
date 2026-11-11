@@ -144,7 +144,7 @@ flowchart TB
 ### La estructura de archivos en nuestro proyecto
 
 ```
-Features/Pedidos/
+MediatR/Pedidos/
 ├── Commands/
 │   ├── CreatePedidoCommand.cs
 │   ├── CreatePedidoCommandHandler.cs
@@ -1233,7 +1233,7 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using TiendaApi.Api.Features.Pedidos.Commands;
+using TiendaApi.Api.MediatR.Pedidos.Commands;
 using TiendaApi.Api.Dtos.Pedidos;
 using TiendaApi.Api.Errors;
 using TiendaApi.Api.Models;
@@ -1319,8 +1319,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TiendaApi.Api.Dtos.Pedidos;
 using TiendaApi.Api.Errors;
-using TiendaApi.Api.Features.Pedidos.Commands;
-using TiendaApi.Api.Features.Pedidos.Queries;
+using TiendaApi.Api.MediatR.Pedidos.Commands;
+using TiendaApi.Api.MediatR.Pedidos.Queries;
 using TiendaApi.Api.Helpers.Pagination;
 using TiendaApi.Api.Models;
 

@@ -249,4 +249,29 @@ public class ProductoReadRepositoryIntegrationTests {
         ProductoRead? otro = await _repo.FindByIdAsync(2);
         otro!.Categoria.Nombre.Should().Be("Ropa", "los de otra categoría no se tocan");
     }
+
+    // ------------------------------------- sincronización del nombre de proveedor
+
+    [Test]
+    public async Task UpdateProveedorNombreAsync_TocaSoloLosDeEseProveedor() {
+        ProductoRead a = Producto(1);
+        a.ProveedorId = "PROV1234567";
+        a.Proveedor = new ProveedorRead { Codigo = "PROV1234567", Nombre = "Viejo", Descripcion = "desc vieja" };
+        await _repo.UpsertAsync(a);
+
+        ProductoRead b = Producto(2, "Camiseta");
+        b.ProveedorId = "PROV7654321";
+        b.Proveedor = new ProveedorRead { Codigo = "PROV7654321", Nombre = "Otro", Descripcion = null };
+        await _repo.UpsertAsync(b);
+
+        await _repo.UpdateProveedorNombreAsync("PROV1234567", "Proveedor Nuevo", "nueva descripción");
+
+        ProductoRead? leido = await _repo.FindByIdAsync(1);
+        leido!.Proveedor.Nombre.Should().Be("Proveedor Nuevo");
+        leido.Proveedor.Descripcion.Should().Be("nueva descripción");
+        leido.SyncAt.Should().NotBe(default, "la sincronización estampa SyncAt");
+
+        ProductoRead? otro = await _repo.FindByIdAsync(2);
+        otro!.Proveedor.Nombre.Should().Be("Otro", "los de otro proveedor no se tocan");
+    }
 }
