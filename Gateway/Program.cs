@@ -21,8 +21,7 @@ Log.Logger = new LoggerConfiguration()
         theme: AnsiConsoleTheme.Code)
     .CreateLogger();
 
-try
-{
+try {
     Log.Information("arrancando gateway...");
 
     var builder = WebApplication.CreateBuilder(args);
@@ -51,17 +50,17 @@ try
     // Quien firma es solo identity; aquí solo se valida.
     builder.Services.AddJwtAuthentication(builder.Configuration);
 
-          // Rate limit en el borde (ENDPOINTS §11.1): vive en el gateway,
-      // que es la única puerta pública.
-      builder.Services.AddRateLimitingPolicy();
+    // Rate limit en el borde (ENDPOINTS §11.1): vive en el gateway,
+    // que es la única puerta pública.
+    builder.Services.AddRateLimitingPolicy();
 
-      var app = builder.Build();
-        // Seguridad en el borde (ENDPOINTS §11.1): el gateway es la
-        // única puerta pública, así que los headers de seguridad viven AQUÍ.
-        // Ojo: las páginas UI (Swagger, GraphQL,
-        // índice) reciben una CSP relajada; sin ella se sirven en blanco.
-        app.UseSecurityHeaders();
-        app.UseRateLimiting();
+    var app = builder.Build();
+    // Seguridad en el borde (ENDPOINTS §11.1): el gateway es la
+    // única puerta pública, así que los headers de seguridad viven AQUÍ.
+    // Ojo: las páginas UI (Swagger, GraphQL,
+    // índice) reciben una CSP relajada; sin ella se sirven en blanco.
+    app.UseSecurityHeaders();
+    app.UseRateLimiting();
 
     // 🔐 Si el cliente MANDA un token, el gateway lo valida (firma, issuer,
     // audience, caducidad). Uno inválido o caducado corta AQUÍ con 401 — no llega
@@ -70,12 +69,10 @@ try
     // que los [Authorize] del monolito (los endpoints públicos —health, signin,
     // listados— siguen sin token).
     app.UseAuthentication();
-    app.Use(async (context, next) =>
-    {
+    app.Use(async (context, next) => {
         var authorization = context.Request.Headers.Authorization.ToString();
         if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase)
-            && context.User.Identity?.IsAuthenticated != true)
-        {
+            && context.User.Identity?.IsAuthenticated != true) {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new { message = "Token inválido o caducado" });
             return;
@@ -91,12 +88,12 @@ try
     // El mapa completo de rutas vive en appsettings.json (ReverseProxy:Routes):
     // auth, users, categorias, proveedores, productos, pedidos, estadisticas,
     // backup, storage, graphql, hubs, health, version y swagger.
-            // El gateway sirve SUS PROPIOS endpoints de infraestructura
-        // (health, version, swagger) con el mismo shape que el monolito.
-        app.MapHealthEndpoint();
-        app.MapInfoEndpoints();
-        app.MapSwaggerEndpoints();
-app.MapReverseProxy();
+    // El gateway sirve SUS PROPIOS endpoints de infraestructura
+    // (health, version, swagger) con el mismo shape que el monolito.
+    app.MapHealthEndpoint();
+    app.MapInfoEndpoints();
+    app.MapSwaggerEndpoints();
+    app.MapReverseProxy();
 
     Log.Information("=================================================================");
     Log.Information("api-gateway · Única puerta pública (YARP, R12)");
@@ -108,12 +105,8 @@ app.MapReverseProxy();
     Log.Information("=================================================================");
 
     app.Run();
-}
-catch (Exception ex)
-{
+} catch (Exception ex) {
     Log.Fatal(ex, "gateway terminó inesperadamente");
-}
-finally
-{
+} finally {
     Log.CloseAndFlush();
 }

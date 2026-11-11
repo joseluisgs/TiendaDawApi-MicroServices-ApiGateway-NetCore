@@ -9,8 +9,7 @@ namespace TiendaApi.Api.Models;
 /// (<c>[Authorize(Roles = UserRoles.ADMIN)]</c>). El rol real vive en el JWT
 /// que emite identity.
 /// </summary>
-public static class UserRoles
-{
+public static class UserRoles {
     /// <summary>Rol de administrador con acceso total al sistema.</summary>
     public const string ADMIN = "ADMIN";
 

@@ -19,12 +19,10 @@ public record GetUsuariosActivosQuery()
 /// no debe mandar emails a cuentas ya borradas.
 /// </summary>
 public class GetUsuariosActivosQueryHandler(IUserRepository repository)
-    : IRequestHandler<GetUsuariosActivosQuery, IReadOnlyList<UserDto>>
-{
+    : IRequestHandler<GetUsuariosActivosQuery, IReadOnlyList<UserDto>> {
     /// <inheritdoc/>
     public async Task<IReadOnlyList<UserDto>> Handle(
-        GetUsuariosActivosQuery request, CancellationToken cancellationToken)
-    {
+        GetUsuariosActivosQuery request, CancellationToken cancellationToken) {
         var usuarios = await repository.GetActiveUsersAsync();
         return usuarios.ToDtoList().ToList();
     }

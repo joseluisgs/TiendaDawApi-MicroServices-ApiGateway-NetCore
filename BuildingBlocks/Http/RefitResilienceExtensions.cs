@@ -8,8 +8,7 @@ namespace BuildingBlocks.Http;
 /// Extensión <c>AddTiendaResilience()</c> para los clients Refit entre
 /// microservicios.
 /// </summary>
-public static class RefitResilienceExtensions
-{
+public static class RefitResilienceExtensions {
     /// <summary>
     /// Añade la política de resiliencia al client: timeout por intento (10 s
     /// lecturas / 5 s escrituras), reintento por verbo y cortacircuitos por
@@ -19,8 +18,7 @@ public static class RefitResilienceExtensions
     /// el reenvío de JWT ocurre una sola vez por petición lógica y el reintento
     /// reutiliza el mismo request (la cabecera ya está puesta, no se duplica).
     /// </summary>
-    public static IHttpClientBuilder AddTiendaResilience(this IHttpClientBuilder builder)
-    {
+    public static IHttpClientBuilder AddTiendaResilience(this IHttpClientBuilder builder) {
         builder.Services.TryAddSingleton(static sp =>
             new ResiliencePipelineProvider(sp.GetRequiredService<ILoggerFactory>()));
         builder.Services.AddTransient<ResilienceDelegatingHandler>();

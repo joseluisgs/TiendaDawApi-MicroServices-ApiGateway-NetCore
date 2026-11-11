@@ -16,16 +16,14 @@ namespace TiendaApi.Api.Controllers;
 [ApiController]
 [Route("internal/users")]
 [Produces("application/json")]
-public class UsersInternalController(IMediator mediator) : ControllerBase
-{
+public class UsersInternalController(IMediator mediator) : ControllerBase {
     /// <summary>
     /// Existe y no está borrado → 200 con el usuario; si no, 404.
     /// </summary>
     [HttpGet("{id:long}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<UserDto>> GetUsuario([FromRoute] long id)
-    {
+    public async Task<ActionResult<UserDto>> GetUsuario([FromRoute] long id) {
         var resultado = await mediator.Send(new GetUsuarioInternoQuery(id));
         if (resultado.IsFailure)
             return NotFound(new { message = resultado.Error.Message });

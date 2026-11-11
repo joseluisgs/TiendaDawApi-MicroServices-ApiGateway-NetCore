@@ -18,8 +18,7 @@ namespace TiendaApi.Tests.Unit.Controllers;
 /// descuento atómico con validación, con los mismos códigos que devolvía el
 /// monolito (204 · 404 · 422 con el mensaje de <c>StockInsuficiente</c> · 400).
 /// </summary>
-public class ProductosInternalControllerTests
-{
+public class ProductosInternalControllerTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IProductoRepository> _productos = null!;
@@ -27,8 +26,7 @@ public class ProductosInternalControllerTests
     private ProductosInternalController _controller = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _productos = new Mock<IProductoRepository>();
         _transaccion = new Mock<IDbContextTransaction>();
 
@@ -45,8 +43,7 @@ public class ProductosInternalControllerTests
             .ReturnsAsync(new Producto { Id = id, Nombre = "Laptop Dell XPS 15", Stock = stock });
 
     [Test]
-    public async Task DecrementarStock_Suficiente_Devuelve204YDescuenta()
-    {
+    public async Task DecrementarStock_Suficiente_Devuelve204YDescuenta() {
         Existe(id: 1, stock: 10);
 
         var result = await _controller.DecrementarStock(1, new DecrementoStockDto(3));
@@ -57,8 +54,7 @@ public class ProductosInternalControllerTests
     }
 
     [Test]
-    public async Task DecrementarStock_ProductoNoExiste_Devuelve404()
-    {
+    public async Task DecrementarStock_ProductoNoExiste_Devuelve404() {
         _productos.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((Producto?)null);
 
         var result = await _controller.DecrementarStock(999, new DecrementoStockDto(1));
@@ -71,8 +67,7 @@ public class ProductosInternalControllerTests
     }
 
     [Test]
-    public async Task DecrementarStock_Insuficiente_Devuelve422ConElMensajeDelMonolito()
-    {
+    public async Task DecrementarStock_Insuficiente_Devuelve422ConElMensajeDelMonolito() {
         Existe(id: 1, stock: 2);
 
         var result = await _controller.DecrementarStock(1, new DecrementoStockDto(5));
@@ -86,8 +81,7 @@ public class ProductosInternalControllerTests
     }
 
     [Test]
-    public async Task DecrementarStock_CantidadNoValida_Devuelve400_SinTransaccion()
-    {
+    public async Task DecrementarStock_CantidadNoValida_Devuelve400_SinTransaccion() {
         var result = await _controller.DecrementarStock(1, new DecrementoStockDto(0));
 
         result.Result.Should().BeOfType<BadRequestObjectResult>();

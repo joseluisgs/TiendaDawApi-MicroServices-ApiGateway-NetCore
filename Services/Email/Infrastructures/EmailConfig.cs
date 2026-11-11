@@ -15,26 +15,21 @@ namespace TiendaApi.Api.Infrastructures;
 /// Desarrollo: MemoryEmailService (solo loguea, no envía nada real).
 /// Producción: MailKitEmailService (SMTP real con pipeline Polly).
 /// </summary>
-public static class EmailConfig
-{
+public static class EmailConfig {
     /// <summary>
     /// Configura el servicio de email: canal + consumidor en segundo plano y
     /// la implementación de envío según el entorno.
     /// </summary>
-    public static IServiceCollection AddEmail(this IServiceCollection services, IWebHostEnvironment environment)
-    {
+    public static IServiceCollection AddEmail(this IServiceCollection services, IWebHostEnvironment environment) {
         // Cola thread-safe compartida: endpoint (productor) → consumidor.
         services.AddSingleton(Channel.CreateUnbounded<EmailMessage>());
 
         // Consumidor SIEMPRE registrado: procesa la cola en segundo plano.
         services.AddHostedService<EmailBackgroundService>();
 
-        if (environment.IsDevelopment())
-        {
+        if (environment.IsDevelopment()) {
             services.TryAddScoped<IEmailService, MemoryEmailService>();
-        }
-        else
-        {
+        } else {
             // Pipeline de resiliencia (Polly) compartido por todos los
             // MailKitEmailService: Retry 3 + CircuitBreaker(3, 30s) + Timeout 10s.
             services.AddSingleton(static sp =>

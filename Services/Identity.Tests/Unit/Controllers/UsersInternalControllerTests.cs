@@ -16,22 +16,19 @@ namespace TiendaApi.Tests.Unit.Controllers;
 /// /internal/users/activos): delegación pura en MediatR y mapeo de los
 /// Result a códigos HTTP (200/404).
 /// </summary>
-public class UsersInternalControllerTests
-{
+public class UsersInternalControllerTests {
     private Mock<IMediator> _mediator = null!;
     private UsersInternalController _controller = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _mediator = new Mock<IMediator>();
         _controller = new UsersInternalController(_mediator.Object);
         _controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
     }
 
     [Test]
-    public async Task GetUsuario_Existente_Devuelve200ConElDto()
-    {
+    public async Task GetUsuario_Existente_Devuelve200ConElDto() {
         var dto = new UserDto(1, "juan", "juan@test.com", "", "USER", DateTime.UtcNow);
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuarioInternoQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Success<UserDto, DomainError>(dto));
@@ -43,8 +40,7 @@ public class UsersInternalControllerTests
     }
 
     [Test]
-    public async Task GetUsuario_NoExiste_Devuelve404()
-    {
+    public async Task GetUsuario_NoExiste_Devuelve404() {
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuarioInternoQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Failure<UserDto, DomainError>(
                 TiendaApi.Api.Errors.Usuarios.UsuarioError.NotFound(999)));
@@ -55,10 +51,8 @@ public class UsersInternalControllerTests
     }
 
     [Test]
-    public async Task GetActivos_ConLista_Devuelve200()
-    {
-        var lista = new List<UserDto>
-        {
+    public async Task GetActivos_ConLista_Devuelve200() {
+        var lista = new List<UserDto> {
             new(1, "ana", "ana@test.com", "", "USER", DateTime.UtcNow),
             new(2, "luis", "luis@test.com", "", "USER", DateTime.UtcNow),
         };
@@ -72,8 +66,7 @@ public class UsersInternalControllerTests
     }
 
     [Test]
-    public async Task GetActivos_SinUsuarios_Devuelve200Vacia()
-    {
+    public async Task GetActivos_SinUsuarios_Devuelve200Vacia() {
         _mediator.Setup(m => m.Send(It.IsAny<GetUsuariosActivosQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<UserDto>());
 

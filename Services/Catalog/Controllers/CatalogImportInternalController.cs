@@ -43,18 +43,15 @@ public class CatalogImportInternalController(
     IValidator<CategoriaRequestDto> categoriaValidator,
     IValidator<ProveedorRequestDto> proveedorValidator,
     IValidator<ProductoRequestDto> productoValidator,
-    ILogger<CatalogImportInternalController> logger) : ControllerBase
-{
+    ILogger<CatalogImportInternalController> logger) : ControllerBase {
     /// <summary>Upsert de una categoría por ID explícito.</summary>
     [HttpPost("categorias/import")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ImportCategoria([FromBody] ImportCategoriaDto fila)
-    {
-        var validacion = await categoriaValidator.ValidateAsync(new CategoriaRequestDto
-        {
+    public async Task<IActionResult> ImportCategoria([FromBody] ImportCategoriaDto fila) {
+        var validacion = await categoriaValidator.ValidateAsync(new CategoriaRequestDto {
             Nombre = fila.Nombre,
             Descripcion = fila.Descripcion,
         });
@@ -62,10 +59,8 @@ public class CatalogImportInternalController(
             return BadRequest(new { message = Mensaje(validacion) });
 
         var existente = await categoriaRepository.FindByIdAsync(fila.Id);
-        if (existente is null)
-        {
-            await categoriaRepository.CrearConIdExplicitoAsync(new Categoria
-            {
+        if (existente is null) {
+            await categoriaRepository.CrearConIdExplicitoAsync(new Categoria {
                 Id = fila.Id,
                 Nombre = fila.Nombre,
                 Descripcion = fila.Descripcion,
@@ -97,10 +92,8 @@ public class CatalogImportInternalController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ImportProveedor([FromBody] ImportProveedorDto fila)
-    {
-        var validacion = await proveedorValidator.ValidateAsync(new ProveedorRequestDto
-        {
+    public async Task<IActionResult> ImportProveedor([FromBody] ImportProveedorDto fila) {
+        var validacion = await proveedorValidator.ValidateAsync(new ProveedorRequestDto {
             Codigo = fila.Codigo,
             Nombre = fila.Nombre,
             Descripcion = fila.Descripcion,
@@ -110,10 +103,8 @@ public class CatalogImportInternalController(
             return BadRequest(new { message = Mensaje(validacion) });
 
         var existente = await proveedorRepository.FindByIdAsync(fila.Codigo);
-        if (existente is null)
-        {
-            await proveedorRepository.CreateAsync(new Proveedor
-            {
+        if (existente is null) {
+            await proveedorRepository.CreateAsync(new Proveedor {
                 Codigo = fila.Codigo,
                 Nombre = fila.Nombre,
                 Descripcion = fila.Descripcion,
@@ -145,10 +136,8 @@ public class CatalogImportInternalController(
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ImportProducto([FromBody] ImportProductoDto fila)
-    {
-        var validacion = await productoValidator.ValidateAsync(new ProductoRequestDto
-        {
+    public async Task<IActionResult> ImportProducto([FromBody] ImportProductoDto fila) {
+        var validacion = await productoValidator.ValidateAsync(new ProductoRequestDto {
             Nombre = fila.Nombre,
             Descripcion = fila.Descripcion,
             Precio = fila.Precio,
@@ -167,10 +156,8 @@ public class CatalogImportInternalController(
             return BadRequest(new { message = $"El proveedor con código {fila.ProveedorId} no existe", field = "proveedorId" });
 
         var existente = await productoRepository.FindByIdAsync(fila.Id);
-        if (existente is null)
-        {
-            await productoRepository.CrearConIdExplicitoAsync(new Producto
-            {
+        if (existente is null) {
+            await productoRepository.CrearConIdExplicitoAsync(new Producto {
                 Id = fila.Id,
                 Nombre = fila.Nombre,
                 Descripcion = fila.Descripcion,

@@ -28,8 +28,7 @@ namespace TiendaApi.Api.GraphQL.Mutations;
 /// PARÃMETRO <c>[Service]</c>, nunca por constructor â€” HotChocolate resuelve el
 /// tipo de mutaciÃ³n con lifetime singleton.
 /// </summary>
-public class ProductoMutation
-{
+public class ProductoMutation {
     /// <summary>Crea un nuevo producto.</summary>
     /// <param name="input">Datos del producto.</param>
     /// <param name="catalogApi">Cliente Refit de catalog.</param>
@@ -39,10 +38,8 @@ public class ProductoMutation
     public async Task<ProductoDto> CreateProducto(
         CreateProductoInput input,
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
-        var dto = new ProductoRequestDto
-        {
+        CancellationToken ct = default) {
+        var dto = new ProductoRequestDto {
             Nombre = input.Nombre,
             Descripcion = input.Descripcion ?? string.Empty,
             Precio = input.Precio,
@@ -52,12 +49,9 @@ public class ProductoMutation
             ProveedorCodigo = input.ProveedorCodigo
         };
 
-        try
-        {
+        try {
             return await catalogApi.CreateProductoAsync(dto);
-        }
-        catch (Refit.ApiException ex)
-        {
+        } catch (Refit.ApiException ex) {
             throw new GraphQLException(MensajeDeCatalogo(ex));
         }
     }
@@ -78,10 +72,8 @@ public class ProductoMutation
         long id,
         UpdateProductoInput input,
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
-        var patch = new ProductoPatchDto
-        {
+        CancellationToken ct = default) {
+        var patch = new ProductoPatchDto {
             Nombre = input.Nombre,
             Descripcion = input.Descripcion,
             Precio = input.Precio,
@@ -91,12 +83,9 @@ public class ProductoMutation
             ProveedorCodigo = input.ProveedorCodigo
         };
 
-        try
-        {
+        try {
             return await catalogApi.UpdateProductoAsync(id, patch);
-        }
-        catch (Refit.ApiException ex)
-        {
+        } catch (Refit.ApiException ex) {
             throw new GraphQLException(MensajeDeCatalogo(ex));
         }
     }
@@ -110,15 +99,11 @@ public class ProductoMutation
     public async Task<bool> DeleteProducto(
         long id,
         [Service] ICatalogApi catalogApi,
-        CancellationToken ct = default)
-    {
-        try
-        {
+        CancellationToken ct = default) {
+        try {
             await catalogApi.DeleteProductoAsync(id);
             return true;
-        }
-        catch (Refit.ApiException ex)
-        {
+        } catch (Refit.ApiException ex) {
             throw new GraphQLException(MensajeDeCatalogo(ex));
         }
     }
@@ -128,24 +113,19 @@ public class ProductoMutation
     /// <c>errors[]</c> de GraphQL con el mismo texto que darÃ­a REST
     /// (p. ej. "Errores de validaciÃ³n" â†’ el E2E busca "validaci").
     /// </summary>
-    private static string MensajeDeCatalogo(Refit.ApiException ex)
-    {
+    private static string MensajeDeCatalogo(Refit.ApiException ex) {
         if (string.IsNullOrWhiteSpace(ex.Content))
-            return ex.StatusCode switch
-            {
+            return ex.StatusCode switch {
                 HttpStatusCode.NotFound => "Recurso no encontrado",
                 HttpStatusCode.UnprocessableEntity => "Regla de negocio incumplida",
                 _ => $"Error devuelto por catalog ({(int)ex.StatusCode})"
             };
 
-        try
-        {
+        try {
             using var doc = JsonDocument.Parse(ex.Content);
             if (doc.RootElement.TryGetProperty("message", out var m))
                 return m.GetString() ?? ex.Content;
-        }
-        catch
-        {
+        } catch {
             // no era JSON: se reenvÃ­a tal cual
         }
 

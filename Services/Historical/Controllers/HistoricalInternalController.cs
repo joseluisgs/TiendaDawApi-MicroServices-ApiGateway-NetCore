@@ -13,8 +13,7 @@ namespace TiendaApi.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("internal/historial")]
-public class HistoricalInternalController(IHistorialService service) : ControllerBase
-{
+public class HistoricalInternalController(IHistorialService service) : ControllerBase {
     /// <summary>Feed de actividad (últimos productos vistos) de un usuario.</summary>
     [HttpGet("feed")]
     [ProducesResponseType(typeof(IReadOnlyList<VistaFeedDto>), StatusCodes.Status200OK)]
@@ -30,8 +29,7 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
         [FromRoute] long productoId,
         [FromQuery] DateTime? desde,
         [FromQuery] DateTime? hasta,
-        [FromQuery] int limit = 50)
-    {
+        [FromQuery] int limit = 50) {
         var resultado = await service.GetHistorialPreciosAsync(productoId, desde, hasta, limit);
         if (resultado.IsFailure)
             return BadRequest(new { message = resultado.Error.Message });
@@ -42,8 +40,7 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
     /// <summary>Registra la vista de un usuario sobre un producto (el nombre lo aporta el dueño).</summary>
     [HttpPost("vistas")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> RegistrarVista([FromBody] RegistrarVistaRequest body)
-    {
+    public async Task<IActionResult> RegistrarVista([FromBody] RegistrarVistaRequest body) {
         var resultado = await service.RegistrarVistaAsync(body.UsuarioId, body.ProductoId, body.NombreProducto);
         if (resultado.IsFailure)
             return BadRequest(new { message = resultado.Error.Message });
@@ -58,8 +55,7 @@ public class HistoricalInternalController(IHistorialService service) : Controlle
     /// </summary>
     [HttpPost("precios")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> RegistrarPrecio([FromBody] RegistrarPrecioRequest body)
-    {
+    public async Task<IActionResult> RegistrarPrecio([FromBody] RegistrarPrecioRequest body) {
         var resultado = await service.RegistrarPrecioAsync(body.ProductoId, body.Precio);
         if (resultado.IsFailure)
             return BadRequest(new { message = resultado.Error.Message });

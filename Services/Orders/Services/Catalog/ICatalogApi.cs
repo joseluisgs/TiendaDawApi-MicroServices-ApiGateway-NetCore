@@ -10,8 +10,7 @@ namespace TiendaApi.Api.Services.Catalog;
 /// ser <b>validación + decremento atómico en catalog</b> (su endpoint interno
 /// hace el descuento con la misma semántica de 204 · 404 · 422).
 /// </summary>
-public interface ICatalogApi
-{
+public interface ICatalogApi {
     /// <summary>
     /// Snapshot del producto para congelar nombre y precio en el pedido.
     /// </summary>

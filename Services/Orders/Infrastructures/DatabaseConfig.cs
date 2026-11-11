@@ -15,8 +15,7 @@ namespace TiendaApi.Api.Infrastructures;
 /// <b>catalog</b> y se consulta por Refit (<c>ICatalogApi</c>), lo mismo que
 /// ocurre con los usuarios en <b>identity</b>.
 /// </summary>
-public static class DatabaseConfig
-{
+public static class DatabaseConfig {
     /// <summary>
     /// Configura el cliente y la base de datos de MongoDB.
     /// </summary>
@@ -25,8 +24,7 @@ public static class DatabaseConfig
     /// <param name="environment">Entorno (producción exige configuración explícita).</param>
     /// <returns>IServiceCollection para encadenar.</returns>
     public static IServiceCollection AddDatabases(
-        this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
-    {
+        this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment) {
         Log.Information("Configurando MongoDB (orders_db)...");
 
         // Fail-fast: en producción, si falta la configuración, la app NO debe
@@ -40,8 +38,7 @@ public static class DatabaseConfig
         var databaseName = configuration["MongoDbSettings:DatabaseName"] ?? "orders_db";
 
         services.AddSingleton<IMongoClient>(_ => new MongoClient(connectionString));
-        services.AddSingleton(sp =>
-        {
+        services.AddSingleton(sp => {
             var client = sp.GetRequiredService<IMongoClient>();
             return client.GetDatabase(databaseName);
         });
@@ -63,13 +60,11 @@ public static class DatabaseConfig
     /// <param name="claveConfig">Nombre de la clave, para los mensajes.</param>
     /// <param name="environment">Entorno actual.</param>
     private static string ResolverCadenaObligatoria(
-        string? valor, string fallbackDesarrollo, string claveConfig, IWebHostEnvironment environment)
-    {
+        string? valor, string fallbackDesarrollo, string claveConfig, IWebHostEnvironment environment) {
         if (!string.IsNullOrEmpty(valor))
             return valor;
 
-        if (environment.IsDevelopment())
-        {
+        if (environment.IsDevelopment()) {
             Log.Warning("⚠ Usando credenciales por defecto de desarrollo ({Clave} no definida)", claveConfig);
             return fallbackDesarrollo;
         }

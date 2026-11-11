@@ -12,8 +12,7 @@ namespace TiendaApi.Tests.Integration.TestContainers;
 /// (usuarios, roles, logins) — aquí no hay Mongo ni Cassandra.
 /// </summary>
 [SetUpFixture]
-public sealed class AssemblyContainerFixture
-{
+public sealed class AssemblyContainerFixture {
     private static PostgreSqlContainer? _postgres;
 
     /// <summary>Contenedor PostgreSQL compartido (arrancado una vez por assembly).</summary>
@@ -24,15 +23,12 @@ public sealed class AssemblyContainerFixture
     /// Crea (o recrea) una base de datos PostgreSQL con el nombre indicado y
     /// devuelve la cadena de conexión apuntando a ella.
     /// </summary>
-    internal static async Task<string> CreatePostgresDatabaseAsync(string databaseName)
-    {
-        var admin = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString())
-        {
+    internal static async Task<string> CreatePostgresDatabaseAsync(string databaseName) {
+        var admin = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString()) {
             Database = "postgres",
         };
 
-        await using (var connection = new NpgsqlConnection(admin.ConnectionString))
-        {
+        await using (var connection = new NpgsqlConnection(admin.ConnectionString)) {
             await connection.OpenAsync();
             await using var drop = new NpgsqlCommand(
                 $"DROP DATABASE IF EXISTS \"{databaseName}\" WITH (FORCE)", connection);
@@ -43,18 +39,15 @@ public sealed class AssemblyContainerFixture
             await create.ExecuteNonQueryAsync();
         }
 
-        var target = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString())
-        {
+        var target = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString()) {
             Database = databaseName,
         };
         return target.ConnectionString;
     }
 
     /// <summary>Elimina una base de datos PostgreSQL creada por una clase de tests.</summary>
-    internal static async Task DropPostgresDatabaseAsync(string databaseName)
-    {
-        var admin = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString())
-        {
+    internal static async Task DropPostgresDatabaseAsync(string databaseName) {
+        var admin = new NpgsqlConnectionStringBuilder(Postgres.GetConnectionString()) {
             Database = "postgres",
         };
 
@@ -67,8 +60,7 @@ public sealed class AssemblyContainerFixture
 
     /// <summary>Arranca el contenedor una sola vez por assembly.</summary>
     [OneTimeSetUp]
-    public async Task OneTimeSetup()
-    {
+    public async Task OneTimeSetup() {
         _postgres = new PostgreSqlBuilder("postgres:17-alpine")
                         .WithDatabase("identity_tests")
             .WithUsername("admin")
@@ -79,8 +71,7 @@ public sealed class AssemblyContainerFixture
 
     /// <summary>Para el contenedor al terminar el assembly.</summary>
     [OneTimeTearDown]
-    public async Task OneTimeTearDown()
-    {
+    public async Task OneTimeTearDown() {
         if (_postgres is not null)
             await _postgres.DisposeAsync();
     }

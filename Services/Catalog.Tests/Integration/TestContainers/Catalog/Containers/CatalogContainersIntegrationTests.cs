@@ -14,34 +14,29 @@ namespace TiendaApi.Tests.Integration.TestContainers.Catalog.Containers;
 /// </summary>
 [TestFixture]
 [Category("Integration")]
-public class CatalogContainersIntegrationTests
-{
+public class CatalogContainersIntegrationTests {
     private const string DatabaseName = "it_catalog_containers";
     private string _connectionString = string.Empty;
 
     [OneTimeSetUp]
-    public async Task OneTimeSetup()
-    {
+    public async Task OneTimeSetup() {
         _connectionString = await AssemblyContainerFixture.CreatePostgresDatabaseAsync(DatabaseName);
     }
 
     [OneTimeTearDown]
-    public async Task OneTimeTearDown()
-    {
+    public async Task OneTimeTearDown() {
         await AssemblyContainerFixture.DropPostgresDatabaseAsync(DatabaseName);
     }
 
     [Test]
-    public void PostgreSQLContainer_DebeEstarArrancado()
-    {
+    public void PostgreSQLContainer_DebeEstarArrancado() {
         _connectionString.Should().NotBeNullOrEmpty();
         _connectionString.Should().Contain("Host=", "la cadena debe apuntar al contenedor Testcontainers");
         _connectionString.Should().Contain(DatabaseName, "y a la BD propia de esta clase de tests");
     }
 
     [Test]
-    public void MongoDBContainer_DebeEstarArrancado()
-    {
+    public void MongoDBContainer_DebeEstarArrancado() {
         var database = AssemblyContainerFixture.GetMongoDatabase("it_catalog_containers_ping");
 
         database.Should().NotBeNull();
@@ -49,11 +44,9 @@ public class CatalogContainersIntegrationTests
     }
 
     [Test]
-    public void Configuracion_PuedeConstruirElServiceProvider()
-    {
+    public void Configuracion_PuedeConstruirElServiceProvider() {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
+            .AddInMemoryCollection(new Dictionary<string, string?> {
                 { "ConnectionStrings:DefaultConnection", _connectionString },
                 { "MongoDbSettings:ProductosCollection", "productos_read" },
             })

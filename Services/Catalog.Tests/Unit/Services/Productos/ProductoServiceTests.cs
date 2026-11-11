@@ -16,8 +16,7 @@ namespace TiendaApi.Tests.Unit.Services.Productos;
 /// 🎓 Camino real: caché → MongoDB (<c>productos_read</c>). PostgreSQL solo
 /// interviene en las escrituras, por eso aquí NUNCA se toca el repositorio PG.
 /// </summary>
-public class ProductoServiceTests
-{
+public class ProductoServiceTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios, sin arrastrar
     // invocaciones de los tests anteriores (NUnit reutiliza la instancia).
     private Mock<IProductoReadRepository> _read = null!;
@@ -25,14 +24,12 @@ public class ProductoServiceTests
     private ProductoService _service = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _read = new Mock<IProductoReadRepository>();
         _cache = new Mock<ICacheService>();
 
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
+            .AddInMemoryCollection(new Dictionary<string, string?> {
                 ["Cache:ProductoCacheTTLMinutes"] = "10"
             })
             .Build();
@@ -40,8 +37,7 @@ public class ProductoServiceTests
         _service = new ProductoService(_read.Object, _cache.Object, configuration);
     }
 
-    private static ProductoRead Producto(long id, string nombre = "Laptop") => new()
-    {
+    private static ProductoRead Producto(long id, string nombre = "Laptop") => new() {
         Id = id,
         Nombre = nombre,
         Descripcion = "desc",
@@ -55,15 +51,13 @@ public class ProductoServiceTests
     /// Espera a que el <c>Task.Run</c> fire-and-forget del servicio termine de
     /// escribir en caché (la invalidación/escritura no es awaitable por diseño).
     /// </summary>
-    private static async Task EsperarAsync(Func<bool> condicion)
-    {
+    private static async Task EsperarAsync(Func<bool> condicion) {
         for (var i = 0; i < 40 && !condicion(); i++)
             await Task.Delay(25);
     }
 
     [Test]
-    public async Task GetById_CacheHit_NoTocaMongo()
-    {
+    public async Task GetById_CacheHit_NoTocaMongo() {
         var enCache = new ProductoDto(1, "En caché", "d", 1m, 1, null,
             new CategoriaResumenDto(1, "Cat"), null, DateTime.UtcNow, DateTime.UtcNow);
         _cache.Setup(c => c.GetAsync<ProductoDto>("productos:1")).ReturnsAsync(enCache);
@@ -75,8 +69,7 @@ public class ProductoServiceTests
     }
 
     [Test]
-    public async Task GetById_SinCache_LeeDeMongo_YLoCachea()
-    {
+    public async Task GetById_SinCache_LeeDeMongo_YLoCachea() {
         _cache.Setup(c => c.GetAsync<ProductoDto>(It.IsAny<string>()))
             .ReturnsAsync((ProductoDto?)null);
         _read.Setup(r => r.FindByIdAsync(7)).ReturnsAsync(Producto(7));
@@ -94,8 +87,7 @@ public class ProductoServiceTests
     }
 
     [Test]
-    public async Task GetById_NoExiste_DevuelveNull()
-    {
+    public async Task GetById_NoExiste_DevuelveNull() {
         _cache.Setup(c => c.GetAsync<ProductoDto>(It.IsAny<string>()))
             .ReturnsAsync((ProductoDto?)null);
         _read.Setup(r => r.FindByIdAsync(999)).ReturnsAsync((ProductoRead?)null);
@@ -108,8 +100,7 @@ public class ProductoServiceTests
     }
 
     [Test]
-    public async Task GetPaged_SinCache_LeeDeMongo_YDevuelvePagedResult()
-    {
+    public async Task GetPaged_SinCache_LeeDeMongo_YDevuelvePagedResult() {
         _cache.Setup(c => c.GetAsync<PagedResult<ProductoDto>>(It.IsAny<string>()))
             .ReturnsAsync((PagedResult<ProductoDto>?)null);
         _read.Setup(r => r.FindAllPagedAsync(It.IsAny<ProductoFilterDto>()))
@@ -124,8 +115,7 @@ public class ProductoServiceTests
     }
 
     [Test]
-    public async Task GetPaged_CacheHit_NoTocaMongo()
-    {
+    public async Task GetPaged_CacheHit_NoTocaMongo() {
         var enCache = new PagedResult<ProductoDto> { TotalCount = 5, Page = 1, PageSize = 10 };
         _cache.Setup(c => c.GetAsync<PagedResult<ProductoDto>>(It.IsAny<string>()))
             .ReturnsAsync(enCache);

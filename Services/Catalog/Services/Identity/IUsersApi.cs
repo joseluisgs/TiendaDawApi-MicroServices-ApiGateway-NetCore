@@ -9,8 +9,7 @@ namespace TiendaApi.Api.Services.Identity;
 /// piden al dueño. Se usa para el reporte semanal de productos (equivale al
 /// <c>GetActiveUsersAsync</c> de <c>ProductoReportTask</c> en el monolito).
 /// </summary>
-public interface IUsersApi
-{
+public interface IUsersApi {
     /// <summary>Usuarios activos (<c>!IsDeleted</c>, ordenados por email).</summary>
     [Get("/internal/users/activos")]
     Task<List<UsuarioActivoDto>> GetActivosAsync();

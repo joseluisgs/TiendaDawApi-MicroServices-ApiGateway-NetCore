@@ -10,8 +10,7 @@ namespace TiendaApi.Api.Services.Identity;
 /// usuarios al dueño para cruzarlo con los pedidos (ranking de clientes y
 /// cifras de "usuarios nuevos en el periodo").
 /// </summary>
-public interface IUsersApi
-{
+public interface IUsersApi {
     /// <summary>Página de usuarios (solo ADMIN, igual que en el monolito).</summary>
     /// <param name="page">Página base 0.</param>
     /// <param name="size">Tamaño.</param>

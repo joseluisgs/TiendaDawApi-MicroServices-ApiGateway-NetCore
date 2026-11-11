@@ -8,8 +8,7 @@ namespace BuildingBlocks.Jwt;
 /// variable de entorno inyectada a todos; en desarrollo, la misma sección en
 /// cada appsettings). Quien firma con ellos es únicamente <c>identity</c>.
 /// </summary>
-public sealed class JwtSettings
-{
+public sealed class JwtSettings {
     /// <summary>Sección de configuración de la que se leen los valores.</summary>
     public const string SectionName = "Jwt";
 

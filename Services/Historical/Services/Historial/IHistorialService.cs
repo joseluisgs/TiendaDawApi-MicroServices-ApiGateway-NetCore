@@ -14,8 +14,7 @@ namespace TiendaApi.Api.Services.Historial;
 /// SERIES (dato derivado): "sin puntos" = lista vacía, una respuesta válida
 /// como otra.
 /// </summary>
-public interface IHistorialService
-{
+public interface IHistorialService {
     /// <summary>
     /// Serie histórica de precios de un producto (sin validar existencia:
     /// la valida el consumidor dueño del producto).

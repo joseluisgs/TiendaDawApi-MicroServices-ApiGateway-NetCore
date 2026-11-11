@@ -9,20 +9,15 @@ namespace TiendaApi.Api.Features.Pedidos.Notifications;
 /// 🎓 OPEN/CLOSED: cambiar el canal de notificación no obliga a tocar el comando.
 /// </summary>
 public class PedidoCreadoEmailHandler(IEmailApi emailService, IConfiguration configuration)
-    : INotificationHandler<PedidoCreadoNotification>
-{
+    : INotificationHandler<PedidoCreadoNotification> {
     /// <inheritdoc/>
-    public async Task Handle(PedidoCreadoNotification notification, CancellationToken cancellationToken)
-    {
+    public async Task Handle(PedidoCreadoNotification notification, CancellationToken cancellationToken) {
         var adminEmail = configuration["Smtp:AdminEmail"];
         if (string.IsNullOrWhiteSpace(adminEmail)) return;
         var content = EmailTemplates.PedidoCreado(notification.Pedido.Id, notification.Pedido.Total, notification.Pedido.Items?.Count ?? 0, notification.Pedido.UserId);
-        try
-        {
+        try {
             await emailService.EnqueueAsync(new EmailRequest(adminEmail, $"🛒 Nuevo Pedido #{notification.Pedido.Id}", EmailTemplates.CreateBase("Nuevo Pedido Recibido", content), IsHtml: true));
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             // 📧 Mejor esfuerzo: email caído NO rompe la operación del pedido.
             Log.Warning(ex, "PedidoCreadoEmailHandler: email-service no disponible, no se encoló el aviso");
         }

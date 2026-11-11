@@ -17,22 +17,19 @@ namespace TiendaApi.Tests.Unit.GraphQL;
 /// solo se traduce su respuesta a un error de GraphQL (para que salga en
 /// <c>errors[]</c> con el mismo texto que daría REST).
 /// </summary>
-public class ProductoMutationTests
-{
+public class ProductoMutationTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<ICatalogApi> _catalog = null!;
     private ProductoMutation _mutation = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _catalog = new Mock<ICatalogApi>();
         _mutation = new ProductoMutation();
     }
 
-    private static CreateProductoInput Input(string nombre = "Laptop", long categoriaId = 1) => new()
-    {
+    private static CreateProductoInput Input(string nombre = "Laptop", long categoriaId = 1) => new() {
         Nombre = nombre,
         Precio = 9.99m,
         Stock = 1,
@@ -47,8 +44,7 @@ public class ProductoMutationTests
     // ── create ─────────────────────────────────────────────────────────
 
     [Test]
-    public async Task CreateProducto_MapeaElInput_YDevuelveElDtoDeCatalog()
-    {
+    public async Task CreateProducto_MapeaElInput_YDevuelveElDtoDeCatalog() {
         _catalog.Setup(c => c.CreateProductoAsync(It.IsAny<ProductoRequestDto>()))
             .ReturnsAsync(Producto(7, "Laptop"));
 
@@ -61,8 +57,7 @@ public class ProductoMutationTests
     }
 
     [Test]
-    public async Task CreateProducto_CatalogDevuelve400_LanzaGraphQLExceptionConSuMensaje()
-    {
+    public async Task CreateProducto_CatalogDevuelve400_LanzaGraphQLExceptionConSuMensaje() {
         // El E2E busca "validaci" en errors[]: el mensaje debe ser el de catalog.
         _catalog.Setup(c => c.CreateProductoAsync(It.IsAny<ProductoRequestDto>()))
             .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.BadRequest,
@@ -77,8 +72,7 @@ public class ProductoMutationTests
     }
 
     [Test]
-    public async Task CreateProducto_CatalogResponde500_NoSeComeElError()
-    {
+    public async Task CreateProducto_CatalogResponde500_NoSeComeElError() {
         _catalog.Setup(c => c.CreateProductoAsync(It.IsAny<ProductoRequestDto>()))
             .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.InternalServerError, ""));
 
@@ -90,8 +84,7 @@ public class ProductoMutationTests
     // ── update ─────────────────────────────────────────────────────────
 
     [Test]
-    public async Task UpdateProducto_UsaElPatch_ParaNoPisarLosCamposNull()
-    {
+    public async Task UpdateProducto_UsaElPatch_ParaNoPisarLosCamposNull() {
         _catalog.Setup(c => c.UpdateProductoAsync(It.IsAny<long>(), It.IsAny<ProductoPatchDto>()))
             .ReturnsAsync(Producto(7, "Laptop"));
 
@@ -104,8 +97,7 @@ public class ProductoMutationTests
     }
 
     [Test]
-    public async Task UpdateProducto_ProductoInexistente_LanzaGraphQLException()
-    {
+    public async Task UpdateProducto_ProductoInexistente_LanzaGraphQLException() {
         _catalog.Setup(c => c.UpdateProductoAsync(It.IsAny<long>(), It.IsAny<ProductoPatchDto>()))
             .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound,
                 """{"message":"Recurso con ID 7 no encontrado"}"""));
@@ -120,8 +112,7 @@ public class ProductoMutationTests
     // ── delete ─────────────────────────────────────────────────────────
 
     [Test]
-    public async Task DeleteProducto_Ok_DevuelveTrue()
-    {
+    public async Task DeleteProducto_Ok_DevuelveTrue() {
         _catalog.Setup(c => c.DeleteProductoAsync(7)).Returns(Task.CompletedTask);
 
         var resultado = await _mutation.DeleteProducto(7, _catalog.Object);
@@ -131,8 +122,7 @@ public class ProductoMutationTests
     }
 
     [Test]
-    public async Task DeleteProducto_Fallo_LanzaGraphQLException()
-    {
+    public async Task DeleteProducto_Fallo_LanzaGraphQLException() {
         _catalog.Setup(c => c.DeleteProductoAsync(7))
             .ThrowsAsync(await ApiExceptionCon(HttpStatusCode.NotFound, "{}"));
 
@@ -146,15 +136,11 @@ public class ProductoMutationTests
     /// lanzó nada). Más explícito que FluentAssertions aquí: se comprueba el
     /// MENSAJE, que es lo que el E2E va a leer en <c>errors[]</c>.
     /// </summary>
-    private static async Task<GraphQLException?> CapturarAsync(Func<Task> operacion)
-    {
-        try
-        {
+    private static async Task<GraphQLException?> CapturarAsync(Func<Task> operacion) {
+        try {
             await operacion();
             return null;
-        }
-        catch (GraphQLException ex)
-        {
+        } catch (GraphQLException ex) {
             return ex;
         }
     }
@@ -164,8 +150,7 @@ public class ProductoMutationTests
         await ApiException.Create(
             new HttpRequestMessage(HttpMethod.Post, "http://catalog"),
             HttpMethod.Post,
-            new HttpResponseMessage(status)
-            {
+            new HttpResponseMessage(status) {
                 Content = new StringContent(body, System.Text.Encoding.UTF8, "application/json")
             },
             new RefitSettings());

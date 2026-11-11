@@ -37,19 +37,16 @@ public class UpdateProductoImageCommandHandler(
     IMediator mediator,
     ICacheService cacheService,
     IOutputCacheStore outputCacheStore)
-    : IRequestHandler<UpdateProductoImageCommand, Result<ProductoDto, DomainError>>
-{
+    : IRequestHandler<UpdateProductoImageCommand, Result<ProductoDto, DomainError>> {
     /// <inheritdoc/>
     public async Task<Result<ProductoDto, DomainError>> Handle(
-        UpdateProductoImageCommand request, CancellationToken cancellationToken)
-    {
+        UpdateProductoImageCommand request, CancellationToken cancellationToken) {
         var producto = await repository.FindByIdAsync(request.Id);
         if (producto is null)
             return Result.Failure<ProductoDto, DomainError>(ProductoError.NotFound(request.Id));
 
         string rutaPublica;
-        try
-        {
+        try {
             await using var stream = request.Image.OpenReadStream();
             var parte = new StreamPart(
                 stream,
@@ -58,23 +55,17 @@ public class UpdateProductoImageCommandHandler(
                 name: "file");
             var subida = await storageApi.UploadAsync(parte, "productos");
             rutaPublica = subida.Url;
-        }
-        catch (ApiException ex) when (ex.StatusCode is HttpStatusCode.BadRequest)
-        {
+        } catch (ApiException ex) when (ex.StatusCode is HttpStatusCode.BadRequest) {
             // storage valida tamaño/extensión/tipo de contenido y devuelve 400
             // con { message }: se reemite como el error de validación del monolito.
             return Result.Failure<ProductoDto, DomainError>(
                 ValidationError.Create(MensajeDeError(ex)));
         }
 
-        if (producto.IsLocalImage() && !string.IsNullOrWhiteSpace(producto.Imagen))
-        {
-            try
-            {
+        if (producto.IsLocalImage() && !string.IsNullOrWhiteSpace(producto.Imagen)) {
+            try {
                 await storageApi.DeleteAsync(producto.Imagen);
-            }
-            catch (Exception ex)
-            {
+            } catch (Exception ex) {
                 Log.Warning(ex, "storage no disponible: no se borró la imagen anterior {Imagen}", producto.Imagen);
             }
         }
@@ -98,19 +89,15 @@ public class UpdateProductoImageCommandHandler(
     }
 
     /// <summary>Extrae el <c>message</c> del 400 de storage (o uno genérico).</summary>
-    private static string MensajeDeError(ApiException ex)
-    {
-        try
-        {
+    private static string MensajeDeError(ApiException ex) {
+        try {
             if (string.IsNullOrEmpty(ex.Content))
-            return "Archivo no válido";
+                return "Archivo no válido";
 
-        using var doc = System.Text.Json.JsonDocument.Parse(ex.Content);
+            using var doc = System.Text.Json.JsonDocument.Parse(ex.Content);
             if (doc.RootElement.TryGetProperty("message", out var mensaje))
                 return mensaje.GetString() ?? "Archivo no válido";
-        }
-        catch (System.Text.Json.JsonException)
-        {
+        } catch (System.Text.Json.JsonException) {
             // cuerpo no JSON: se responde con el mensaje genérico
         }
 

@@ -13,22 +13,18 @@ namespace TiendaApi.Tests.Unit.Features.Users;
 /// de ProductoReportTask en el monolito). Solo mapea: el filtro !IsDeleted y
 /// el orden por email los hace el repositorio (como en el monolito).
 /// </summary>
-public class GetUsuariosActivosQueryHandlerTests
-{
+public class GetUsuariosActivosQueryHandlerTests {
     private readonly Mock<IUserRepository> _repository = new();
     private readonly GetUsuariosActivosQueryHandler _handler;
 
-    public GetUsuariosActivosQueryHandlerTests()
-    {
+    public GetUsuariosActivosQueryHandlerTests() {
         _handler = new GetUsuariosActivosQueryHandler(_repository.Object);
     }
 
     [Test]
-    public async Task Handle_ConUsuariosActivos_DevuelveLaListaMapeada()
-    {
+    public async Task Handle_ConUsuariosActivos_DevuelveLaListaMapeada() {
         _repository.Setup(r => r.GetActiveUsersAsync())
-            .ReturnsAsync(new List<User>
-            {
+            .ReturnsAsync(new List<User> {
                 new() { Id = 1, UserName = "ana", Email = "ana@test.com", IsDeleted = false },
                 new() { Id = 2, UserName = "luis", Email = "luis@test.com", IsDeleted = false },
             });
@@ -40,8 +36,7 @@ public class GetUsuariosActivosQueryHandlerTests
     }
 
     [Test]
-    public async Task Handle_SinUsuarios_DevuelveVacia_NoError()
-    {
+    public async Task Handle_SinUsuarios_DevuelveVacia_NoError() {
         _repository.Setup(r => r.GetActiveUsersAsync())
             .ReturnsAsync(new List<User>());
 
@@ -51,13 +46,11 @@ public class GetUsuariosActivosQueryHandlerTests
     }
 
     [Test]
-    public async Task Handle_NoExponeDatosSensibles_SoloElDtoPublico()
-    {
+    public async Task Handle_NoExponeDatosSensibles_SoloElDtoPublico() {
         // El reporte solo necesita Email y UserName: el DTO no lleva hashes
         // ni credenciales (mismo UserDto que la ruta pública).
         _repository.Setup(r => r.GetActiveUsersAsync())
-            .ReturnsAsync(new List<User>
-            {
+            .ReturnsAsync(new List<User> {
                 new() { Id = 1, UserName = "ana", Email = "ana@test.com", PasswordHash = "secreto", IsDeleted = false },
             });
 

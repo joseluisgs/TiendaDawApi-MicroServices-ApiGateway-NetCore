@@ -15,16 +15,14 @@ namespace TiendaApi.Api.Infrastructures;
 /// (lectura). Los datos de usuarios, pedidos o históricos NO se consultan:
 /// se piden por Refit al servicio que los dueña.
 /// </summary>
-public static class RepositoriesConfig
-{
+public static class RepositoriesConfig {
     /// <summary>
     /// Registra todos los repositorios.
     /// </summary>
     /// <param name="services">Colección de servicios.</param>
     /// <param name="configuration">Configuración.</param>
     /// <returns>IServiceCollection.</returns>
-    public static IServiceCollection AddRepositories(this IServiceCollection services, IConfiguration configuration)
-    {
+    public static IServiceCollection AddRepositories(this IServiceCollection services, IConfiguration configuration) {
         Log.Information("Registrando repositorios de catalog...");
 
         services.AddScoped<ICategoriaRepository, CategoriaRepository>();

@@ -15,15 +15,13 @@ namespace TiendaApi.Api.Data;
 ///
 /// Copiado del <c>TiendaDbContext</c> del monolito y podado de lo ajeno.
 /// </summary>
-public class CatalogDbContext : DbContext
-{
+public class CatalogDbContext : DbContext {
     private static readonly TimestampInterceptor _timestampInterceptor = new();
 
     /// <summary>
     /// Constructor con opciones de configuración.
     /// </summary>
-    public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options)
-    {
+    public CatalogDbContext(DbContextOptions<CatalogDbContext> options) : base(options) {
     }
 
     /// <summary>DbSet de Categorías.</summary>
@@ -41,8 +39,7 @@ public class CatalogDbContext : DbContext
     /// <summary>
     /// Configura el contexto y registra el interceptor de marcas de tiempo.
     /// </summary>
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         base.OnConfiguring(optionsBuilder);
         optionsBuilder.AddInterceptors(_timestampInterceptor);
     }
@@ -52,12 +49,10 @@ public class CatalogDbContext : DbContext
     /// Idéntico al del monolito para las entidades de catálogo (mismas tablas,
     /// mismos índices, mismos filtros de soft-delete): el cliente no nota el reparto.
     /// </summary>
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Categoria>(entity =>
-        {
+        modelBuilder.Entity<Categoria>(entity => {
             entity.ToTable("categorias");
             entity.HasKey(c => c.Id);
             entity.Property(c => c.Id).UseIdentityAlwaysColumn();
@@ -69,8 +64,7 @@ public class CatalogDbContext : DbContext
             entity.HasQueryFilter(c => !c.IsDeleted);
         });
 
-        modelBuilder.Entity<Producto>(entity =>
-        {
+        modelBuilder.Entity<Producto>(entity => {
             entity.ToTable("productos");
             entity.HasKey(p => p.Id);
             entity.Property(p => p.Id).UseIdentityAlwaysColumn();
@@ -100,8 +94,7 @@ public class CatalogDbContext : DbContext
             entity.HasQueryFilter(p => !p.IsDeleted);
         });
 
-        modelBuilder.Entity<Proveedor>(entity =>
-        {
+        modelBuilder.Entity<Proveedor>(entity => {
             entity.ToTable("proveedores");
             entity.HasKey(p => p.Codigo);
 
@@ -122,8 +115,7 @@ public class CatalogDbContext : DbContext
             entity.HasQueryFilter(p => !p.IsDeleted);
         });
 
-        modelBuilder.Entity<ReplicaMarca>(entity =>
-        {
+        modelBuilder.Entity<ReplicaMarca>(entity => {
             entity.ToTable("replica_marcas");
             entity.HasKey(r => r.Nombre);
             entity.Property(r => r.Nombre).IsRequired().HasMaxLength(50);

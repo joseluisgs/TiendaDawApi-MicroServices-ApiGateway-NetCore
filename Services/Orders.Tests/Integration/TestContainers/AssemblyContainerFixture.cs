@@ -12,8 +12,7 @@ namespace TiendaApi.Tests.Integration.TestContainers;
 /// <c>pedidos</c>. No hay PostgreSQL aquí — el stock es de <b>catalog</b>.
 /// </summary>
 [SetUpFixture]
-public sealed class AssemblyContainerFixture
-{
+public sealed class AssemblyContainerFixture {
     private static MongoDbContainer? _mongo;
 
     /// <summary>Contenedor MongoDB compartido (arrancado una vez por assembly).</summary>
@@ -24,8 +23,7 @@ public sealed class AssemblyContainerFixture
     /// Devuelve una base de MongoDB propia para la clase indicada (se limpia al
     /// entrar: los tests no deben heredar datos entre sí).
     /// </summary>
-    internal static IMongoDatabase GetMongoDatabase(string databaseName)
-    {
+    internal static IMongoDatabase GetMongoDatabase(string databaseName) {
         var client = new MongoClient(Mongo.GetConnectionString());
         client.DropDatabase(databaseName);
         return client.GetDatabase(databaseName);
@@ -33,8 +31,7 @@ public sealed class AssemblyContainerFixture
 
     /// <summary>Arranca el contenedor una sola vez por assembly.</summary>
     [OneTimeSetUp]
-    public async Task OneTimeSetup()
-    {
+    public async Task OneTimeSetup() {
         _mongo = new MongoDbBuilder(TestContainerImages.Mongo)
             .WithUsername("admin")
             .WithPassword("admin123")
@@ -44,8 +41,7 @@ public sealed class AssemblyContainerFixture
 
     /// <summary>Para el contenedor al terminar el assembly.</summary>
     [OneTimeTearDown]
-    public async Task OneTimeTearDown()
-    {
+    public async Task OneTimeTearDown() {
         if (_mongo is not null)
             await _mongo.DisposeAsync();
     }

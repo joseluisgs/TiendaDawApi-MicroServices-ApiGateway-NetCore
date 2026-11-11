@@ -17,14 +17,12 @@ namespace TiendaApi.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("internal/emails")]
-public class InternalEmailsController(Channel<EmailMessage> emailChannel) : ControllerBase
-{
+public class InternalEmailsController(Channel<EmailMessage> emailChannel) : ControllerBase {
     /// <summary>Encola un email para su envío en segundo plano.</summary>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Enqueue([FromBody] EmailRequest body)
-    {
+    public async Task<IActionResult> Enqueue([FromBody] EmailRequest body) {
         if (string.IsNullOrWhiteSpace(body.To) ||
             string.IsNullOrWhiteSpace(body.Subject) ||
             string.IsNullOrWhiteSpace(body.Body))
@@ -32,8 +30,7 @@ public class InternalEmailsController(Channel<EmailMessage> emailChannel) : Cont
 
         // Escritura no bloqueante en el canal (unbounded): el request responde
         // ya y el BackgroundService se encarga del envío.
-        await emailChannel.Writer.WriteAsync(new EmailMessage
-        {
+        await emailChannel.Writer.WriteAsync(new EmailMessage {
             To = body.To,
             Subject = body.Subject,
             Body = body.Body,

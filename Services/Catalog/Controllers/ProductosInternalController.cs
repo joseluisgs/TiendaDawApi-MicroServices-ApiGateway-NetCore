@@ -27,8 +27,7 @@ namespace TiendaApi.Api.Controllers;
 [Produces("application/json")]
 public class ProductosInternalController(
     IProductoRepository productoRepository,
-    ILogger<ProductosInternalController> logger) : ControllerBase
-{
+    ILogger<ProductosInternalController> logger) : ControllerBase {
     /// <summary>
     /// Descuenta stock de forma atómica con validación.
     /// </summary>
@@ -45,8 +44,7 @@ public class ProductosInternalController(
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<object>> DecrementarStock(
         long id,
-        [FromBody] DecrementoStockDto body)
-    {
+        [FromBody] DecrementoStockDto body) {
         if (body.Cantidad <= 0)
             return BadRequest(new { message = "La cantidad debe ser mayor que 0" });
 
@@ -54,19 +52,16 @@ public class ProductosInternalController(
         // descuentos simultáneos se serializan en vez de perder stock.
         await using var transaction = await productoRepository.BeginTransactionAsync(
             System.Data.IsolationLevel.Serializable);
-        try
-        {
+        try {
             // Tracking (el FindByIdAsync lo trae con tracking) y filtro de
             // soft-delete global: un producto borrado "no existe" → 404.
             var producto = await productoRepository.FindByIdAsync(id);
-            if (producto is null)
-            {
+            if (producto is null) {
                 await transaction.RollbackAsync();
                 return NotFound(new { message = ProductoError.NotFound(id).Message });
             }
 
-            if (producto.Stock < body.Cantidad)
-            {
+            if (producto.Stock < body.Cantidad) {
                 await transaction.RollbackAsync();
                 // Mismo 422 y mismo texto que PedidoError.StockInsuficiente
                 // del monolito: orders reenvía este mensaje al cliente.
@@ -83,9 +78,7 @@ public class ProductosInternalController(
                 "Stock decrementado: producto {Id} -{Cantidad} (quedan {Stock})",
                 id, body.Cantidad, producto.Stock);
             return NoContent();
-        }
-        catch (Exception ex)
-        {
+        } catch (Exception ex) {
             await transaction.RollbackAsync();
             logger.LogError(ex, "Error al decrementar stock del producto {Id}", id);
             throw;

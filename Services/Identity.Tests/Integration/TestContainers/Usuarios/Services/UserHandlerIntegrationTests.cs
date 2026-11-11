@@ -27,31 +27,26 @@ namespace TiendaApi.Tests.Integration.TestContainers.Usuarios.Services;
 [TestFixture]
 [Category("Integration")]
 [NonParallelizable]
-public class UserHandlerIntegrationTests
-{
+public class UserHandlerIntegrationTests {
     private const string DatabaseName = "it_user_handler";
     private string _connectionString = string.Empty;
     private ServiceProvider? _provider;
     private IMediator? _mediator;
 
     [OneTimeSetUp]
-    public async Task OneTimeSetup()
-    {
+    public async Task OneTimeSetup() {
         _connectionString = await AssemblyContainerFixture.CreatePostgresDatabaseAsync(DatabaseName);
     }
 
     [OneTimeTearDown]
-    public async Task OneTimeTearDown()
-    {
+    public async Task OneTimeTearDown() {
         await AssemblyContainerFixture.DropPostgresDatabaseAsync(DatabaseName);
     }
 
     [SetUp]
-    public async Task Setup()
-    {
+    public async Task Setup() {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
+            .AddInMemoryCollection(new Dictionary<string, string?> {
                 { "ConnectionStrings:DefaultConnection", _connectionString },
                 { "Cache:UsuarioCacheTTLMinutes", "10" },
             }!)
@@ -67,14 +62,13 @@ public class UserHandlerIntegrationTests
         services.AddDbContext<TiendaDbContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
         // Identity (UserManager, roles y stores) — misma política que el servicio.
-        services.AddIdentityCore<User>(options =>
-            {
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = true;
-                options.Password.RequiredLength = 8;
-                options.Password.RequireNonAlphanumeric = false;
-            })
+        services.AddIdentityCore<User>(options => {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 8;
+            options.Password.RequireNonAlphanumeric = false;
+        })
             .AddRoles<IdentityRole<long>>()
             .AddSignInManager()
             .AddEntityFrameworkStores<TiendaDbContext>()
@@ -92,8 +86,7 @@ public class UserHandlerIntegrationTests
         // Roles: el seed no corre en los tests, y el comando de alta hace
         // AddToRoleAsync (fallaría con "Role USER does not exist").
         var roleManager = _provider.GetRequiredService<RoleManager<IdentityRole<long>>>();
-        foreach (var rol in new[] { "ADMIN", "USER" })
-        {
+        foreach (var rol in new[] { "ADMIN", "USER" }) {
             if (!await roleManager.RoleExistsAsync(rol))
                 await roleManager.CreateAsync(new IdentityRole<long>(rol));
         }
@@ -102,21 +95,18 @@ public class UserHandlerIntegrationTests
     }
 
     [TearDown]
-    public void TearDown()
-    {
+    public void TearDown() {
         _provider?.Dispose();
     }
 
-    private static RegisterDto NuevoUsuario(string username) => new()
-    {
+    private static RegisterDto NuevoUsuario(string username) => new() {
         Username = username,
         Email = $"{username}@example.com",
         Password = "Test1234"
     };
 
     [Test]
-    public async Task GetAll_SinUsuarios_RetornaPaginaVacia()
-    {
+    public async Task GetAll_SinUsuarios_RetornaPaginaVacia() {
         var result = await _mediator!.Send(new GetAllUsersPagedQuery(new UserFilterDto(null, null, null, 0, 10)));
 
         result.IsSuccess.Should().BeTrue();
@@ -125,8 +115,7 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Create_ConDatosValidos_RetornaUsuarioCreado()
-    {
+    public async Task Create_ConDatosValidos_RetornaUsuarioCreado() {
         var uniqueId = Guid.NewGuid().ToString("N")[..8];
         var dto = NuevoUsuario($"testuser_{uniqueId}");
 
@@ -139,8 +128,7 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task GetById_ConUsuarioExistente_RetornaUsuario()
-    {
+    public async Task GetById_ConUsuarioExistente_RetornaUsuario() {
         var createResult = await _mediator!.Send(new CreateUserCommand(NuevoUsuario("buscaruser")));
         createResult.IsSuccess.Should().BeTrue();
 
@@ -151,26 +139,22 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task GetById_ConUsuarioNoExistente_RetornaNotFound()
-    {
+    public async Task GetById_ConUsuarioNoExistente_RetornaNotFound() {
         var result = await _mediator!.Send(new GetUserByIdQuery(999999));
 
         result.IsFailure.Should().BeTrue();
     }
 
     [Test]
-    public async Task Create_ConEmailDuplicado_RetornaConflicto()
-    {
+    public async Task Create_ConEmailDuplicado_RetornaConflicto() {
         var uniqueId = Guid.NewGuid().ToString("N")[..8];
-        await _mediator!.Send(new CreateUserCommand(new RegisterDto
-        {
+        await _mediator!.Send(new CreateUserCommand(new RegisterDto {
             Username = $"emaildup1_{uniqueId}",
             Email = $"dup_{uniqueId}@example.com",
             Password = "Test1234"
         }));
 
-        var result = await _mediator.Send(new CreateUserCommand(new RegisterDto
-        {
+        var result = await _mediator.Send(new CreateUserCommand(new RegisterDto {
             Username = $"emaildup2_{uniqueId}",
             Email = $"dup_{uniqueId}@example.com",
             Password = "Test1234"
@@ -180,18 +164,15 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Create_ConUsernameDuplicado_RetornaConflicto()
-    {
+    public async Task Create_ConUsernameDuplicado_RetornaConflicto() {
         var uniqueId = Guid.NewGuid().ToString("N")[..8];
-        await _mediator!.Send(new CreateUserCommand(new RegisterDto
-        {
+        await _mediator!.Send(new CreateUserCommand(new RegisterDto {
             Username = $"userdup_{uniqueId}",
             Email = $"userdup1_{uniqueId}@example.com",
             Password = "Test1234"
         }));
 
-        var result = await _mediator.Send(new CreateUserCommand(new RegisterDto
-        {
+        var result = await _mediator.Send(new CreateUserCommand(new RegisterDto {
             Username = $"userdup_{uniqueId}",
             Email = $"userdup2_{uniqueId}@example.com",
             Password = "Test1234"
@@ -201,10 +182,8 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Create_ConEmailInvalido_RetornaErrorValidacion()
-    {
-        var dto = new RegisterDto
-        {
+    public async Task Create_ConEmailInvalido_RetornaErrorValidacion() {
+        var dto = new RegisterDto {
             Username = "testuser",
             Email = "email-invalido",
             Password = "Test1234"
@@ -216,10 +195,8 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Create_ConPasswordCorto_RetornaErrorValidacion()
-    {
-        var dto = new RegisterDto
-        {
+    public async Task Create_ConPasswordCorto_RetornaErrorValidacion() {
+        var dto = new RegisterDto {
             Username = "testuser",
             Email = "test@example.com",
             Password = "123"
@@ -231,10 +208,8 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Create_ConUsernameCorto_RetornaErrorValidacion()
-    {
-        var dto = new RegisterDto
-        {
+    public async Task Create_ConUsernameCorto_RetornaErrorValidacion() {
+        var dto = new RegisterDto {
             Username = "ab",
             Email = "test@example.com",
             Password = "Test1234"
@@ -247,8 +222,7 @@ public class UserHandlerIntegrationTests
 
     #region ========== UPDATE ==========
     [Test]
-    public async Task Update_ConUsuarioExistente_ActualizaDatos()
-    {
+    public async Task Update_ConUsuarioExistente_ActualizaDatos() {
         var createResult = await _mediator!.Send(new CreateUserCommand(NuevoUsuario("updatetest")));
         createResult.IsSuccess.Should().BeTrue();
 
@@ -260,8 +234,7 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Update_ConUsuarioNoExistente_RetornaNotFound()
-    {
+    public async Task Update_ConUsuarioNoExistente_RetornaNotFound() {
         var result = await _mediator!.Send(new UpdateUserCommand(
             999999, new UserUpdateDto { Email = "updated@example.com" }));
 
@@ -269,8 +242,7 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Update_ConEmailDuplicado_RetornaConflicto()
-    {
+    public async Task Update_ConEmailDuplicado_RetornaConflicto() {
         await _mediator!.Send(new CreateUserCommand(NuevoUsuario("user1update")));
         var createResult = await _mediator.Send(new CreateUserCommand(NuevoUsuario("user2update")));
         createResult.IsSuccess.Should().BeTrue();
@@ -284,8 +256,7 @@ public class UserHandlerIntegrationTests
 
     #region ========== DELETE ==========
     [Test]
-    public async Task Delete_ConUsuarioExistente_EliminaUsuario()
-    {
+    public async Task Delete_ConUsuarioExistente_EliminaUsuario() {
         var createResult = await _mediator!.Send(new CreateUserCommand(NuevoUsuario("deletetest")));
         createResult.IsSuccess.Should().BeTrue();
 
@@ -298,8 +269,7 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task Delete_ConUsuarioNoExistente_RetornaNotFound()
-    {
+    public async Task Delete_ConUsuarioNoExistente_RetornaNotFound() {
         var result = await _mediator!.Send(new DeleteUserCommand(999999));
 
         result.IsFailure.Should().BeTrue();
@@ -308,8 +278,7 @@ public class UserHandlerIntegrationTests
 
     #region ========== AVATAR ==========
     [Test]
-    public async Task UpdateAvatar_ConUsuarioExistente_ActualizaAvatar()
-    {
+    public async Task UpdateAvatar_ConUsuarioExistente_ActualizaAvatar() {
         var createResult = await _mediator!.Send(new CreateUserCommand(NuevoUsuario("avatartest")));
         createResult.IsSuccess.Should().BeTrue();
 
@@ -321,8 +290,7 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task UpdateAvatar_ConUsuarioNoExistente_RetornaNotFound()
-    {
+    public async Task UpdateAvatar_ConUsuarioNoExistente_RetornaNotFound() {
         var result = await _mediator!.Send(new UpdateUserAvatarCommand(999999, "/uploads/avatars/test.jpg"));
 
         result.IsFailure.Should().BeTrue();
@@ -331,8 +299,7 @@ public class UserHandlerIntegrationTests
 
     #region ========== PAGINACIÓN ==========
     [Test]
-    public async Task GetAllPaged_SinUsuarios_RetornaPaginaVacia()
-    {
+    public async Task GetAllPaged_SinUsuarios_RetornaPaginaVacia() {
         var result = await _mediator!.Send(new GetAllUsersPagedQuery(new UserFilterDto(null, null, null, 0, 10)));
 
         result.IsSuccess.Should().BeTrue();
@@ -341,10 +308,8 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task GetAllPaged_ConUsuarios_RetornaUsuariosPaginados()
-    {
-        for (var i = 0; i < 5; i++)
-        {
+    public async Task GetAllPaged_ConUsuarios_RetornaUsuariosPaginados() {
+        for (var i = 0; i < 5; i++) {
             await _mediator!.Send(new CreateUserCommand(NuevoUsuario($"pageduser{i}")));
         }
 
@@ -359,10 +324,8 @@ public class UserHandlerIntegrationTests
     }
 
     [Test]
-    public async Task GetAllPaged_SegundaPagina_RetornaPaginaCorrecta()
-    {
-        for (var i = 0; i < 5; i++)
-        {
+    public async Task GetAllPaged_SegundaPagina_RetornaPaginaCorrecta() {
+        for (var i = 0; i < 5; i++) {
             await _mediator!.Send(new CreateUserCommand(NuevoUsuario($"paged2user{i}")));
         }
 

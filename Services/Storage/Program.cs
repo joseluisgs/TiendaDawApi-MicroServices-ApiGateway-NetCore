@@ -19,8 +19,7 @@ Log.Logger = new LoggerConfiguration()
         theme: AnsiConsoleTheme.Code)
     .CreateLogger();
 
-try
-{
+try {
     Log.Information("arrancando storage-service...");
 
     var builder = WebApplication.CreateBuilder(args);
@@ -68,12 +67,8 @@ try
     Log.Information("=================================================================");
 
     app.Run();
-}
-catch (Exception ex)
-{
+} catch (Exception ex) {
     Log.Fatal(ex, "storage-service terminó inesperadamente");
-}
-finally
-{
+} finally {
     Log.CloseAndFlush();
 }

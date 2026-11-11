@@ -7,12 +7,10 @@ namespace TiendaApi.Api.Middleware;
 /// el gateway". Se aplican en el borde, que es la
 /// única puerta pública.
 /// </summary>
-public class SecurityHeadersMiddleware(RequestDelegate next)
-{
+public class SecurityHeadersMiddleware(RequestDelegate next) {
     private readonly RequestDelegate _next = next;
 
-    private static readonly Dictionary<string, string> SecurityHeaders = new(StringComparer.OrdinalIgnoreCase)
-    {
+    private static readonly Dictionary<string, string> SecurityHeaders = new(StringComparer.OrdinalIgnoreCase) {
         ["X-Content-Type-Options"] = "nosniff",
         ["X-Frame-Options"] = "DENY",
         ["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
@@ -46,15 +44,13 @@ public class SecurityHeadersMiddleware(RequestDelegate next)
     /// X-XSS-Protection no se envía: es obsoleta (OWASP recomienda no enviarla).
     /// </summary>
     /// <param name="context">Contexto HTTP de la petición en curso.</param>
-    public async Task InvokeAsync(HttpContext context)
-    {
+    public async Task InvokeAsync(HttpContext context) {
         // Páginas UI: Swagger, GraphQL (Banana Cake Pop) y el índice del gateway.
         var esPaginaUi = context.Request.Path.StartsWithSegments("/swagger")
                       || context.Request.Path.StartsWithSegments("/graphql")
                       || context.Request.Path == "/";
 
-        foreach (var header in SecurityHeaders)
-        {
+        foreach (var header in SecurityHeaders) {
             if (esPaginaUi && header.Key == "Content-Security-Policy")
                 context.Response.Headers[header.Key] = ContentSecurityPolicyUi;
             else
@@ -66,8 +62,7 @@ public class SecurityHeadersMiddleware(RequestDelegate next)
 }
 
 /// <summary>Extensiones para registro del middleware.</summary>
-public static class SecurityHeadersMiddlewareExtensions
-{
+public static class SecurityHeadersMiddlewareExtensions {
     /// <summary>Registra el middleware de headers de seguridad.</summary>
     /// <param name="app">Constructor de la aplicación.</param>
     /// <returns>IApplicationBuilder.</returns>

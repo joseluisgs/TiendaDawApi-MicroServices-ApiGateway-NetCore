@@ -21,8 +21,7 @@ namespace TiendaApi.Tests.Unit.Services.Estadisticas;
 /// y hay que convertirlos. Los errores de mapeo son SILENCIOSOS (el cálculo
 /// devuelve ceros en vez de fallar), así que se cubren explícitamente.
 /// </summary>
-public class EstadisticasServiceTests
-{
+public class EstadisticasServiceTests {
     // Se recrean en [SetUp]: cada test parte de mocks limpios (NUnit reutiliza
     // la instancia del fixture).
     private Mock<IOrdersApi> _orders = null!;
@@ -32,8 +31,7 @@ public class EstadisticasServiceTests
     private EstadisticasService _service = null!;
 
     [SetUp]
-    public void SetUp()
-    {
+    public void SetUp() {
         _orders = new Mock<IOrdersApi>();
         _catalog = new Mock<ICatalogApi>();
         _users = new Mock<IUsersApi>();
@@ -64,8 +62,7 @@ public class EstadisticasServiceTests
     }
 
     /// <summary>Página con todo en la 0 y vacía en las demás (corta el bucle).</summary>
-    private static PagedResult<T> Pagina<T>(List<T> items, int page) => new()
-    {
+    private static PagedResult<T> Pagina<T>(List<T> items, int page) => new() {
         Items = page == 0 ? items : Enumerable.Empty<T>(),
         TotalCount = items.Count,
         Page = page + 1,
@@ -108,8 +105,7 @@ public class EstadisticasServiceTests
     // ────────────────────────────────────────────────────────────────
 
     [Test]
-    public async Task Inventario_CruzaProductoConCategoria_YProveedor()
-    {
+    public async Task Inventario_CruzaProductoConCategoria_YProveedor() {
         var result = await _service.InventarioAsync(stockMax: 5);
 
         result.IsSuccess.Should().BeTrue();
@@ -119,8 +115,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Inventario_AgotaLosQueTienenStockCero()
-    {
+    public async Task Inventario_AgotaLosQueTienenStockCero() {
         var result = await _service.InventarioAsync(stockMax: 5);
 
         result.IsSuccess.Should().BeTrue();
@@ -129,8 +124,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Resumen_CuentaPedidos_YRecaudacion()
-    {
+    public async Task Resumen_CuentaPedidos_YRecaudacion() {
         _orders.Setup(o => o.GetPedidosAsync()).ReturnsAsync(Pedidos());
 
         var result = await _service.ResumenAsync(null, null);
@@ -142,8 +136,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Resumen_LasCategoriasSinProducto_SaleConCero()
-    {
+    public async Task Resumen_LasCategoriasSinProducto_SaleConCero() {
         // Con los 3 productos mapeados bien, ninguna categoría queda "sin producto".
         var result = await _service.ResumenAsync(null, null);
 
@@ -154,8 +147,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Clientes_ProductoFavorito_VieneDelItemDesnormalizado()
-    {
+    public async Task Clientes_ProductoFavorito_VieneDelItemDesnormalizado() {
         _orders.Setup(o => o.GetPedidosAsync()).ReturnsAsync(Pedidos());
 
         var result = await _service.ClientesAsync(null, null, top: 5);
@@ -168,8 +160,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Proveedores_AgrupaPorCodigoDelProducto()
-    {
+    public async Task Proveedores_AgrupaPorCodigoDelProducto() {
         // Pedidos que cubren los DOS proveedores, para comprobar el cruce.
         _orders.Setup(o => o.GetPedidosAsync()).ReturnsAsync(
         [
@@ -191,8 +182,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Ventas_AgrupacionInvalida_Devuelve400()
-    {
+    public async Task Ventas_AgrupacionInvalida_Devuelve400() {
         var result = await _service.VentasAsync(null, null, "trimestre");
 
         result.IsFailure.Should().BeTrue();
@@ -200,8 +190,7 @@ public class EstadisticasServiceTests
     }
 
     [Test]
-    public async Task Precios_ProductoInexistente_Devuelve404()
-    {
+    public async Task Precios_ProductoInexistente_Devuelve404() {
         // catalog responde 404 al pedir el producto → el dueño manda.
         _catalog.Setup(c => c.GetProductosAsync(It.IsAny<int>(), It.IsAny<int>()))
             .ThrowsAsync(await ApiExceptionCon(System.Net.HttpStatusCode.NotFound));

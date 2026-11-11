@@ -31,8 +31,7 @@ public class EstadisticasService(
     IUsersApi usersApi,
     IHistorialApi historialApi,
     ILogger<EstadisticasService> logger
-) : IEstadisticasService
-{
+) : IEstadisticasService {
     /// <summary>Puntos máximos del histórico de precios (límite de historical).</summary>
     private const int LimiteHistorialPrecios = 200;
 
@@ -40,8 +39,7 @@ public class EstadisticasService(
     private const int TamanoPagina = 100;
 
     /// <inheritdoc/>
-    public async Task<Result<ResumenEstadisticasDto, DomainError>> ResumenAsync(DateTime? desde, DateTime? hasta)
-    {
+    public async Task<Result<ResumenEstadisticasDto, DomainError>> ResumenAsync(DateTime? desde, DateTime? hasta) {
         var (pedidos, periodo) = await CargarAsync(desde, hasta);
         var lista = pedidos.ToList();
 
@@ -50,8 +48,7 @@ public class EstadisticasService(
 
         // Comparativa: la ventana inmediatamente anterior de la misma duración.
         ComparativaDto? comparativa = null;
-        if (periodo.Dias > 0)
-        {
+        if (periodo.Dias > 0) {
             var anteriorDesde = periodo.Desde!.Value.AddDays(-periodo.Dias);
             var pedidosAnteriores = await CargarSoloRangoAsync(anteriorDesde, periodo.Desde.Value);
             var totalesAnteriores = EstadisticasCalculator.CalcularTotales(pedidosAnteriores);
@@ -91,10 +88,8 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<VentasSerieDto, DomainError>> VentasAsync(
-        DateTime? desde, DateTime? hasta, string agrupar)
-    {
-        if (!EstadisticasCalculator.Agrupaciones.Contains(agruparCorrecto(agrupar)))
-        {
+        DateTime? desde, DateTime? hasta, string agrupar) {
+        if (!EstadisticasCalculator.Agrupaciones.Contains(agruparCorrecto(agrupar))) {
             return Result.Failure<VentasSerieDto, DomainError>(
                 ErrorEstadisticas.AgrupacionInvalida(agrupar));
         }
@@ -108,8 +103,7 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<ProductosMasVendidosDto, DomainError>> ProductosMasVendidosAsync(
-        DateTime? desde, DateTime? hasta, string orden, int top)
-    {
+        DateTime? desde, DateTime? hasta, string orden, int top) {
         var ordenLimpio = orden == "recaudacion" ? "recaudacion" : "unidades";
         var (pedidos, periodo) = await CargarAsync(desde, hasta);
         var (productos, categorias, _, _) = await CargarCatalogosAsync();
@@ -123,8 +117,7 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<CategoriasEstadisticasDto, DomainError>> CategoriasAsync(
-        DateTime? desde, DateTime? hasta)
-    {
+        DateTime? desde, DateTime? hasta) {
         var (pedidos, periodo) = await CargarAsync(desde, hasta);
         var (productos, categorias, _, _) = await CargarCatalogosAsync();
 
@@ -136,8 +129,7 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<ProveedoresEstadisticasDto, DomainError>> ProveedoresAsync(
-        DateTime? desde, DateTime? hasta)
-    {
+        DateTime? desde, DateTime? hasta) {
         var (pedidos, periodo) = await CargarAsync(desde, hasta);
         var (productos, _, proveedores, _) = await CargarCatalogosAsync();
 
@@ -149,8 +141,7 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<EstadosEstadisticasDto, DomainError>> EstadosAsync(
-        DateTime? desde, DateTime? hasta)
-    {
+        DateTime? desde, DateTime? hasta) {
         var (pedidos, periodo) = await CargarAsync(desde, hasta);
         return Result.Success<EstadosEstadisticasDto, DomainError>(
             EstadisticasCalculator.EmbudoEstados(pedidos, periodo));
@@ -158,8 +149,7 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<ClientesEstadisticasDto, DomainError>> ClientesAsync(
-        DateTime? desde, DateTime? hasta, int top)
-    {
+        DateTime? desde, DateTime? hasta, int top) {
         var (pedidos, periodo) = await CargarAsync(desde, hasta);
         var (_, _, _, usuarios) = await CargarCatalogosAsync();
 
@@ -170,8 +160,7 @@ public class EstadisticasService(
     }
 
     /// <inheritdoc/>
-    public async Task<Result<InventarioDto, DomainError>> InventarioAsync(int stockMax)
-    {
+    public async Task<Result<InventarioDto, DomainError>> InventarioAsync(int stockMax) {
         var (productos, categorias, _, _) = await CargarCatalogosAsync();
 
         return Result.Success<InventarioDto, DomainError>(
@@ -180,8 +169,7 @@ public class EstadisticasService(
 
     /// <inheritdoc/>
     public async Task<Result<PreciosEstadisticasDto, DomainError>> PreciosAsync(
-        long productoId, DateTime? desde, DateTime? hasta)
-    {
+        long productoId, DateTime? desde, DateTime? hasta) {
         // El 404 lo decide catalog (dueño del producto), igual que el
         // FindByIdAsync contra PostgreSQL en el monolito.
         if (!await ExisteProductoAsync(productoId))
@@ -202,10 +190,8 @@ public class EstadisticasService(
     }
 
     /// <summary>¿Existe el producto en catalog? (su 404 es el que manda).</summary>
-    private async Task<bool> ExisteProductoAsync(long productoId)
-    {
-        try
-        {
+    private async Task<bool> ExisteProductoAsync(long productoId) {
+        try {
             // Página 0 con tamaño mínimo: solo se comprueba la existencia.
             var pagina = await catalogApi.GetProductosAsync(0, 1);
             if (pagina?.Items is null) return false;
@@ -213,9 +199,7 @@ public class EstadisticasService(
             // Recorrido por si la primera página no lo contiene.
             var encontrados = await ObtenerTodoAsync((p, s) => catalogApi.GetProductosAsync(p, s));
             return encontrados.Any(p => p.Id == productoId);
-        }
-        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
-        {
+        } catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound) {
             return false;
         }
     }
@@ -233,10 +217,8 @@ public class EstadisticasService(
     /// cabe de sobra en una respuesta).
     /// </summary>
     private async Task<(IEnumerable<Pedido> Pedidos, PeriodoDto Periodo)> CargarAsync(
-        DateTime? desde, DateTime? hasta)
-    {
-        if (desde.HasValue && hasta.HasValue)
-        {
+        DateTime? desde, DateTime? hasta) {
+        if (desde.HasValue && hasta.HasValue) {
             var pedidos = await CargarSoloRangoAsync(desde.Value, hasta.Value);
             return (pedidos, EstadisticasCalculator.CrearPeriodo(desde.Value, hasta.Value));
         }
@@ -251,16 +233,14 @@ public class EstadisticasService(
     }
 
     /// <summary>Carga solo los pedidos de un rango concreto (para la comparativa).</summary>
-    private async Task<IEnumerable<Pedido>> CargarSoloRangoAsync(DateTime desde, DateTime hasta)
-    {
+    private async Task<IEnumerable<Pedido>> CargarSoloRangoAsync(DateTime desde, DateTime hasta) {
         if (desde >= hasta) return [];
         var todos = await CargarTodosAsync();
         return todos.Where(p => p.CreatedAt >= desde && p.CreatedAt < hasta).ToList();
     }
 
     /// <summary>Todos los pedidos de orders, mapeados a los modelos de dominio.</summary>
-    private async Task<List<Pedido>> CargarTodosAsync()
-    {
+    private async Task<List<Pedido>> CargarTodosAsync() {
         // Tolerante a cuerpo nulo: si orders responde vacío, la ventana es cero
         // pedidos (mismo criterio tolerante que el monolito con Cassandra).
         var pedidos = await ordersApi.GetPedidosAsync();
@@ -275,8 +255,7 @@ public class EstadisticasService(
         IReadOnlyDictionary<long, Producto> Productos,
         IReadOnlyDictionary<long, Categoria> Categorias,
         IReadOnlyDictionary<string, Proveedor> Proveedores,
-        IReadOnlyDictionary<long, string> Usuarios)> CargarCatalogosAsync()
-    {
+        IReadOnlyDictionary<long, string> Usuarios)> CargarCatalogosAsync() {
         // Independientes entre sí → en paralelo. Se lanzan primero y se esperan
         // después (Task.WhenAll con tipos distintos no devuelve los valores).
         var tProductos = ObtenerTodoAsync((p, s) => catalogApi.GetProductosAsync(p, s));
@@ -303,11 +282,9 @@ public class EstadisticasService(
     /// demás servicios son paginados con máximo 100 por página).
     /// </summary>
     private static async Task<List<T>> ObtenerTodoAsync<T>(
-        Func<int, int, Task<PagedResult<T>>> pagina)
-    {
+        Func<int, int, Task<PagedResult<T>>> pagina) {
         var todos = new List<T>();
-        for (var page = 0; page < 500; page++)
-        {
+        for (var page = 0; page < 500; page++) {
             var r = await pagina(page, TamanoPagina);
             if (r.Items is not null) todos.AddRange(r.Items);
 
@@ -320,8 +297,7 @@ public class EstadisticasService(
     }
 
     /// <summary>Cifras de inventario del catálogo actual.</summary>
-    private async Task<ResumenProductosDto> ResumenProductosAsync()
-    {
+    private async Task<ResumenProductosDto> ResumenProductosAsync() {
         var (productos, _, _, _) = await CargarCatalogosAsync();
         var activos = productos.Values.Where(p => !p.IsDeleted).ToList();
 
@@ -342,8 +318,7 @@ public class EstadisticasService(
     }
 
     /// <summary>Cifras de usuarios, con los que compraron en la ventana.</summary>
-    private async Task<ResumenUsuariosDto> ResumenUsuariosAsync(PeriodoDto periodo, IEnumerable<Pedido> pedidos)
-    {
+    private async Task<ResumenUsuariosDto> ResumenUsuariosAsync(PeriodoDto periodo, IEnumerable<Pedido> pedidos) {
         var usuarios = await ObtenerTodoAsync((p, s) => usersApi.GetUsuariosAsync(p, s));
 
         var conPedidos = pedidos.Where(EstadisticasCalculator.CuentaParaIngresos)
@@ -373,12 +348,10 @@ public class EstadisticasService(
     // Mapeo snapshot → modelo de dominio (el calculador no cambia)
     // ────────────────────────────────────────────────────────────
 
-    private static Pedido Mapear(PedidoSnapshot s) => new()
-    {
+    private static Pedido Mapear(PedidoSnapshot s) => new() {
         Id = ObjectId.TryParse(s.Id, out var oid) ? oid : ObjectId.GenerateNewId(),
         UserId = s.UserId,
-        Items = (s.Items ?? []).Select(i => new PedidoItem
-        {
+        Items = (s.Items ?? []).Select(i => new PedidoItem {
             ProductoId = i.ProductoId,
             NombreProducto = i.NombreProducto,
             Cantidad = i.Cantidad,
@@ -392,8 +365,7 @@ public class EstadisticasService(
         UpdatedAt = s.CreatedAt,
     };
 
-    private static Producto Mapear(ProductoSnapshot s) => new()
-    {
+    private static Producto Mapear(ProductoSnapshot s) => new() {
         Id = s.Id,
         Nombre = s.Nombre,
         Precio = s.Precio,
@@ -405,16 +377,14 @@ public class EstadisticasService(
         UpdatedAt = s.CreatedAt,
     };
 
-    private static Categoria Mapear(CategoriaSnapshot s) => new()
-    {
+    private static Categoria Mapear(CategoriaSnapshot s) => new() {
         Id = s.Id,
         Nombre = s.Nombre,
         CreatedAt = default,
         UpdatedAt = default,
     };
 
-    private static Proveedor Mapear(ProveedorSnapshot s) => new()
-    {
+    private static Proveedor Mapear(ProveedorSnapshot s) => new() {
         Codigo = s.Codigo,
         Nombre = s.Nombre,
         CreatedAt = default,

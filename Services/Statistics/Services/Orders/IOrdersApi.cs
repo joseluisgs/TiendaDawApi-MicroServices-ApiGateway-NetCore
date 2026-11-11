@@ -9,8 +9,7 @@ namespace TiendaApi.Api.Services.Orders;
 /// admin no pagina) y acota la ventana en memoria, con el mismo resultado
 /// numérico que <c>FindByRangoFechasAsync</c> del monolito.
 /// </summary>
-public interface IOrdersApi
-{
+public interface IOrdersApi {
     /// <summary>Todos los pedidos, ordenados por fecha descendente.</summary>
     [Get("/api/v1/pedidos")]
     Task<List<PedidoSnapshot>> GetPedidosAsync();

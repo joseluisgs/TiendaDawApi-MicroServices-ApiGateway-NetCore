@@ -10,8 +10,7 @@ namespace TiendaApi.Api.Services.Email;
 /// registra y no rompe la operación del usuario — mejor esfuerzo, como en el
 /// monolito.
 /// </summary>
-public interface IEmailApi
-{
+public interface IEmailApi {
     /// <summary>Encola un email para su envío.</summary>
     [Post("/internal/emails")]
     Task EnqueueAsync([Body] EmailRequest body);
